@@ -92,7 +92,9 @@ public strictfp class RobotPlayer {
     }
 
     static void runDesignSchool() throws GameActionException {
-
+        for (Direction dir : directions) {
+            tryBuild(RobotType.LANDSCAPER, dir);
+        }
     }
 
     static void runFulfillmentCenter() throws GameActionException {
