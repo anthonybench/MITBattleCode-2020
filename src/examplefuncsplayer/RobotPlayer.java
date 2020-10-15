@@ -93,7 +93,9 @@ public strictfp class RobotPlayer {
 
     static void runDesignSchool() throws GameActionException {
         for (Direction dir : directions) {
-            tryBuild(RobotType.LANDSCAPER, dir);
+            if (tryBuild(RobotType.LANDSCAPER, dir)) {
+                System.out.println("Made a landscaper");
+            }
         }
     }
 
