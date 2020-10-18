@@ -1,24 +1,32 @@
 package examplefuncsplayer;
+
 import battlecode.common.*;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
 
     static Direction[] directions = {
-        Direction.NORTH,
-        Direction.NORTHEAST,
-        Direction.EAST,
-        Direction.SOUTHEAST,
-        Direction.SOUTH,
-        Direction.SOUTHWEST,
-        Direction.WEST,
-        Direction.NORTHWEST
+            Direction.NORTH,
+            Direction.NORTHEAST,
+            Direction.EAST,
+            Direction.SOUTHEAST,
+            Direction.SOUTH,
+            Direction.SOUTHWEST,
+            Direction.WEST,
+            Direction.NORTHWEST
     };
     static RobotType[] spawnedByMiner = {RobotType.REFINERY, RobotType.VAPORATOR, RobotType.DESIGN_SCHOOL,
             RobotType.FULFILLMENT_CENTER, RobotType.NET_GUN};
 
     static int turnCount;
-
+    static MapLocation hqLoc;
+    static MapLocation enemyHqLoc;
+    static int numMiners = 0;
+    static int firstMiner = -1;
+    static int secondMiner = -1;
+    static int teamSecret = 123456;
+    static int mapWidth = 30;
+    static int mapHeight = 30;
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
@@ -33,6 +41,8 @@ public strictfp class RobotPlayer {
         turnCount = 0;
 
         System.out.println("I'm a " + rc.getType() + " and I just got created!");
+        findHQ();
+//        findEnemyHQ();
         while (true) {
             turnCount += 1;
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
@@ -41,20 +51,37 @@ public strictfp class RobotPlayer {
                 // You can add the missing ones or rewrite this into your own control structure.
                 System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
                 switch (rc.getType()) {
-                    case HQ:                 runHQ();                break;
-                    case MINER:              runMiner();             break;
-                    case REFINERY:           runRefinery();          break;
-                    case VAPORATOR:          runVaporator();         break;
-                    case DESIGN_SCHOOL:      runDesignSchool();      break;
-                    case FULFILLMENT_CENTER: runFulfillmentCenter(); break;
-                    case LANDSCAPER:         runLandscaper();        break;
-                    case DELIVERY_DRONE:     runDeliveryDrone();     break;
-                    case NET_GUN:            runNetGun();            break;
+                    case HQ:
+                        runHQ();
+                        break;
+                    case MINER:
+                        runMiner();
+                        break;
+                    case REFINERY:
+                        runRefinery();
+                        break;
+                    case VAPORATOR:
+                        runVaporator();
+                        break;
+                    case DESIGN_SCHOOL:
+                        runDesignSchool();
+                        break;
+                    case FULFILLMENT_CENTER:
+                        runFulfillmentCenter();
+                        break;
+                    case LANDSCAPER:
+                        runLandscaper();
+                        break;
+                    case DELIVERY_DRONE:
+                        runDeliveryDrone();
+                        break;
+                    case NET_GUN:
+                        runNetGun();
+                        break;
                 }
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
-
             } catch (Exception e) {
                 System.out.println(rc.getType() + " Exception");
                 e.printStackTrace();
@@ -62,25 +89,109 @@ public strictfp class RobotPlayer {
         }
     }
 
+    static void findHQ() throws GameActionException {
+        if (hqLoc == null) {
+            // search surroundings for HQ
+            RobotInfo[] robots = rc.senseNearbyRobots();
+            for (RobotInfo robot : robots) {
+                if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
+                    hqLoc = robot.location;
+                }
+            }
+            if (hqLoc == null) {
+                // if still null, search the blockchain
+                getHqLocFromBlockchain();
+            }
+        }
+    }
+
+    static void findEnemyHQ() throws GameActionException {
+        if (enemyHqLoc == null) {
+            // search surroundings for enemy HQ
+            RobotInfo[] robots = rc.senseNearbyRobots();
+            for (RobotInfo robot : robots) {
+                if (robot.type == RobotType.HQ && robot.team != rc.getTeam()) {
+                    enemyHqLoc = robot.location;
+                }
+            }
+            // TODO later: use blockchain to communicate
+        }
+    }
+
     static void runHQ() throws GameActionException {
-        for (Direction dir : directions)
-            tryBuild(RobotType.MINER, dir);
+        if (turnCount == 1) {
+            sendHqLoc(rc.getLocation());
+        }
+        if (mapWidth == 30 && mapHeight == 30) {
+            //find current map width
+            while (rc.onTheMap(new MapLocation(mapWidth + 1, 0))) {
+                mapWidth++;
+            }
+            //find current map height
+            while (rc.onTheMap(new MapLocation(0, mapHeight + 1))) {
+                mapHeight++;
+            }
+            System.out.println("BOUNDARIES" + mapWidth + " " + mapHeight);
+
+            //horizontally symmetric
+            int possibleX = mapWidth - rc.getLocation().x;
+            int possibleY = mapHeight - rc.getLocation().y;
+
+            System.out.println("Possible points" + possibleX + " " + possibleY);
+        }
+        if (numMiners < 10) {
+            for (Direction dir : directions)
+                if (tryBuild(RobotType.MINER, dir)) {
+                    numMiners++;
+                }
+        }
     }
 
     static void runMiner() throws GameActionException {
         tryBlockchain();
-        tryMove(randomDirection());
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
-        // tryBuild(randomSpawnedByMiner(), randomDirection());
-        for (Direction dir : directions)
-            tryBuild(RobotType.FULFILLMENT_CENTER, dir);
+        updateFirstMiner();
+        updateSecondMiner();
+        if (firstMiner == -1) {
+            broadcastFirstMiner();
+        }
+        if (secondMiner == -1) {
+            broadcastSecondMiner();
+        }
+
+        if (hqLoc != null && enemyHqLoc == null) {
+            if (rc.getID() == firstMiner) {
+                if ((hqLoc.x < (GameConstants.MAP_MAX_WIDTH / 2))) {
+                    goTo(directions[2]);
+                } else {
+                    goTo(directions[6]);
+                }
+            } else if (rc.getID() == secondMiner) {
+                if ((hqLoc.y < (GameConstants.MAP_MAX_HEIGHT / 2))) {
+                    goTo(directions[0]);
+                } else {
+                    goTo(directions[4]);
+                }
+            }
+        }
         for (Direction dir : directions)
             if (tryRefine(dir))
                 System.out.println("I refined soup! " + rc.getTeamSoup());
         for (Direction dir : directions)
             if (tryMine(dir))
                 System.out.println("I mined soup! " + rc.getSoupCarrying());
+        if (!nearbyRobot(RobotType.DESIGN_SCHOOL)) {
+            if (tryBuild(RobotType.DESIGN_SCHOOL, randomDirection()))
+                System.out.println("created a design school");
+        }
+
+        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
+            // time to go back to the HQ
+            if (goTo(hqLoc))
+                System.out.println("moved towards HQ");
+        } else if (goTo(randomDirection())) {
+            // otherwise, move randomly as usual
+            System.out.println("I moved randomly!");
+        }
     }
 
     static void runRefinery() throws GameActionException {
@@ -182,7 +293,7 @@ public strictfp class RobotPlayer {
      * Attempts to build a given robot in a given direction.
      *
      * @param type The type of the robot to build
-     * @param dir The intended direction of movement
+     * @param dir  The intended direction of movement
      * @return true if a move was performed
      * @throws GameActionException
      */
@@ -232,5 +343,106 @@ public strictfp class RobotPlayer {
                 rc.submitTransaction(message, 10);
         }
         // System.out.println(rc.getRoundMessages(turnCount-1));
+    }
+
+    // tries to move in the general direction of dir
+    static boolean goTo(Direction dir) throws GameActionException {
+        Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+        for (Direction d : toTry) {
+            if (tryMove(d))
+                return true;
+        }
+        return false;
+    }
+
+    // navigate towards a particular location
+    static boolean goTo(MapLocation destination) throws GameActionException {
+        return goTo(rc.getLocation().directionTo(destination));
+    }
+
+    static boolean nearbyRobot(RobotType target) throws GameActionException {
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r : robots) {
+            if (r.getType() == target) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static boolean tryDig() throws GameActionException {
+        Direction dir = randomDirection();
+        if (rc.canDigDirt(dir)) {
+            rc.digDirt(dir);
+            return true;
+        }
+        return false;
+    }
+
+    public static void broadcastFirstMiner() throws GameActionException {
+        int[] message = new int[7];
+        message[0] = teamSecret;
+        message[1] = 1;
+        message[2] = rc.getID(); // x coord of HQ
+        message[3] = 0;
+        if (rc.canSubmitTransaction(message, 3)) {
+            rc.submitTransaction(message, 3);
+            firstMiner = rc.getID();
+        }
+    }
+
+    public static void updateFirstMiner() throws GameActionException {
+        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
+            int[] mess = tx.getMessage();
+            if (mess[0] == teamSecret && mess[1] == 1) {
+                System.out.println("Got a first miner");
+                firstMiner = mess[2];
+            }
+        }
+    }
+
+    public static void broadcastSecondMiner() throws GameActionException {
+        int[] message = new int[7];
+        message[0] = teamSecret;
+        message[1] = 2;
+        message[2] = rc.getID(); // x coord of HQ
+        message[3] = 0;
+        if (rc.canSubmitTransaction(message, 3)) {
+            rc.submitTransaction(message, 3);
+            secondMiner = rc.getID();
+        }
+    }
+
+    public static void updateSecondMiner() throws GameActionException {
+        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
+            int[] mess = tx.getMessage();
+            if (mess[0] == teamSecret && mess[1] == 2) {
+                System.out.println("Got a first miner");
+                secondMiner = mess[2];
+            }
+        }
+    }
+
+    public static void sendHqLoc(MapLocation loc) throws GameActionException {
+        int[] message = new int[7];
+        message[0] = teamSecret;
+        message[1] = 0;
+        message[2] = loc.x; // x coord of HQ
+        message[3] = loc.y; // y coord of HQ
+        if (rc.canSubmitTransaction(message, 3))
+            rc.submitTransaction(message, 3);
+    }
+
+    public static void getHqLocFromBlockchain() throws GameActionException {
+        System.out.println("B L O C K C H A I N");
+        for (int i = 1; i < rc.getRoundNum(); i++) {
+            for (Transaction tx : rc.getBlock(i)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == 0) {
+                    System.out.println("found the HQ!");
+                    hqLoc = new MapLocation(mess[2], mess[3]);
+                }
+            }
+        }
     }
 }
