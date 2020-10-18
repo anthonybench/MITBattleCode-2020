@@ -27,6 +27,10 @@ public strictfp class RobotPlayer {
     static int teamSecret = 123456;
     static int mapWidth = 30;
     static int mapHeight = 30;
+    static int enemyHqX = -1;
+    static int enemyHqY = -1;
+    static int possibleY = 0;
+    static int possibleX = 0;
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
@@ -134,11 +138,13 @@ public strictfp class RobotPlayer {
             System.out.println("BOUNDARIES" + mapWidth + " " + mapHeight);
 
             //horizontally symmetric
-            int possibleX = mapWidth - rc.getLocation().x;
-            int possibleY = mapHeight - rc.getLocation().y;
+            possibleX = mapWidth - rc.getLocation().x;
+            possibleY = mapHeight - rc.getLocation().y;
 
             System.out.println("Possible points" + possibleX + " " + possibleY);
         }
+        broadcastEnemyHQCoordinates(possibleX, possibleY);
+
         if (numMiners < 10) {
             for (Direction dir : directions)
                 if (tryBuild(RobotType.MINER, dir)) {
@@ -149,30 +155,17 @@ public strictfp class RobotPlayer {
 
     static void runMiner() throws GameActionException {
         tryBlockchain();
-        updateFirstMiner();
-        updateSecondMiner();
-        if (firstMiner == -1) {
-            broadcastFirstMiner();
-        }
-        if (secondMiner == -1) {
-            broadcastSecondMiner();
-        }
-
-        if (hqLoc != null && enemyHqLoc == null) {
-            if (rc.getID() == firstMiner) {
-                if ((hqLoc.x < (GameConstants.MAP_MAX_WIDTH / 2))) {
-                    goTo(directions[2]);
-                } else {
-                    goTo(directions[6]);
-                }
-            } else if (rc.getID() == secondMiner) {
-                if ((hqLoc.y < (GameConstants.MAP_MAX_HEIGHT / 2))) {
-                    goTo(directions[0]);
-                } else {
-                    goTo(directions[4]);
-                }
-            }
-        }
+//        if (enemyHqX == -1 && enemyHqY == -1) {
+//            getEnemyHQCoordinates();
+//            enemyHqLoc = new MapLocation(enemyHqX, enemyHqY);
+//        } else if (enemyHqY != -1 && enemyHqX != -1) {
+//            System.out.println("Enemy HQ" + enemyHqLoc);
+//            if (goTo(enemyHqLoc)) {
+//                System.out.println("Went to possible enemy HQ coordinate" + enemyHqX + ", " + enemyHqY);
+//            } else {
+//                System.out.println("Couldn't move to enemy HQ");
+//            }
+//        }
         for (Direction dir : directions)
             if (tryRefine(dir))
                 System.out.println("I refined soup! " + rc.getTeamSoup());
@@ -216,7 +209,17 @@ public strictfp class RobotPlayer {
     }
 
     static void runLandscaper() throws GameActionException {
-
+        if (enemyHqX == -1 && enemyHqY == -1) {
+            getEnemyHQCoordinates();
+            enemyHqLoc = new MapLocation(enemyHqX, enemyHqY);
+        } else if (enemyHqY != -1 && enemyHqX != -1) {
+            System.out.println("Enemy HQ" + enemyHqLoc);
+            if (goTo(enemyHqLoc)) {
+                System.out.println("Went to possible enemy HQ coordinate" + enemyHqX + ", " + enemyHqY);
+            } else {
+                System.out.println("Couldn't move to enemy HQ");
+            }
+        }
     }
 
     static void runDeliveryDrone() throws GameActionException {
@@ -442,6 +445,31 @@ public strictfp class RobotPlayer {
                     System.out.println("found the HQ!");
                     hqLoc = new MapLocation(mess[2], mess[3]);
                 }
+            }
+        }
+    }
+
+    public static void broadcastEnemyHQCoordinates(int x, int y) throws GameActionException {
+        int[] message = new int[7];
+        System.out.println(x + y);
+        message[0] = teamSecret;
+        message[1] = 11;
+        message[2] = x; // possible x coord of enemy HQ
+        message[3] = y; // possible y coord of enemy HQ
+        if (rc.canSubmitTransaction(message, 3))
+            rc.submitTransaction(message, 3);
+    }
+
+    public static void getEnemyHQCoordinates() throws GameActionException {
+        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
+            int[] mess = tx.getMessage();
+            if (mess[0] == teamSecret && mess[1] == 11) {
+                System.out.println("Got enemy HQ coordinates");
+                if (enemyHqX == -1 && enemyHqY == -1) {
+                    enemyHqX = mess[2];
+                    enemyHqY = mess[3];
+                }
+                System.out.println(enemyHqX + enemyHqY);
             }
         }
     }
