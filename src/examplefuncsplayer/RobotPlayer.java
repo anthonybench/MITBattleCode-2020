@@ -169,9 +169,9 @@ public strictfp class RobotPlayer {
         for (Direction dir : directions)
             if (tryRefine(dir))
                 System.out.println("I refined soup! " + rc.getTeamSoup());
-        for (Direction dir : directions)
-            if (tryMine(dir))
-                System.out.println("I mined soup! " + rc.getSoupCarrying());
+//        for (Direction dir : directions)
+//            if (tryMine(dir))
+//                System.out.println("I mined soup! " + rc.getSoupCarrying());
         if (!nearbyRobot(RobotType.DESIGN_SCHOOL)) {
             if (tryBuild(RobotType.DESIGN_SCHOOL, randomDirection()))
                 System.out.println("created a design school");
@@ -181,9 +181,42 @@ public strictfp class RobotPlayer {
             // time to go back to the HQ
             if (goTo(hqLoc))
                 System.out.println("moved towards HQ");
-        } else if (goTo(randomDirection())) {
-            // otherwise, move randomly as usual
-            System.out.println("I moved randomly!");
+        } else {
+            // Try to find soup
+            MapLocation[] soupToMine = rc.senseNearbySoup();
+            if (soupToMine.length == 0) {
+                // If no soup is nearby, search for soup
+                if (rc.canMove(Direction.NORTH)) {
+                    rc.move(Direction.NORTH);
+                    System.out.println("===============");
+                    System.out.println("I moved north!");
+                    System.out.println("===============");
+                }
+            } else if (Math.abs(soupToMine[0].x - rc.getLocation().x) < 2 &&
+                    Math.abs(soupToMine[0].y - rc.getLocation().y) < 2) {
+                // Else if soup is adjacent, mine it
+                for (Direction dir : directions) {
+                    if (tryMine(dir)) {
+                        System.out.println("I mined soup! " + rc.getSoupCarrying());
+                    }
+                }
+            } else {
+                // Otherwise, travel towards the detected soup
+                if (soupToMine[0].x > rc.getLocation().x) {
+                    if (rc.canMove(Direction.EAST))
+                        rc.move(Direction.EAST);
+                } else if (soupToMine[0].x < rc.getLocation().x) {
+                    if (rc.canMove(Direction.WEST))
+                        rc.move(Direction.WEST);
+                }
+                if (soupToMine[0].y > rc.getLocation().y) {
+                    if (rc.canMove(Direction.NORTH))
+                        rc.move(Direction.NORTH);
+                } else if (soupToMine[0].y < rc.getLocation().y) {
+                    if (rc.canMove(Direction.SOUTH))
+                        rc.move(Direction.SOUTH);
+                }
+            }
         }
     }
 
