@@ -187,12 +187,9 @@ public strictfp class RobotPlayer {
             // Try to find soup
             MapLocation[] soupToMine = rc.senseNearbySoup();
             if (soupToMine.length == 0) {
-                // If no soup is nearby, search for soup
-                if (rc.canMove(Direction.NORTH)) {
-                    rc.move(Direction.NORTH);
-                    System.out.println("===============");
-                    System.out.println("I moved north!");
-                    System.out.println("===============");
+                // If no soup is nearby, search for soup by moving randomly
+                if (goTo(randomDirection())) {
+                    System.out.println("I moved randomly!");
                 }
             } else if (Math.abs(soupToMine[0].x - rc.getLocation().x) < 2 &&
                     Math.abs(soupToMine[0].y - rc.getLocation().y) < 2) {
