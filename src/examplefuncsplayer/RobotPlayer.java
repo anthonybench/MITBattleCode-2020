@@ -31,6 +31,7 @@ public strictfp class RobotPlayer {
     static int enemyHqY = -1;
     static int possibleY = 0;
     static int possibleX = 0;
+
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
@@ -140,10 +141,10 @@ public strictfp class RobotPlayer {
             //horizontally symmetric
             possibleX = mapWidth - rc.getLocation().x;
             possibleY = mapHeight - rc.getLocation().y;
-
-            System.out.println("Possible points" + possibleX + " " + possibleY);
         }
-        broadcastEnemyHQCoordinates(possibleX, possibleY);
+        System.out.println("Possible points" + possibleX + " " + possibleY);
+
+        broadcastEnemyHQCoordinates();
 
         if (numMiners < 10) {
             for (Direction dir : directions)
@@ -166,16 +167,17 @@ public strictfp class RobotPlayer {
 //                System.out.println("Couldn't move to enemy HQ");
 //            }
 //        }
+        if (!nearbyRobot(RobotType.DESIGN_SCHOOL)) {
+            if (tryBuild(RobotType.DESIGN_SCHOOL, randomDirection()))
+                System.out.println("created a design school");
+        }
+
         for (Direction dir : directions)
             if (tryRefine(dir))
                 System.out.println("I refined soup! " + rc.getTeamSoup());
 //        for (Direction dir : directions)
 //            if (tryMine(dir))
 //                System.out.println("I mined soup! " + rc.getSoupCarrying());
-        if (!nearbyRobot(RobotType.DESIGN_SCHOOL)) {
-            if (tryBuild(RobotType.DESIGN_SCHOOL, randomDirection()))
-                System.out.println("created a design school");
-        }
 
         if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
             // time to go back to the HQ
@@ -242,10 +244,9 @@ public strictfp class RobotPlayer {
     }
 
     static void runLandscaper() throws GameActionException {
-        if(rc.getDirtCarrying() == 0){
+        if (rc.getDirtCarrying() == 0) {
             tryDig();
         }
-
 
         //Gets the enemy HQ coordinate, if gotten already sends landscrapers to enemy HQ
         if (enemyHqX == -1 && enemyHqY == -1) {
@@ -254,7 +255,7 @@ public strictfp class RobotPlayer {
         } else if (enemyHqY != -1 && enemyHqX != -1) {
             System.out.println("Enemy HQ" + enemyHqLoc);
             //If nearby enemy HQ, bury it
-            if(rc.getLocation().distanceSquaredTo(enemyHqLoc) < 4
+            if (rc.getLocation().distanceSquaredTo(enemyHqLoc) < 4
                     && rc.canDepositDirt(rc.getLocation().directionTo(enemyHqLoc))) {
                 rc.depositDirt(rc.getLocation().directionTo(enemyHqLoc));
             }
@@ -496,13 +497,12 @@ public strictfp class RobotPlayer {
         }
     }
 
-    public static void broadcastEnemyHQCoordinates(int x, int y) throws GameActionException {
+    public static void broadcastEnemyHQCoordinates() throws GameActionException {
         int[] message = new int[7];
-        System.out.println(x + y);
         message[0] = teamSecret;
         message[1] = 11;
-        message[2] = x; // possible x coord of enemy HQ
-        message[3] = y; // possible y coord of enemy HQ
+        message[2] = possibleX; // possible x coord of enemy HQ
+        message[3] = possibleY; // possible y coord of enemy HQ
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
     }
@@ -512,10 +512,8 @@ public strictfp class RobotPlayer {
             int[] mess = tx.getMessage();
             if (mess[0] == teamSecret && mess[1] == 11) {
                 System.out.println("Got enemy HQ coordinates");
-                if (enemyHqX == -1 && enemyHqY == -1) {
-                    enemyHqX = mess[2];
-                    enemyHqY = mess[3];
-                }
+                enemyHqX = mess[2];
+                enemyHqY = mess[3];
                 System.out.println(enemyHqX + enemyHqY);
             }
         }
