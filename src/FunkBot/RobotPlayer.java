@@ -1,4 +1,4 @@
-package examplefuncsplayer;
+package FunkBot;
 
 import battlecode.common.*;
 
