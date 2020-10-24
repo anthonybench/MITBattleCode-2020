@@ -3,12 +3,12 @@ import battlecode.common.*;
 
 public class Miner extends Unit {
 
-    public Miner(RobotController rc) {
+    public Miner(RobotController rc) throws GameActionException {
         super(rc);
     }
 
-    public void takeTurn() throws GameActionException {
-        super.takeTurn();
+    public void run() throws GameActionException {
+        super.run();
 
         //        if (enemyHqX == -1 && enemyHqY == -1) {
 //            getEnemyHQCoordinates();

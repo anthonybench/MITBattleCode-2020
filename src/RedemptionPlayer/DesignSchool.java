@@ -8,7 +8,7 @@ public class DesignSchool extends Building {
         super(rc);
     }
 
-    public void takeTurn() throws GameActionException {
+    public void run() throws GameActionException {
         for (Direction dir : Util.directions) {
             if (tryBuild(RobotType.LANDSCAPER, dir)) {
                 System.out.println("Made a landscaper");

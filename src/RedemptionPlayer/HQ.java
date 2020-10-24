@@ -13,8 +13,10 @@ public class HQ extends Building {
         super(rc);
     }
 
-    public void takeTurn() throws GameActionException {
-        super.takeTurn();
+    public void run() throws GameActionException {
+        super.run();
+        System.out.println("BOUNDARIES" + mapWidth + " " + mapHeight);
+
         if (turnCount == 1) {
             sendHqLoc(rc.getLocation());
         }

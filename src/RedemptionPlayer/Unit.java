@@ -7,8 +7,9 @@ public class Unit extends Robot{
     static int enemyHqY = -1;
     static MapLocation enemyHqLoc;
 
-    public Unit(RobotController rc) {
+    public Unit(RobotController rc) throws GameActionException{
         super(rc);
+        findHQ();
     }
 
     /**

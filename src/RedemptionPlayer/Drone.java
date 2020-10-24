@@ -4,11 +4,11 @@ import battlecode.common.*;
 
 public class Drone extends Unit{
 
-    public Drone(RobotController rc) {
+    public Drone(RobotController rc) throws GameActionException {
         super(rc);
     }
-    public void takeTurn() throws GameActionException {
-        super.takeTurn();
+    public void run() throws GameActionException {
+        super.run();
         Team enemy = rc.getTeam().opponent();
         if (!rc.isCurrentlyHoldingUnit()) {
             // See if there are any enemy robots within capturing range
