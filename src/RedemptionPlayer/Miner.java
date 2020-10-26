@@ -90,10 +90,10 @@ public class Miner extends Unit {
 //                System.out.println("Couldn't move to enemy HQ");
 //            }
 //        }
-            if (!nearbyRobot(RobotType.DESIGN_SCHOOL)) {
-                if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
-                    System.out.println("created a design school");
-            }
+//            if (!nearbyRobot(RobotType.DESIGN_SCHOOL)) {
+//                if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
+//                    System.out.println("created a design school");
+//            }
 
 //        for (Direction dir : directions)
 //            if (tryMine(dir))
