@@ -21,6 +21,7 @@ public class Landscaper extends Unit{
 
         if (rc.getDirtCarrying() == 0) {
             tryDig();
+            System.out.println("Try dig");
         }
 
         //Gets the enemy HQ coordinate, if gotten already sends landscrapers to enemy HQ

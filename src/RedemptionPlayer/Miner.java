@@ -1,4 +1,5 @@
 package RedemptionPlayer;
+
 import battlecode.common.*;
 
 public class Miner extends Unit {
@@ -7,6 +8,7 @@ public class Miner extends Unit {
     static int enemyPotentialHQNumber = 1;
     static int targetEnemyX = 0;
     static int targetEnemyY = 0;
+
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
     }
@@ -19,37 +21,65 @@ public class Miner extends Unit {
             firstMiner = true;
         }
 
-        if (firstMiner) {
-            getEnemyHQCoordinates();
-
-            if (rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), 34)) {
-                if (nearbyRobot(RobotType.HQ)) {
-                    System.out.println("Found real enemy HQ coordinates");
-                    broadcastRealEnemyHQCoordinates();
-                } else {
-                    enemyPotentialHQNumber = 2;
-                }
-            }
-
-            switch (enemyPotentialHQNumber) {
-                case 1:
-                    targetEnemyX = 0;
-                    targetEnemyY = potentialEnemyHQY;
-                    break;
-                case 2:
-                    targetEnemyX = potentialEnemyHQX;
-                    targetEnemyY = potentialEnemyHQY;
-                    break;
-                case 3:
-                    targetEnemyX = potentialEnemyHQX;
-                    targetEnemyY = 0;
-                    break;
-            }
-
-            goTo(new MapLocation(targetEnemyX, targetEnemyY));
-
+        // HQ broadcasts the position the round right before
+        if (turnCount == 5) {
+            getPotentialEnemyHQCoordinates();
         }
-        //        if (enemyHqX == -1 && enemyHqY == -1) {
+
+        if (firstMiner) {
+            System.out.println("First miner and Enemy hq is " + enemyHqLoc);
+            if (enemyHqLoc != null) {
+                //if miner is the first miner and enemy HQ is found, keep broadcasting
+                //enemy HQ to new units and (build design schools nearby enemy HQ) -> this behavior should be optimized
+                if (turnCount % 10 == 0) {
+                    //Temporary way to stop broadcasting every turn when miner is around enemy HQ, because it uses too much soup.
+                    broadcastRealEnemyHQCoordinates();
+                }
+                if (!nearbyRobot(RobotType.DESIGN_SCHOOL)) {
+                    //Temporary way to stop building too much Design schools next to enemy HQ
+                    //TODO broadcast how much design school are built, and stop building after an optimal number!
+                    if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
+                        System.out.println("created a design school");
+                }
+            } else {
+                //If enemy HQ is not found yet and is within miner's sensor radius, broadcast enemy HQ position
+                System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
+                //!!!distance squared should be 34, but that doesn't work if miner is within pollution
+                if (rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), 2)) {
+                    if (nearbyRobot(RobotType.HQ)) {
+                        System.out.println("Found real enemy HQ coordinates");
+                        broadcastRealEnemyHQCoordinates();
+                        enemyHqLoc = new MapLocation(targetEnemyX, targetEnemyY);
+
+                        System.out.println("cooldown" + rc.getCooldownTurns());
+                    } else {
+                        //if potential enemy HQ location is within sensor radius but enemy HQ is not found,
+                        //switch to move to next potential location
+                        enemyPotentialHQNumber++;
+                    }
+                }
+
+                //Sets the first miner's targeted locations
+                switch (enemyPotentialHQNumber) {
+                    case 1:
+                        targetEnemyX = hqLoc.x;
+                        targetEnemyY = potentialEnemyHQY;
+                        break;
+                    case 2:
+                        targetEnemyX = potentialEnemyHQX;
+                        targetEnemyY = potentialEnemyHQY;
+                        break;
+                    case 3:
+                        targetEnemyX = potentialEnemyHQX;
+                        targetEnemyY = hqLoc.y;
+                        break;
+                }
+
+                goTo(new MapLocation(targetEnemyX, targetEnemyY));
+            }
+        } else {
+            System.out.println("Not first miner");
+            //        if (enemyHqX == -1 && enemyHqY == -1) {
 //            getEnemyHQCoordinates();
 //            enemyHqLoc = new MapLocation(enemyHqX, enemyHqY);
 //        } else if (enemyHqY != -1 && enemyHqX != -1) {
@@ -60,57 +90,61 @@ public class Miner extends Unit {
 //                System.out.println("Couldn't move to enemy HQ");
 //            }
 //        }
-        if (!nearbyRobot(RobotType.DESIGN_SCHOOL)) {
-            if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
-                System.out.println("created a design school");
-        }
+            if (!nearbyRobot(RobotType.DESIGN_SCHOOL)) {
+                if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
+                    System.out.println("created a design school");
+            }
 
-        for (Direction dir : Util.directions)
-            if (tryRefine(dir))
-                System.out.println("I refined soup! " + rc.getTeamSoup());
 //        for (Direction dir : directions)
 //            if (tryMine(dir))
 //                System.out.println("I mined soup! " + rc.getSoupCarrying());
+            for (Direction dir : Util.directions)
+                if (tryRefine(dir))
+                    System.out.println("I refined soup! " + rc.getTeamSoup());
 
-        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
-            // time to go back to the HQ
-            if (goTo(hqLoc))
-                System.out.println("moved towards HQ");
-        } else {
-            // Try to find soup
-            MapLocation[] soupToMine = rc.senseNearbySoup();
-            if (soupToMine.length == 0) {
-                // If no soup is nearby, search for soup by moving randomly
-                if (goTo(Util.randomDirection())) {
-                    System.out.println("I moved randomly!");
-                }
-            } else if (Math.abs(soupToMine[0].x - rc.getLocation().x) < 2 &&
-                    Math.abs(soupToMine[0].y - rc.getLocation().y) < 2) {
-                // Else if soup is adjacent, mine it
-                for (Direction dir : Util.directions) {
-                    if (tryMine(dir)) {
-                        System.out.println("I mined soup! " + rc.getSoupCarrying());
-                    }
-                }
+            int whenToStopMiningSoup = 50; //used to be RobotType.MINER.soupLimit;
+            if (rc.getSoupCarrying() >= whenToStopMiningSoup) {
+                // time to go back to the HQ
+                if (goTo(hqLoc))
+                    System.out.println("moved towards HQ");
             } else {
-                // Otherwise, travel towards the detected soup
-                if (soupToMine[0].x > rc.getLocation().x) {
-                    if (rc.canMove(Direction.EAST))
-                        rc.move(Direction.EAST);
-                } else if (soupToMine[0].x < rc.getLocation().x) {
-                    if (rc.canMove(Direction.WEST))
-                        rc.move(Direction.WEST);
-                }
-                if (soupToMine[0].y > rc.getLocation().y) {
-                    if (rc.canMove(Direction.NORTH))
-                        rc.move(Direction.NORTH);
-                } else if (soupToMine[0].y < rc.getLocation().y) {
-                    if (rc.canMove(Direction.SOUTH))
-                        rc.move(Direction.SOUTH);
+                System.out.println("Before trying to find soup");
+                // Try to find soup
+                MapLocation[] soupToMine = rc.senseNearbySoup();
+                if (soupToMine.length == 0) {
+                    // If no soup is nearby, search for soup by moving randomly
+                    if (goTo(Util.randomDirection())) {
+                        System.out.println("I moved randomly!");
+                    }
+                } else if (Math.abs(soupToMine[0].x - rc.getLocation().x) < 2 &&
+                        Math.abs(soupToMine[0].y - rc.getLocation().y) < 2) {
+                    // Else if soup is adjacent, mine it
+                    for (Direction dir : Util.directions) {
+                        if (tryMine(dir)) {
+                            System.out.println("I mined soup! " + rc.getSoupCarrying());
+                        }
+                    }
+                } else {
+                    // Otherwise, travel towards the detected soup
+                    if (soupToMine[0].x > rc.getLocation().x) {
+                        if (rc.canMove(Direction.EAST))
+                            rc.move(Direction.EAST);
+                    } else if (soupToMine[0].x < rc.getLocation().x) {
+                        if (rc.canMove(Direction.WEST))
+                            rc.move(Direction.WEST);
+                    }
+                    if (soupToMine[0].y > rc.getLocation().y) {
+                        if (rc.canMove(Direction.NORTH))
+                            rc.move(Direction.NORTH);
+                    } else if (soupToMine[0].y < rc.getLocation().y) {
+                        if (rc.canMove(Direction.SOUTH))
+                            rc.move(Direction.SOUTH);
+                    }
                 }
             }
         }
     }
+
     /**
      * Attempts to mine soup in a given direction.
      *
@@ -147,5 +181,6 @@ public class Miner extends Unit {
         message[3] = potentialEnemyHQY; // possible y coord of enemy HQ
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
+        System.out.println("Broadcasting real enemy HQ coordinates");
     }
 }

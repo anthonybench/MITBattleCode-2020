@@ -21,11 +21,8 @@ public class HQ extends Building {
             sendHqLoc(rc.getLocation());
         }
 
-        //I'm assuming there's a min num of turns it takes to find the enemyHQ
-        if (turnCount > 10) {
-            getRealEnemyHQFromBlockchain();
-        }
-        if (enemyHqLoc == null) {
+        //Broadcast once to save soup, first miner would definitely get it on turn 5 (maybe add broadcast cost to ensure)
+        if (turnCount == 5) {
             if (mapWidth == 30 && mapHeight == 30) {
                 //find current map width
                 while (rc.onTheMap(new MapLocation(mapWidth + 1, 0))) {
@@ -42,11 +39,14 @@ public class HQ extends Building {
                 possibleY = mapHeight - rc.getLocation().y;
             }
             System.out.println("Possible points" + possibleX + " " + possibleY);
-
             broadcastPotentialEnemyHQCoordinates();
         }
 
-        if (numMiners < 10) {
+//        if (turnCount % 10 == 0) {
+//            getRealEnemyHQFromBlockchain();
+//        }
+
+        if (numMiners < 3) {
             for (Direction dir : Util.directions)
                 if (tryBuild(RobotType.MINER, dir)) {
                     numMiners++;
@@ -72,5 +72,6 @@ public class HQ extends Building {
         message[3] = possibleY; // possible y coord of enemy HQ
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
+        System.out.println("broadcasting potential enemy HQ coordinates");
     }
 }

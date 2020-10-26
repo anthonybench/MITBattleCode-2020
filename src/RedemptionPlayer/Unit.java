@@ -58,11 +58,11 @@ public class Unit extends Robot{
         return goTo(rc.getLocation().directionTo(destination));
     }
 
-    public void getEnemyHQCoordinates() throws GameActionException {
+    public void getPotentialEnemyHQCoordinates() throws GameActionException {
         for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
             int[] mess = tx.getMessage();
             if (mess[0] == teamSecret && mess[1] == 11) {
-                System.out.println("Got enemy HQ coordinates");
+                System.out.println("Got potential enemy HQ coordinates");
                 potentialEnemyHQX = mess[2];
                 potentialEnemyHQY = mess[3];
                 System.out.println(potentialEnemyHQX + potentialEnemyHQY);
