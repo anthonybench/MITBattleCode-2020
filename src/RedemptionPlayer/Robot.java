@@ -13,7 +13,6 @@ public class Robot {
 
     public void run() throws GameActionException {
         turnCount += 1;
-
     }
     /**
      * Attempts to build a given robot in a given direction.

@@ -3,12 +3,19 @@ import battlecode.common.*;
 
 public class Miner extends Unit {
 
+    static boolean firstMiner = false;
+
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
     }
 
     public void run() throws GameActionException {
         super.run();
+
+        //Sets the first spawned miner to the first miner (that will be discovring enemy HQ)
+        if (turnCount == 1 && rc.getRoundNum() == 2) {
+            firstMiner = true;
+        }
 
         //        if (enemyHqX == -1 && enemyHqY == -1) {
 //            getEnemyHQCoordinates();
