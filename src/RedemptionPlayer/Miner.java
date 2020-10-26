@@ -46,7 +46,7 @@ public class Miner extends Unit {
                 System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
                 //!!!distance squared should be 34, but that doesn't work if miner is within pollution
                 if (rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), 2)) {
-                    if (nearbyRobot(RobotType.HQ)) {
+                    if (nearbyEnemyRobot(RobotType.HQ)) {
                         System.out.println("Found real enemy HQ coordinates");
                         broadcastRealEnemyHQCoordinates();
                         enemyHqLoc = new MapLocation(targetEnemyX, targetEnemyY);

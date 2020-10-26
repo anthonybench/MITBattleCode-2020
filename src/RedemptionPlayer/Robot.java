@@ -41,6 +41,16 @@ public class Robot {
         return false;
     }
 
+    boolean nearbyEnemyRobot(RobotType target) throws GameActionException {
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r : robots) {
+            if (r.getType() == target && r.team != rc.getTeam()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void getHqLocFromBlockchain() throws GameActionException {
         System.out.println("B L O C K C H A I N");
         for (int i = 1; i < rc.getRoundNum(); i++) {
