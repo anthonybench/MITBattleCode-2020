@@ -4,7 +4,9 @@ import battlecode.common.*;
 public class Miner extends Unit {
 
     static boolean firstMiner = false;
-
+    static int enemyPotentialHQNumber = 1;
+    static int targetEnemyX = 0;
+    static int targetEnemyY = 0;
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
     }
@@ -17,6 +19,36 @@ public class Miner extends Unit {
             firstMiner = true;
         }
 
+        if (firstMiner) {
+            getEnemyHQCoordinates();
+
+            if (rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), 34)) {
+                if (nearbyRobot(RobotType.HQ)) {
+                    System.out.println("Found real enemy HQ coordinates");
+                    broadcastRealEnemyHQCoordinates();
+                } else {
+                    enemyPotentialHQNumber = 2;
+                }
+            }
+
+            switch (enemyPotentialHQNumber) {
+                case 1:
+                    targetEnemyX = 0;
+                    targetEnemyY = potentialEnemyHQY;
+                    break;
+                case 2:
+                    targetEnemyX = potentialEnemyHQX;
+                    targetEnemyY = potentialEnemyHQY;
+                    break;
+                case 3:
+                    targetEnemyX = potentialEnemyHQX;
+                    targetEnemyY = 0;
+                    break;
+            }
+
+            goTo(new MapLocation(targetEnemyX, targetEnemyY));
+
+        }
         //        if (enemyHqX == -1 && enemyHqY == -1) {
 //            getEnemyHQCoordinates();
 //            enemyHqLoc = new MapLocation(enemyHqX, enemyHqY);
@@ -105,5 +137,15 @@ public class Miner extends Unit {
             rc.depositSoup(dir, rc.getSoupCarrying());
             return true;
         } else return false;
+    }
+
+    public void broadcastRealEnemyHQCoordinates() throws GameActionException {
+        int[] message = new int[7];
+        message[0] = teamSecret;
+        message[1] = 111;
+        message[2] = potentialEnemyHQX; // possible x coord of enemy HQ
+        message[3] = potentialEnemyHQY; // possible y coord of enemy HQ
+        if (rc.canSubmitTransaction(message, 3))
+            rc.submitTransaction(message, 3);
     }
 }

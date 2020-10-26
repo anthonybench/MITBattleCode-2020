@@ -3,9 +3,8 @@ package RedemptionPlayer;
 import battlecode.common.*;
 
 public class Unit extends Robot{
-    static int enemyHqX = -1;
-    static int enemyHqY = -1;
-    static MapLocation enemyHqLoc;
+    static int potentialEnemyHQX = -1;
+    static int potentialEnemyHQY = -1;
 
     public Unit(RobotController rc) throws GameActionException{
         super(rc);
@@ -64,9 +63,9 @@ public class Unit extends Robot{
             int[] mess = tx.getMessage();
             if (mess[0] == teamSecret && mess[1] == 11) {
                 System.out.println("Got enemy HQ coordinates");
-                enemyHqX = mess[2];
-                enemyHqY = mess[3];
-                System.out.println(enemyHqX + enemyHqY);
+                potentialEnemyHQX = mess[2];
+                potentialEnemyHQY = mess[3];
+                System.out.println(potentialEnemyHQX + potentialEnemyHQY);
             }
         }
     }

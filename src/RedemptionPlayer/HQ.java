@@ -20,24 +20,31 @@ public class HQ extends Building {
         if (turnCount == 1) {
             sendHqLoc(rc.getLocation());
         }
-        if (mapWidth == 30 && mapHeight == 30) {
-            //find current map width
-            while (rc.onTheMap(new MapLocation(mapWidth + 1, 0))) {
-                mapWidth++;
-            }
-            //find current map height
-            while (rc.onTheMap(new MapLocation(0, mapHeight + 1))) {
-                mapHeight++;
-            }
-            System.out.println("BOUNDARIES" + mapWidth + " " + mapHeight);
 
-            //horizontally symmetric
-            possibleX = mapWidth - rc.getLocation().x;
-            possibleY = mapHeight - rc.getLocation().y;
+        //I'm assuming there's a min num of turns it takes to find the enemyHQ
+        if (turnCount > 10) {
+            getRealEnemyHQFromBlockchain();
         }
-        System.out.println("Possible points" + possibleX + " " + possibleY);
+        if (enemyHqLoc == null) {
+            if (mapWidth == 30 && mapHeight == 30) {
+                //find current map width
+                while (rc.onTheMap(new MapLocation(mapWidth + 1, 0))) {
+                    mapWidth++;
+                }
+                //find current map height
+                while (rc.onTheMap(new MapLocation(0, mapHeight + 1))) {
+                    mapHeight++;
+                }
+                System.out.println("BOUNDARIES" + mapWidth + " " + mapHeight);
 
-        broadcastEnemyHQCoordinates();
+                //horizontally symmetric
+                possibleX = mapWidth - rc.getLocation().x;
+                possibleY = mapHeight - rc.getLocation().y;
+            }
+            System.out.println("Possible points" + possibleX + " " + possibleY);
+
+            broadcastPotentialEnemyHQCoordinates();
+        }
 
         if (numMiners < 10) {
             for (Direction dir : Util.directions)
@@ -57,7 +64,7 @@ public class HQ extends Building {
             rc.submitTransaction(message, 3);
     }
 
-    public void broadcastEnemyHQCoordinates() throws GameActionException {
+    public void broadcastPotentialEnemyHQCoordinates() throws GameActionException {
         int[] message = new int[7];
         message[0] = teamSecret;
         message[1] = 11;

@@ -24,10 +24,9 @@ public class Landscaper extends Unit{
         }
 
         //Gets the enemy HQ coordinate, if gotten already sends landscrapers to enemy HQ
-        if (enemyHqX == -1 && enemyHqY == -1) {
-            getEnemyHQCoordinates();
-            enemyHqLoc = new MapLocation(enemyHqX, enemyHqY);
-        } else if (enemyHqY != -1 && enemyHqX != -1) {
+        if (enemyHqLoc == null) {
+            getRealEnemyHQFromBlockchain();
+        } else {
             System.out.println("Enemy HQ" + enemyHqLoc);
             //If nearby enemy HQ, bury it
             if (rc.getLocation().distanceSquaredTo(enemyHqLoc) < 4
@@ -37,7 +36,7 @@ public class Landscaper extends Unit{
             }
             //If not nearby enemy HQ, continue moving towards it
             if (goTo(enemyHqLoc)) {
-                System.out.println("Went to possible enemy HQ coordinate" + enemyHqX + ", " + enemyHqY);
+                System.out.println("Moving towards enemy HQ");
             } else {
                 System.out.println("Couldn't move to enemy HQ");
             }
