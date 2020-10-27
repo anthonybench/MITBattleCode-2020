@@ -9,8 +9,8 @@ public class Miner extends Unit {
 
     static boolean firstMiner = false;
     static int enemyPotentialHQNumber = 1;
-    static int targetEnemyX = 0;
-    static int targetEnemyY = 0;
+    static int targetEnemyX = -100;
+    static int targetEnemyY = -100;
     static int stuckMoves = 0;
 
     public Miner(RobotController rc) throws GameActionException {
@@ -29,6 +29,7 @@ public class Miner extends Unit {
         // HQ broadcasts the position the round right before
         if (turnCount == 5) {
             getPotentialEnemyHQCoordinates();
+            System.out.println("potential coordinates " + potentialEnemyHQX + " " + potentialEnemyHQY);
         }
 
         if (firstMiner) {
@@ -50,7 +51,8 @@ public class Miner extends Unit {
                 //If enemy HQ is not found yet and is within miner's sensor radius, broadcast enemy HQ position
                 System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
                 //Checks if the enemyHQ is within the current robots sensor radius
-                if (rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), rc.getCurrentSensorRadiusSquared())) {
+                if (turnCount > 5 &&
+                        rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), rc.getCurrentSensorRadiusSquared())) {
                     if (nearbyEnemyRobot(RobotType.HQ)) {
                         System.out.println("Found real enemy HQ coordinates");
                         broadcastRealEnemyHQCoordinates();
@@ -64,6 +66,7 @@ public class Miner extends Unit {
                     }
                 }
 
+                System.out.println("Target HQ " + enemyPotentialHQNumber);
                 //Sets the first miner's targeted locations
                 switch (enemyPotentialHQNumber) {
                     case 1:
@@ -79,6 +82,8 @@ public class Miner extends Unit {
                         targetEnemyY = hqLoc.y;
                         break;
                 }
+                System.out.println("1 " + hqLoc.x + " " + potentialEnemyHQY);
+                System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
 
                 if (stuckMoves > 0) {
                     System.out.println(mapWidth + "Latest!" + mapHeight);
@@ -95,7 +100,7 @@ public class Miner extends Unit {
                     stuckMoves--;
                 }
 
-                if (goTo(new MapLocation(targetEnemyX, targetEnemyY))){
+                if (goTo(new MapLocation(targetEnemyX, targetEnemyY))) {
                     if (mapLocations.containsKey(rc.getLocation())) {
                         stuckMoves = 5;
                     } else {
