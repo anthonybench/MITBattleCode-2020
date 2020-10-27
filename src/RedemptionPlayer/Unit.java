@@ -2,10 +2,16 @@ package RedemptionPlayer;
 
 import battlecode.common.*;
 
+import java.util.Map;
+
 public class Unit extends Robot{
-    static int enemyHqX = -1;
-    static int enemyHqY = -1;
-    static MapLocation enemyHqLoc;
+    static int potentialEnemyHQX = -1;
+    static int potentialEnemyHQY = -1;
+    static MapLocation lastPostiion;
+    static int mapWidth;
+    static int mapHeight;
+
+    Map<MapLocation, Integer> mapLocations;
 
     public Unit(RobotController rc) throws GameActionException{
         super(rc);
@@ -21,7 +27,7 @@ public class Unit extends Robot{
      */
     boolean tryMove(Direction dir) throws GameActionException {
         // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
-        if (rc.isReady() && rc.canMove(dir)) {
+        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir))) {
             rc.move(dir);
             return true;
         } else return false;
@@ -59,14 +65,16 @@ public class Unit extends Robot{
         return goTo(rc.getLocation().directionTo(destination));
     }
 
-    public void getEnemyHQCoordinates() throws GameActionException {
+    public void getPotentialEnemyHQCoordinates() throws GameActionException {
         for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
             int[] mess = tx.getMessage();
             if (mess[0] == teamSecret && mess[1] == 11) {
-                System.out.println("Got enemy HQ coordinates");
-                enemyHqX = mess[2];
-                enemyHqY = mess[3];
-                System.out.println(enemyHqX + enemyHqY);
+                System.out.println("Got potential enemy HQ coordinates");
+                potentialEnemyHQX = mess[2];
+                potentialEnemyHQY = mess[3];
+                mapWidth = mess[4];
+                mapHeight = mess[5];
+                System.out.println(potentialEnemyHQX + potentialEnemyHQY);
             }
         }
     }

@@ -5,7 +5,8 @@ public class Robot {
     RobotController rc;
     int turnCount = 0;
     int teamSecret = 123456;
-    MapLocation hqLoc;
+    static MapLocation hqLoc;
+    static MapLocation enemyHqLoc;
 
     public Robot(RobotController rc) {
         this.rc = rc;
@@ -13,7 +14,6 @@ public class Robot {
 
     public void run() throws GameActionException {
         turnCount += 1;
-
     }
     /**
      * Attempts to build a given robot in a given direction.
@@ -41,6 +41,16 @@ public class Robot {
         return false;
     }
 
+    boolean nearbyEnemyRobot(RobotType target) throws GameActionException {
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r : robots) {
+            if (r.getType() == target && r.team != rc.getTeam()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void getHqLocFromBlockchain() throws GameActionException {
         System.out.println("B L O C K C H A I N");
         for (int i = 1; i < rc.getRoundNum(); i++) {
@@ -49,6 +59,18 @@ public class Robot {
                 if (mess[0] == teamSecret && mess[1] == 0) {
                     System.out.println("found the HQ!");
                     hqLoc = new MapLocation(mess[2], mess[3]);
+                }
+            }
+        }
+    }
+
+    public void getRealEnemyHQFromBlockchain() throws GameActionException {
+        for (int i = 1; i < rc.getRoundNum(); i++) {
+            for (Transaction tx : rc.getBlock(i)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == 111) {
+                    System.out.println("got the real enemy HQ coord!");
+                    enemyHqLoc = new MapLocation(mess[2], mess[3]);
                 }
             }
         }
