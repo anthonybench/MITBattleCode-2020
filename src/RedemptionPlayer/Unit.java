@@ -2,9 +2,16 @@ package RedemptionPlayer;
 
 import battlecode.common.*;
 
+import java.util.Map;
+
 public class Unit extends Robot{
     static int potentialEnemyHQX = -1;
     static int potentialEnemyHQY = -1;
+    static MapLocation lastPostiion;
+    static int mapWidth;
+    static int mapHeight;
+
+    Map<MapLocation, Integer> mapLocations;
 
     public Unit(RobotController rc) throws GameActionException{
         super(rc);
@@ -20,7 +27,7 @@ public class Unit extends Robot{
      */
     boolean tryMove(Direction dir) throws GameActionException {
         // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
-        if (rc.isReady() && rc.canMove(dir)) {
+        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir))) {
             rc.move(dir);
             return true;
         } else return false;
@@ -65,6 +72,8 @@ public class Unit extends Robot{
                 System.out.println("Got potential enemy HQ coordinates");
                 potentialEnemyHQX = mess[2];
                 potentialEnemyHQY = mess[3];
+                mapWidth = mess[4];
+                mapHeight = mess[5];
                 System.out.println(potentialEnemyHQX + potentialEnemyHQY);
             }
         }

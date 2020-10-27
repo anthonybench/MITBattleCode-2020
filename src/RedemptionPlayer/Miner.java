@@ -2,15 +2,20 @@ package RedemptionPlayer;
 
 import battlecode.common.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Miner extends Unit {
 
     static boolean firstMiner = false;
     static int enemyPotentialHQNumber = 1;
     static int targetEnemyX = 0;
     static int targetEnemyY = 0;
+    static int stuckMoves = 0;
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
+        mapLocations = new HashMap<>();
     }
 
     public void run() throws GameActionException {
@@ -44,8 +49,8 @@ public class Miner extends Unit {
             } else {
                 //If enemy HQ is not found yet and is within miner's sensor radius, broadcast enemy HQ position
                 System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
-                //!!!distance squared should be 34, but that doesn't work if miner is within pollution
-                if (rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), 2)) {
+                //Checks if the enemyHQ is within the current robots sensor radius
+                if (rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), rc.getCurrentSensorRadiusSquared())) {
                     if (nearbyEnemyRobot(RobotType.HQ)) {
                         System.out.println("Found real enemy HQ coordinates");
                         broadcastRealEnemyHQCoordinates();
@@ -74,8 +79,19 @@ public class Miner extends Unit {
                         targetEnemyY = hqLoc.y;
                         break;
                 }
+                if (stuckMoves > 0) {
+                    System.out.println(mapWidth + " " + mapHeight);
+                    tryMove( rc.getLocation().directionTo(new MapLocation(mapWidth / 2, mapHeight / 2)));
+                    stuckMoves--;
+                }
 
-                goTo(new MapLocation(targetEnemyX, targetEnemyY));
+                if (goTo(new MapLocation(targetEnemyX, targetEnemyY))){
+                    if (mapLocations.containsKey(rc.getLocation())) {
+                        stuckMoves = 5;
+                    } else {
+                        mapLocations.put(rc.getLocation(), 1);
+                    }
+                }
             }
         } else {
             System.out.println("Not first miner");

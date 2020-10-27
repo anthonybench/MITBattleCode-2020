@@ -70,6 +70,8 @@ public class HQ extends Building {
         message[1] = 11;
         message[2] = possibleX; // possible x coord of enemy HQ
         message[3] = possibleY; // possible y coord of enemy HQ
+        message[4] = mapWidth;
+        message[5] = mapHeight;
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
         System.out.println("broadcasting potential enemy HQ coordinates");
