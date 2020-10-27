@@ -79,9 +79,19 @@ public class Miner extends Unit {
                         targetEnemyY = hqLoc.y;
                         break;
                 }
+
                 if (stuckMoves > 0) {
-                    System.out.println(mapWidth + " " + mapHeight);
-                    tryMove( rc.getLocation().directionTo(new MapLocation(mapWidth / 2, mapHeight / 2)));
+                    System.out.println(mapWidth + "Latest!" + mapHeight);
+                    for (Direction dir : Util.directions) {
+                        System.out.println("Dir " + dir);
+                        if (rc.senseFlooding(rc.getLocation().add(dir)) || !rc.canMove(dir)) {
+                            System.out.println("Dir1 " + dir);
+                            tryMove(dir.rotateRight());
+                        } else {
+                            tryMove(rc.getLocation().directionTo(new MapLocation(targetEnemyX, targetEnemyY)));
+                        }
+                    }
+//                    tryMove( rc.getLocation().directionTo(new MapLocation(mapWidth / 2, mapHeight / 2)));
                     stuckMoves--;
                 }
 
