@@ -12,6 +12,7 @@ public class Miner extends Unit {
     static int targetEnemyX = -100;
     static int targetEnemyY = -100;
     static int stuckMoves = 0;
+    static int designSchoolCount = 0; //only first miner cares about this for now
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
@@ -45,8 +46,17 @@ public class Miner extends Unit {
                     //Temporary way to stop building too much Design schools next to enemy HQ
                     //TODO broadcast how much design school are built, and stop building after an optimal number!
                     if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
-                        System.out.println("created a design school");
+                        System.out.println("created a design school next to enemy HQ");
                 }
+            } else if (enemyHqLoc == null && rc.getRoundNum() > 200) {
+                if (nearbyRobot(RobotType.HQ)) {
+                    if (designSchoolCount < 3) {
+                        if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
+                            System.out.println("created a design school next to HQ");
+                        designSchoolCount++;
+                    }
+                }
+                goTo(hqLoc);
             } else {
                 //If enemy HQ is not found yet and is within miner's sensor radius, broadcast enemy HQ position
                 System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
