@@ -52,11 +52,13 @@ public class Miner extends Unit {
                     }
                 }
             } else if (enemyHqLoc == null && rc.getRoundNum() > 200) {
+                //Band-aid function!  Part of turtle
                 if (nearbyRobot(RobotType.HQ)) {
-                    if (designSchoolCount < 3) {
-                        if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
+                    if (designSchoolCount < 1) {
+                        if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
                             System.out.println("created a design school next to HQ");
-                        designSchoolCount++;
+                            designSchoolCount++;
+                        }
                     }
                 }
                 goTo(hqLoc);
@@ -102,7 +104,8 @@ public class Miner extends Unit {
                     System.out.println(mapWidth + "Latest!" + mapHeight);
                     for (Direction dir : Util.directions) {
                         System.out.println("Dir " + dir);
-                        if (rc.senseFlooding(rc.getLocation().add(dir)) || !rc.canMove(dir)) {
+                        if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))
+                                || !rc.canMove(dir)) {
                             System.out.println("Dir1 " + dir);
                             tryMove(dir.rotateRight());
                         } else {
@@ -142,6 +145,17 @@ public class Miner extends Unit {
 //        for (Direction dir : directions)
 //            if (tryMine(dir))
 //                System.out.println("I mined soup! " + rc.getSoupCarrying());
+
+            //Band-aid function!  Part of turtle
+            if (enemyHqLoc == null && rc.getRoundNum() > 200 && rc.getTeamSoup() > 500) {
+                if (designSchoolCount < 1) {
+                    if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
+                        System.out.println("created a design school next to HQ");
+                        designSchoolCount++;
+                    }
+                }
+            }
+
             for (Direction dir : Util.directions)
                 if (tryRefine(dir))
                     System.out.println("I refined soup! " + rc.getTeamSoup());
@@ -157,11 +171,13 @@ public class Miner extends Unit {
                 MapLocation[] soupToMine = rc.senseNearbySoup();
                 if (soupToMine.length == 0) {
                     // If no soup is nearby, search for soup by moving randomly
+                    System.out.println("No soup nearby");
                     if (goTo(Util.randomDirection())) {
                         System.out.println("I moved randomly!");
                     }
                 } else if (Math.abs(soupToMine[0].x - rc.getLocation().x) < 2 &&
                         Math.abs(soupToMine[0].y - rc.getLocation().y) < 2) {
+                    System.out.println("Soup nearby and within mine distance");
                     // Else if soup is adjacent, mine it
                     for (Direction dir : Util.directions) {
                         if (tryMine(dir)) {
@@ -169,6 +185,7 @@ public class Miner extends Unit {
                         }
                     }
                 } else {
+                    System.out.println("Moving towards soup to mine");
                     // Otherwise, travel towards the detected soup
                     if (soupToMine[0].x > rc.getLocation().x) {
                         if (rc.canMove(Direction.EAST))
