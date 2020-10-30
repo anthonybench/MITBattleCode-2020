@@ -42,11 +42,14 @@ public class Miner extends Unit {
                     //Temporary way to stop broadcasting every turn when miner is around enemy HQ, because it uses too much soup.
                     broadcastRealEnemyHQCoordinates();
                 }
+                System.out.println("test" + designSchoolCount);
                 //create design school next to enemy HQ
                 if (designSchoolCount < 1) {
-                    if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
+                    System.out.println("test");
+                    if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
                         System.out.println("created a design school next to enemy HQ");
-                    designSchoolCount++;
+                        designSchoolCount++;
+                    }
                 }
             } else if (enemyHqLoc == null && rc.getRoundNum() > 200) {
                 if (nearbyRobot(RobotType.HQ)) {
