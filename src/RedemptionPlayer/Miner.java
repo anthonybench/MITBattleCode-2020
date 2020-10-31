@@ -14,7 +14,7 @@ public class Miner extends Unit {
     static int targetEnemyY = -100;
     static int stuckMoves = 0;
     static int designSchoolCount = 0; //only first miner cares about this for now
-
+    static int currentElevation = 0;
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
         mapLocations = new HashMap<>();
@@ -22,10 +22,15 @@ public class Miner extends Unit {
 
     public void run() throws GameActionException {
         super.run();
-        //Sets the first spawned miner to the first miner (that will be discovring enemy HQ)
+
+        currentElevation = rc.senseElevation(rc.getLocation());
+
+        System.out.println(rc.getMapHeight() + " " + rc.getMapWidth() + " " + currentElevation + " "
+                + rc.senseElevation(rc.getLocation().add(Util.directions[0])) + " " + rc.senseElevation(rc.getLocation().add(Util.directions[2])));
+
         if (turnCount == 1 && rc.getRoundNum() == 2) {
+            //Sets the first spawned miner to the first miner (that will be discovring enemy HQ)
             firstMiner = true;
-            System.out.println(rc.getMapHeight() + " " + rc.getMapWidth() + " " + rc.senseElevation(rc.getLocation()));
             potentialEnemyHQY = rc.getMapHeight() - hqLoc.y - 1;
             potentialEnemyHQX = rc.getMapWidth() - hqLoc.x - 1;
         }
@@ -185,18 +190,22 @@ public class Miner extends Unit {
                     System.out.println("Moving towards soup to mine");
                     // Otherwise, travel towards the detected soup
                     if (soupToMine[0].x > rc.getLocation().x) {
-                        if (rc.canMove(Direction.EAST))
-                            rc.move(Direction.EAST);
+//                        if (rc.canMove(Direction.EAST))
+//                            rc.move(Direction.EAST);
+                        tryMove(Direction.EAST);
                     } else if (soupToMine[0].x < rc.getLocation().x) {
-                        if (rc.canMove(Direction.WEST))
-                            rc.move(Direction.WEST);
+//                        if (rc.canMove(Direction.WEST))
+//                            rc.move(Direction.WEST);
+                        tryMove(Direction.WEST);
                     }
                     if (soupToMine[0].y > rc.getLocation().y) {
-                        if (rc.canMove(Direction.NORTH))
-                            rc.move(Direction.NORTH);
+//                        if (rc.canMove(Direction.NORTH))
+//                            rc.move(Direction.NORTH);
+                        tryMove(Direction.NORTH);
                     } else if (soupToMine[0].y < rc.getLocation().y) {
-                        if (rc.canMove(Direction.SOUTH))
-                            rc.move(Direction.SOUTH);
+//                        if (rc.canMove(Direction.SOUTH))
+//                            rc.move(Direction.SOUTH);
+                        tryMove(Direction.SOUTH);
                     }
                 }
             }

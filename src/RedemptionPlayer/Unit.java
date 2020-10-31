@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 import java.util.Map;
 
-public class Unit extends Robot{
+public class Unit extends Robot {
     static int potentialEnemyHQX = -1;
     static int potentialEnemyHQY = -1;
     static MapLocation lastPostiion;
@@ -13,7 +13,7 @@ public class Unit extends Robot{
 
     Map<MapLocation, Integer> mapLocations;
 
-    public Unit(RobotController rc) throws GameActionException{
+    public Unit(RobotController rc) throws GameActionException {
         super(rc);
         findHQ();
     }
@@ -27,7 +27,7 @@ public class Unit extends Robot{
      */
     boolean tryMove(Direction dir) throws GameActionException {
         // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
-        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir))) {
+        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir)) && !tileGoingToFlood(dir)) {
             rc.move(dir);
             return true;
         } else return false;
@@ -94,5 +94,20 @@ public class Unit extends Robot{
                 getHqLocFromBlockchain();
             }
         }
+    }
+
+    boolean tileGoingToFlood(Direction currentDir) throws GameActionException {
+        //Fixes issue for maps like hills
+        System.out.println("DIR " + currentDir);
+        MapLocation nextMapLoc = rc.adjacentLocation(currentDir);
+        int currentDirElevation = rc.senseElevation(nextMapLoc);
+        for (Direction dir : Util.directions) {
+            System.out.println(rc.senseElevation(nextMapLoc.add(dir)) + " " + rc.senseFlooding(nextMapLoc.add(dir)));
+            if (rc.senseFlooding(nextMapLoc.add(dir)) && rc.senseElevation(nextMapLoc.add(dir)) >= currentDirElevation) {
+                System.out.println("Has flooding adjacent");
+                return true;
+            }
+        }
+        return false;
     }
 }
