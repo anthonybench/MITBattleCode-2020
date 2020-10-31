@@ -6,7 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Miner extends Unit {
-
+    static int potentialEnemyHQX = -1;
+    static int potentialEnemyHQY = -1;
     static boolean firstMiner = false;
     static int enemyPotentialHQNumber = 1;
     static int targetEnemyX = -100;
@@ -21,17 +22,19 @@ public class Miner extends Unit {
 
     public void run() throws GameActionException {
         super.run();
-
         //Sets the first spawned miner to the first miner (that will be discovring enemy HQ)
         if (turnCount == 1 && rc.getRoundNum() == 2) {
             firstMiner = true;
+            System.out.println(rc.getMapHeight() + " " + rc.getMapWidth() + " " + rc.senseElevation(rc.getLocation()));
+            potentialEnemyHQY = rc.getMapHeight() - hqLoc.y - 1;
+            potentialEnemyHQX = rc.getMapWidth() - hqLoc.x - 1;
         }
 
         // HQ broadcasts the position the round right before
-        if (turnCount == 5) {
-            getPotentialEnemyHQCoordinates();
-            System.out.println("potential coordinates " + potentialEnemyHQX + " " + potentialEnemyHQY);
-        }
+//        if (turnCount == 5) {
+//            getPotentialEnemyHQCoordinates();
+//            System.out.println("potential coordinates " + potentialEnemyHQX + " " + potentialEnemyHQY);
+//        }
 
         if (firstMiner) {
             System.out.println("First miner and Enemy hq is " + enemyHqLoc);
@@ -42,10 +45,8 @@ public class Miner extends Unit {
                     //Temporary way to stop broadcasting every turn when miner is around enemy HQ, because it uses too much soup.
                     broadcastRealEnemyHQCoordinates();
                 }
-                System.out.println("test" + designSchoolCount);
                 //create design school next to enemy HQ
                 if (designSchoolCount < 1) {
-                    System.out.println("test");
                     if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
                         System.out.println("created a design school next to enemy HQ");
                         designSchoolCount++;
@@ -72,8 +73,6 @@ public class Miner extends Unit {
                         System.out.println("Found real enemy HQ coordinates");
                         broadcastRealEnemyHQCoordinates();
                         enemyHqLoc = new MapLocation(targetEnemyX, targetEnemyY);
-
-                        System.out.println("cooldown" + rc.getCooldownTurns());
                     } else {
                         //if potential enemy HQ location is within sensor radius but enemy HQ is not found,
                         //switch to move to next potential location
@@ -103,10 +102,8 @@ public class Miner extends Unit {
                 if (stuckMoves > 0) {
                     System.out.println(mapWidth + "Latest!" + mapHeight);
                     for (Direction dir : Util.directions) {
-                        System.out.println("Dir " + dir);
                         if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))
                                 || !rc.canMove(dir)) {
-                            System.out.println("Dir1 " + dir);
                             tryMove(dir.rotateRight());
                         } else {
                             tryMove(rc.getLocation().directionTo(new MapLocation(targetEnemyX, targetEnemyY)));

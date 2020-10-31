@@ -22,25 +22,25 @@ public class HQ extends Building {
         }
 
         //Broadcast once to save soup, first miner would definitely get it on turn 5 (maybe add broadcast cost to ensure)
-        if (turnCount == 5) {
-            if (mapWidth == 30 && mapHeight == 30) {
-                //find current map width
-                while (rc.onTheMap(new MapLocation(mapWidth + 1, 0))) {
-                    mapWidth++;
-                }
-                //find current map height
-                while (rc.onTheMap(new MapLocation(0, mapHeight + 1))) {
-                    mapHeight++;
-                }
-                System.out.println("BOUNDARIES" + mapWidth + " " + mapHeight);
-
-                //horizontally symmetric
-                possibleX = mapWidth - rc.getLocation().x;
-                possibleY = mapHeight - rc.getLocation().y;
-            }
-            System.out.println("Possible points" + possibleX + " " + possibleY);
-            broadcastPotentialEnemyHQCoordinates();
-        }
+//        if (turnCount == 5) {
+//            if (mapWidth == 30 && mapHeight == 30) {
+//                //find current map width
+//                while (rc.onTheMap(new MapLocation(mapWidth + 1, 0))) {
+//                    mapWidth++;
+//                }
+//                //find current map height
+//                while (rc.onTheMap(new MapLocation(0, mapHeight + 1))) {
+//                    mapHeight++;
+//                }
+//                System.out.println("BOUNDARIES" + mapWidth + " " + mapHeight);
+//
+//                //horizontally symmetric
+//                possibleX = mapWidth - rc.getLocation().x;
+//                possibleY = mapHeight - rc.getLocation().y;
+//            }
+//            System.out.println("Possible points" + possibleX + " " + possibleY);
+//            broadcastPotentialEnemyHQCoordinates();
+//        }
 
 //        if (turnCount % 10 == 0) {
 //            getRealEnemyHQFromBlockchain();
@@ -64,16 +64,16 @@ public class HQ extends Building {
             rc.submitTransaction(message, 3);
     }
 
-    public void broadcastPotentialEnemyHQCoordinates() throws GameActionException {
-        int[] message = new int[7];
-        message[0] = teamSecret;
-        message[1] = 11;
-        message[2] = possibleX; // possible x coord of enemy HQ
-        message[3] = possibleY; // possible y coord of enemy HQ
-        message[4] = mapWidth;
-        message[5] = mapHeight;
-        if (rc.canSubmitTransaction(message, 3))
-            rc.submitTransaction(message, 3);
-        System.out.println("broadcasting potential enemy HQ coordinates");
-    }
+//    public void broadcastPotentialEnemyHQCoordinates() throws GameActionException {
+//        int[] message = new int[7];
+//        message[0] = teamSecret;
+//        message[1] = 11;
+//        message[2] = possibleX; // possible x coord of enemy HQ
+//        message[3] = possibleY; // possible y coord of enemy HQ
+//        message[4] = mapWidth;
+//        message[5] = mapHeight;
+//        if (rc.canSubmitTransaction(message, 3))
+//            rc.submitTransaction(message, 3);
+//        System.out.println("broadcasting potential enemy HQ coordinates");
+//    }
 }

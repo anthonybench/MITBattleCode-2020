@@ -66,19 +66,19 @@ public class Unit extends Robot{
         return goTo(rc.getLocation().directionTo(destination));
     }
 
-    public void getPotentialEnemyHQCoordinates() throws GameActionException {
-        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
-            int[] mess = tx.getMessage();
-            if (mess[0] == teamSecret && mess[1] == 11) {
-                System.out.println("Got potential enemy HQ coordinates");
-                potentialEnemyHQX = mess[2];
-                potentialEnemyHQY = mess[3];
-                mapWidth = mess[4];
-                mapHeight = mess[5];
-                System.out.println(potentialEnemyHQX + potentialEnemyHQY);
-            }
-        }
-    }
+//    public void getPotentialEnemyHQCoordinates() throws GameActionException {
+//        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
+//            int[] mess = tx.getMessage();
+//            if (mess[0] == teamSecret && mess[1] == 11) {
+//                System.out.println("Got potential enemy HQ coordinates");
+//                potentialEnemyHQX = mess[2];
+//                potentialEnemyHQY = mess[3];
+//                mapWidth = mess[4];
+//                mapHeight = mess[5];
+//                System.out.println(potentialEnemyHQX + potentialEnemyHQY);
+//            }
+//        }
+//    }
 
     void findHQ() throws GameActionException {
         if (hqLoc == null) {
