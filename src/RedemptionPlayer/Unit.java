@@ -98,12 +98,11 @@ public class Unit extends Robot {
 
     boolean tileGoingToFlood(Direction currentDir) throws GameActionException {
         //Fixes issue for maps like hills
-        System.out.println("DIR " + currentDir);
         MapLocation nextMapLoc = rc.adjacentLocation(currentDir);
         int currentDirElevation = rc.senseElevation(nextMapLoc);
         for (Direction dir : Util.directions) {
-            System.out.println(rc.senseElevation(nextMapLoc.add(dir)) + " " + rc.senseFlooding(nextMapLoc.add(dir)));
-            if (rc.senseFlooding(nextMapLoc.add(dir)) && rc.senseElevation(nextMapLoc.add(dir)) >= currentDirElevation) {
+            if (rc.canSenseLocation(nextMapLoc.add(dir)) && rc.senseFlooding(nextMapLoc.add(dir))
+                    && rc.senseElevation(nextMapLoc.add(dir)) >= currentDirElevation) {
                 System.out.println("Has flooding adjacent");
                 return true;
             }

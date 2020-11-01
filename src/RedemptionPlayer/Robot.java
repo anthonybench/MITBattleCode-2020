@@ -31,10 +31,10 @@ public class Robot {
         return false;
     }
 
-    boolean nearbyRobot(RobotType target) throws GameActionException {
+    boolean nearbyTeamRobot(RobotType target) throws GameActionException {
         RobotInfo[] robots = rc.senseNearbyRobots();
         for (RobotInfo r : robots) {
-            if (r.getType() == target) {
+            if (r.getType() == target && r.team == rc.getTeam()) {
                 return true;
             }
         }
