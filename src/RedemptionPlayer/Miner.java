@@ -50,13 +50,20 @@ public class Miner extends Unit {
                     //Temporary way to stop broadcasting every turn when miner is around enemy HQ, because it uses too much soup.
                     broadcastRealEnemyHQCoordinates();
                 }
-                //create design school next to enemy HQ
-                if (designSchoolCount < 1) {
-                    if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
-                        System.out.println("created a design school next to enemy HQ");
-                        designSchoolCount++;
+
+                if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 15)) {
+                    //create design school next to enemy HQ
+                    if (designSchoolCount < 1) {
+                        if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
+                            System.out.println("created a design school next to enemy HQ");
+                            designSchoolCount++;
+                        }
                     }
+                } else {
+                    //move towards enemy HQ to make sure your not divided by water, example map: DidMonkeyMakeThis
+                    minerGoToEnemyHQ();
                 }
+
             } else if (enemyHqLoc == null && rc.getRoundNum() > 200) {
                 //Band-aid function!  Part of turtle
                 if (nearbyRobot(RobotType.HQ)) {
@@ -104,27 +111,7 @@ public class Miner extends Unit {
                 System.out.println("1 " + hqLoc.x + " " + potentialEnemyHQY);
                 System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
 
-                if (stuckMoves > 0) {
-                    System.out.println(mapWidth + "Latest!" + mapHeight);
-                    for (Direction dir : Util.directions) {
-                        if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))
-                                || !rc.canMove(dir)) {
-                            tryMove(dir.rotateRight());
-                        } else {
-                            tryMove(rc.getLocation().directionTo(new MapLocation(targetEnemyX, targetEnemyY)));
-                        }
-                    }
-//                    tryMove( rc.getLocation().directionTo(new MapLocation(mapWidth / 2, mapHeight / 2)));
-                    stuckMoves--;
-                }
-
-                if (goTo(new MapLocation(targetEnemyX, targetEnemyY))) {
-                    if (mapLocations.containsKey(rc.getLocation())) {
-                        stuckMoves = 5;
-                    } else {
-                        mapLocations.put(rc.getLocation(), 1);
-                    }
-                }
+                minerGoToEnemyHQ();
             }
         } else {
             System.out.println("Not first miner");
@@ -249,5 +236,29 @@ public class Miner extends Unit {
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
         System.out.println("Broadcasting real enemy HQ coordinates");
+    }
+
+    public void minerGoToEnemyHQ () throws GameActionException{
+        if (stuckMoves > 0) {
+            System.out.println(mapWidth + "Latest!" + mapHeight);
+            for (Direction dir : Util.directions) {
+                if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))
+                        || !rc.canMove(dir)) {
+                    tryMove(dir.rotateRight());
+                } else {
+                    tryMove(rc.getLocation().directionTo(new MapLocation(targetEnemyX, targetEnemyY)));
+                }
+            }
+//                    tryMove( rc.getLocation().directionTo(new MapLocation(mapWidth / 2, mapHeight / 2)));
+            stuckMoves--;
+        }
+
+        if (goTo(new MapLocation(targetEnemyX, targetEnemyY))) {
+            if (mapLocations.containsKey(rc.getLocation())) {
+                stuckMoves = 5;
+            } else {
+                mapLocations.put(rc.getLocation(), 1);
+            }
+        }
     }
 }
