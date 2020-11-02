@@ -10,6 +10,8 @@ public class Unit extends Robot {
     static MapLocation lastPostiion;
     static int mapWidth;
     static int mapHeight;
+    static int targetEnemyX = -100;
+    static int targetEnemyY = -100;
 
     Map<MapLocation, Integer> mapLocations;
 
@@ -108,5 +110,16 @@ public class Unit extends Robot {
             }
         }
         return false;
+    }
+
+    public void broadcastRealEnemyHQCoordinates() throws GameActionException {
+        int[] message = new int[7];
+        message[0] = teamSecret;
+        message[1] = 111;
+        message[2] = targetEnemyX; // possible x coord of enemy HQ
+        message[3] = targetEnemyY; // possible y coord of enemy HQ
+        if (rc.canSubmitTransaction(message, 3))
+            rc.submitTransaction(message, 3);
+        System.out.println("Broadcasting real enemy HQ coordinates");
     }
 }

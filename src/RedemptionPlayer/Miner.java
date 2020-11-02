@@ -10,13 +10,13 @@ public class Miner extends Unit {
     static int potentialEnemyHQY = -1;
     static boolean firstMiner = false;
     static int enemyPotentialHQNumber = 1;
-    static int targetEnemyX = -100;
-    static int targetEnemyY = -100;
+
     static int stuckMoves = 0;
     static int designSchoolCount = 0; //only first miner cares about this for now
     static int currentElevation = 0;
     static boolean startAttacking = false;
     static boolean giveUpMinerRush = false;
+    static boolean pauseForFlight = false;
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
         mapLocations = new HashMap<>();
@@ -43,10 +43,14 @@ public class Miner extends Unit {
 //            System.out.println("potential coordinates " + potentialEnemyHQX + " " + potentialEnemyHQY);
 //        }
 
+        if (pauseForFlight)
+            return;
+
+
         if (firstMiner) {
             System.out.println("First miner and Enemy hq is " + enemyHqLoc);
             System.out.println(startAttacking + " " + giveUpMinerRush);
-            if (rc.getRoundNum() > 200 && !startAttacking) {
+            if (rc.getRoundNum() > 150 && !startAttacking) {
                 giveUpMinerRush = true;
             }
             if (enemyHqLoc != null && !giveUpMinerRush) {
@@ -72,18 +76,40 @@ public class Miner extends Unit {
                     minerGoToEnemyHQ();
                 }
 
-            } else if (giveUpMinerRush && rc.getRoundNum() > 200) {
-                System.out.println("Heading back to turtle");
-                //Band-aid function!  Part of turtle
-                if (nearbyTeamRobot(RobotType.HQ)) {
-                    if (designSchoolCount < 1) {
-                        if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
-                            System.out.println("created a design school next to HQ");
-                            designSchoolCount++;
-                        }
+            } else if (giveUpMinerRush && rc.getRoundNum() > 150) {
+                System.out.println("Switching to drone delivery!");
+
+                //Make fulfillment center
+                for (Direction dir : Util.directions) {
+                    if (tryBuild(RobotType.FULFILLMENT_CENTER, dir)) {
+                        System.out.println("\n=====================");
+                        System.out.println("Fulfillmment center created!");
+                        System.out.println("=====================\n");
+
+                        pauseForFlight = true;
+                        int[] message = new int[7];
+                        message[0] = teamSecret;
+                        message[1] = 222;
+                        message[2] = rc.getID(); // supply id for pickup
+                        message[3] = enemyPotentialHQNumber; // supply next target location
+                        message[4] = rc.getLocation().x;
+                        message[5] = rc.getLocation().y;
+                        if (rc.canSubmitTransaction(message, 3))
+                            rc.submitTransaction(message, 3);
+                        System.out.println("Broadcasting uber request");
+                        break;
                     }
                 }
-                goTo(hqLoc);
+                //Band-aid function!  Part of turtle
+//                if (nearbyTeamRobot(RobotType.HQ)) {
+//                    if (designSchoolCount < 1) {
+//                        if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
+//                            System.out.println("created a design school next to HQ");
+//                            designSchoolCount++;
+//                        }
+//                    }
+//                }
+//                goTo(hqLoc);
             } else {
                 //If enemy HQ is not found yet and is within miner's sensor radius, broadcast enemy HQ position
                 System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
@@ -145,7 +171,7 @@ public class Miner extends Unit {
 //                System.out.println("I mined soup! " + rc.getSoupCarrying());
 
             //Band-aid function!  Part of turtle
-            if (enemyHqLoc == null && rc.getRoundNum() > 200 && rc.getTeamSoup() > 500) {
+            if (enemyHqLoc == null && rc.getRoundNum() > 250 && rc.getTeamSoup() > 500) {
                 if (designSchoolCount < 1) {
                     if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
                         System.out.println("created a design school next to HQ");
@@ -248,16 +274,7 @@ public class Miner extends Unit {
         } else return false;
     }
 
-    public void broadcastRealEnemyHQCoordinates() throws GameActionException {
-        int[] message = new int[7];
-        message[0] = teamSecret;
-        message[1] = 111;
-        message[2] = targetEnemyX; // possible x coord of enemy HQ
-        message[3] = targetEnemyY; // possible y coord of enemy HQ
-        if (rc.canSubmitTransaction(message, 3))
-            rc.submitTransaction(message, 3);
-        System.out.println("Broadcasting real enemy HQ coordinates");
-    }
+
 
     public void minerGoToEnemyHQ () throws GameActionException{
         if (stuckMoves > 0) {
