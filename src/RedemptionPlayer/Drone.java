@@ -3,12 +3,76 @@ package RedemptionPlayer;
 import battlecode.common.*;
 
 public class Drone extends Unit{
+    static MapLocation minerLoc = null;
+    static int enemyPotentialHQNumber = 0;
+    static int firstMinerID = 0;
 
     public Drone(RobotController rc) throws GameActionException {
         super(rc);
     }
     public void run() throws GameActionException {
         super.run();
+
+        if (!rc.isCurrentlyHoldingUnit()) {
+            if (minerLoc == null)
+                getUberRequest();
+            System.out.println("Next HQ to try: " + enemyPotentialHQNumber);
+            System.out.println("Miner Found: " + firstMinerID);
+            if (rc.canPickUpUnit(firstMinerID)) {
+                System.out.println("I can pick up a miner!");
+                rc.pickUpUnit(firstMinerID);
+            } else {
+                goTo(minerLoc);
+            }
+        } else {
+            potentialEnemyHQY = rc.getMapHeight() - hqLoc.y - 1;
+            potentialEnemyHQX = rc.getMapWidth() - hqLoc.x - 1;
+
+            if (enemyHqLoc != null) {
+                if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 6)) {
+                    for (Direction dir : Util.directions) {
+                        if (rc.canDropUnit(dir)) {
+                            rc.dropUnit(dir);
+                            System.out.println("Thanks for choosing Uber!");
+                        }
+                    }
+                }
+            }
+            if (turnCount > 5 &&
+                    rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), rc.getCurrentSensorRadiusSquared())) {
+                if (nearbyEnemyRobot(RobotType.HQ)) {
+                    System.out.println("Found real enemy HQ coordinates");
+                    broadcastRealEnemyHQCoordinates();
+                    enemyHqLoc = new MapLocation(targetEnemyX, targetEnemyY);
+                } else {
+                    //if potential enemy HQ location is within sensor radius but enemy HQ is not found,
+                    //switch to move to next potential location
+                    enemyPotentialHQNumber++;
+                }
+            }
+
+            switch (enemyPotentialHQNumber) {
+                case 1:
+                    targetEnemyX = hqLoc.x;
+                    targetEnemyY = potentialEnemyHQY;
+                    break;
+                case 2:
+                    targetEnemyX = potentialEnemyHQX;
+                    targetEnemyY = potentialEnemyHQY;
+                    break;
+                case 3:
+                    targetEnemyX = potentialEnemyHQX;
+                    targetEnemyY = hqLoc.y;
+                    break;
+            }
+            MapLocation targetLoc = new MapLocation(targetEnemyX, targetEnemyY);
+            if (rc.canMove(rc.getLocation().directionTo(targetLoc))) {
+                rc.move(rc.getLocation().directionTo(targetLoc));
+            }
+
+
+        }
+
         Team enemy = rc.getTeam().opponent();
         if (!rc.isCurrentlyHoldingUnit()) {
             // See if there are any enemy robots within capturing range
@@ -22,6 +86,20 @@ public class Drone extends Unit{
         } else {
             // No close robots, so search for robots within sight radius
             tryMove(Util.randomDirection());
+        }
+    }
+
+    public void getUberRequest() throws GameActionException {
+        for (int i = 1; i < rc.getRoundNum(); i++) {
+            for (Transaction tx : rc.getBlock(i)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == 222) {
+                    System.out.println("Retrieved uber instructions!");
+                    minerLoc = new MapLocation(mess[4], mess[5]);
+                    enemyPotentialHQNumber = mess[3];
+                    firstMinerID = mess[2];
+                }
+            }
         }
     }
 }

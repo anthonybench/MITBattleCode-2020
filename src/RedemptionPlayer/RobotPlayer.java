@@ -17,15 +17,15 @@ public strictfp class RobotPlayer {
         Robot thisRobot = null;
 
         switch (rc.getType()) {
-            case HQ:                 thisRobot = new HQ(rc);           break;
-            case MINER:              thisRobot = new Miner(rc);        break;
-            case REFINERY:           thisRobot = new Refinery(rc);     break;
-            case VAPORATOR:          thisRobot = new Vaporator(rc);    break;
-            case DESIGN_SCHOOL:      thisRobot = new DesignSchool(rc); break;
-            case FULFILLMENT_CENTER: thisRobot = new Building(rc);     break;
-            case LANDSCAPER:         thisRobot = new Landscaper(rc);   break;
-            case DELIVERY_DRONE:     thisRobot = new Unit(rc);         break;
-            case NET_GUN:            thisRobot = new NetGun(rc);      break;
+            case HQ:                 thisRobot = new HQ(rc);                    break;
+            case MINER:              thisRobot = new Miner(rc);                 break;
+            case REFINERY:           thisRobot = new Refinery(rc);              break;
+            case VAPORATOR:          thisRobot = new Vaporator(rc);             break;
+            case DESIGN_SCHOOL:      thisRobot = new DesignSchool(rc);          break;
+            case FULFILLMENT_CENTER: thisRobot = new FulfillmentCenter(rc);     break;
+            case LANDSCAPER:         thisRobot = new Landscaper(rc);            break;
+            case DELIVERY_DRONE:     thisRobot = new Drone(rc);                  break;
+            case NET_GUN:            thisRobot = new NetGun(rc);                break;
         }
 
         while(true) {
