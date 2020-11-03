@@ -35,8 +35,10 @@ public class Drone extends Unit {
             System.out.println(enemyHqLoc);
             if (enemyHqLoc != null) {
                 if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 6)) {
+                    System.out.println("Thanks for choosing Uber!");
                     for (Direction dir : Util.directions) {
-                        if (rc.canDropUnit(dir)) {
+                        System.out.println(rc.canDropUnit(dir));
+                        if (rc.canDropUnit(dir) && !rc.senseFlooding(rc.getLocation().add(dir))) {
                             rc.dropUnit(dir);
                             droppedOffFirstMiner = true;
                             System.out.println("Thanks for choosing Uber!");
@@ -120,12 +122,12 @@ public class Drone extends Unit {
     }
 
     public void droneMoveToEnemyHQ() throws GameActionException {
-        System.out.println("Moving towards enemy HQ");
         MapLocation targetLoc = new MapLocation(targetEnemyX, targetEnemyY);
         Direction dirToEnemyHQ = rc.getLocation().directionTo(targetLoc);
         Direction[] dirs = {dirToEnemyHQ, dirToEnemyHQ.rotateRight(), dirToEnemyHQ.rotateRight().rotateRight()};
         for (Direction dir : dirs) {
             if (rc.canMove(dir)) {
+                System.out.println("Moving towards enemy HQ " + dir);
                 rc.move(dir);
             }
         }

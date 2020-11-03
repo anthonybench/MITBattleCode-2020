@@ -203,10 +203,12 @@ public class Miner extends Unit {
 
             //Band-aid function!  Part of turtle
             if (enemyHqLoc == null && rc.getRoundNum() > 200 && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)
-                    && rc.getTeamSoup() > 300 && designSchoolCount < 1) {
-                if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
-                    System.out.println("created a design school next to HQ");
-                    designSchoolCount++;
+                    && rc.getTeamSoup() > 300 && designSchoolCount < 1 && rc.getLocation().isWithinDistanceSquared(hqLoc, 6)) {
+                for (Direction dir : Util.directions) {
+                    if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                        System.out.println("created a design school next to HQ");
+                        designSchoolCount++;
+                    }
                 }
             }
 

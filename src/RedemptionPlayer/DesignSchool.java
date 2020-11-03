@@ -16,7 +16,7 @@ public class DesignSchool extends Building {
             return;
         } else if (nearbyEnemyRobot(RobotType.HQ)) {
             if (landscaperCount <= 2) {
-                if (!broadcastedHalt && !haltProduction) {
+                if (!broadcastedHalt && !haltProduction && rc.getTeamSoup() < 150) {
                     broadcastHaltProduction();
                     broadcastedHalt = true;
                 }
@@ -26,20 +26,23 @@ public class DesignSchool extends Building {
                     broadcastedCont = true;
                 }
             }
+            tryBuildDesignSchool();
         } else if (landscaperCount <= 4) {
             getHaltProductionFromBlockchain();
             getContinueProductionFromBlockchain();
             if (checkHalt()) {
                 return;
             }
+            tryBuildDesignSchool();
         }
+    }
 
+    public void tryBuildDesignSchool() throws GameActionException {
         for (Direction dir : Util.directions) {
             if (tryBuild(RobotType.LANDSCAPER, dir)) {
                 landscaperCount++;
                 System.out.println("Made a landscaper");
             }
-
         }
     }
 }
