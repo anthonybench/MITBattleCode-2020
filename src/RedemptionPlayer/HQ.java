@@ -46,7 +46,7 @@ public class HQ extends Building {
 //            getRealEnemyHQFromBlockchain();
 //        }
 
-        if (numMiners < 3) {
+        if (numMiners < 5) {
             for (Direction dir : Util.directions)
                 if (tryBuild(RobotType.MINER, dir)) {
                     numMiners++;
