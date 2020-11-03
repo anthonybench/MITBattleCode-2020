@@ -57,7 +57,7 @@ public class HQ extends Building {
     public void sendHqLoc(MapLocation loc) throws GameActionException {
         int[] message = new int[7];
         message[0] = teamSecret;
-        message[1] = 0;
+        message[1] = HQ_LOC;
         message[2] = loc.x; // x coord of HQ
         message[3] = loc.y; // y coord of HQ
         if (rc.canSubmitTransaction(message, 3))

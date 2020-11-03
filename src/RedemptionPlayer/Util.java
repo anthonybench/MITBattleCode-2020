@@ -24,5 +24,4 @@ public class Util {
     static Direction randomDirection() {
         return directions[(int) (Math.random() * directions.length)];
     }
-
 }

@@ -3,6 +3,7 @@ package RedemptionPlayer;
 import battlecode.common.*;
 
 public class Landscaper extends Unit {
+    static boolean rushType = false;
 
     public Landscaper(RobotController rc) throws GameActionException {
         super(rc);
@@ -11,8 +12,13 @@ public class Landscaper extends Unit {
     public void run() throws GameActionException {
         super.run();
 
+        if (nearbyEnemyRobot(RobotType.HQ)) {
+            rushType = true;
+        }
+
+        System.out.println(rushType + " " + enemyHqLoc);
         //Gets the enemy HQ coordinate, if gotten already sends landscrapers to enemy HQ
-        if (enemyHqLoc == null && rc.getRoundNum() <= 200) {
+        if (rushType && enemyHqLoc == null) {
             getRealEnemyHQFromBlockchain();
         }
         if (enemyHqLoc == null && rc.getRoundNum() > 200) {

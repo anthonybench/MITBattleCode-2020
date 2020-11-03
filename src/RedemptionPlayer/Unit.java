@@ -114,11 +114,11 @@ public class Unit extends Robot {
     public void broadcastRealEnemyHQCoordinates() throws GameActionException {
         int[] message = new int[7];
         message[0] = teamSecret;
-        message[1] = 111;
+        message[1] = ENEMY_HQ_LOC;
         message[2] = targetEnemyX; // possible x coord of enemy HQ
         message[3] = targetEnemyY; // possible y coord of enemy HQ
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
-        System.out.println("Broadcasting real enemy HQ coordinates");
+        System.out.println("Broadcasting real enemy HQ coordinates " + targetEnemyX + " " + targetEnemyY);
     }
 }

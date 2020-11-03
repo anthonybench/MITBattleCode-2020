@@ -17,7 +17,8 @@ public class Miner extends Unit {
     static boolean startAttacking = false;
     static boolean giveUpMinerRush = false;
     static boolean pauseForFlight = false;
-  
+    static boolean droppedOff = false;
+
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
         mapLocations = new HashMap<>();
@@ -28,9 +29,6 @@ public class Miner extends Unit {
 
         currentElevation = rc.senseElevation(rc.getLocation());
 
-        System.out.println(rc.getMapHeight() + " " + rc.getMapWidth() + " " + currentElevation + " "
-                + rc.senseElevation(rc.getLocation().add(Util.directions[0])) + " " + rc.senseElevation(rc.getLocation().add(Util.directions[2])));
-
         if (turnCount == 1 && rc.getRoundNum() == 2) {
             //Sets the first spawned miner to the first miner (that will be discovring enemy HQ)
             firstMiner = true;
@@ -38,15 +36,18 @@ public class Miner extends Unit {
             potentialEnemyHQX = rc.getMapWidth() - hqLoc.x - 1;
         }
 
-        // HQ broadcasts the position the round right before
-//        if (turnCount == 5) {
-//            getPotentialEnemyHQCoordinates();
-//            System.out.println("potential coordinates " + potentialEnemyHQX + " " + potentialEnemyHQY);
-//        }
+        getPickedUpFirstMiner();
+
+        if (droppedOff) {
+            //to restart rush after drone dropping miner off
+            pauseForFlight = false;
+            giveUpMinerRush = false;
+            startAttacking = true;
+            nearbyEnemyHQLocation();
+        }
 
         if (pauseForFlight)
             return;
-
 
         if (firstMiner) {
             System.out.println("First miner and Enemy hq is " + enemyHqLoc);
@@ -54,6 +55,7 @@ public class Miner extends Unit {
             if (rc.getRoundNum() > 150 && !startAttacking) {
                 giveUpMinerRush = true;
             }
+
             if (enemyHqLoc != null && !giveUpMinerRush) {
                 System.out.println("rushing");
                 //if miner is the first miner and enemy HQ is found, keep broadcasting
@@ -98,7 +100,7 @@ public class Miner extends Unit {
                         pauseForFlight = true;
                         int[] message = new int[7];
                         message[0] = teamSecret;
-                        message[1] = 222;
+                        message[1] = UBER_REQUEST;
                         message[2] = rc.getID(); // supply id for pickup
                         message[3] = enemyPotentialHQNumber; // supply next target location
                         message[4] = rc.getLocation().x;
@@ -127,6 +129,8 @@ public class Miner extends Unit {
                         rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), rc.getCurrentSensorRadiusSquared())) {
                     if (nearbyEnemyRobot(RobotType.HQ)) {
                         System.out.println("Found real enemy HQ coordinates");
+                        nearbyEnemyHQLocation(); //Special case is map spiral, two potential locations can be sensed together.
+                        System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
                         broadcastRealEnemyHQCoordinates();
                         enemyHqLoc = new MapLocation(targetEnemyX, targetEnemyY);
                     } else {
@@ -136,25 +140,25 @@ public class Miner extends Unit {
                     }
                 }
 
-                System.out.println("Target HQ " + enemyPotentialHQNumber);
-                //Sets the first miner's targeted locations
-                switch (enemyPotentialHQNumber) {
-                    case 1:
-                        targetEnemyX = hqLoc.x;
-                        targetEnemyY = potentialEnemyHQY;
-                        break;
-                    case 2:
-                        targetEnemyX = potentialEnemyHQX;
-                        targetEnemyY = potentialEnemyHQY;
-                        break;
-                    case 3:
-                        targetEnemyX = potentialEnemyHQX;
-                        targetEnemyY = hqLoc.y;
-                        break;
+                if (enemyHqLoc == null) {
+                    System.out.println("Target HQ " + enemyPotentialHQNumber);
+                    //Sets the first miner's targeted locations
+                    switch (enemyPotentialHQNumber) {
+                        case 1:
+                            targetEnemyX = hqLoc.x;
+                            targetEnemyY = potentialEnemyHQY;
+                            break;
+                        case 2:
+                            targetEnemyX = potentialEnemyHQX;
+                            targetEnemyY = potentialEnemyHQY;
+                            break;
+                        case 3:
+                            targetEnemyX = potentialEnemyHQX;
+                            targetEnemyY = hqLoc.y;
+                            break;
+                    }
+                    System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
                 }
-                System.out.println("1 " + hqLoc.x + " " + potentialEnemyHQY);
-                System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
-
                 minerGoToEnemyHQ();
             }
         } else {
@@ -180,14 +184,14 @@ public class Miner extends Unit {
 //                System.out.println("I mined soup! " + rc.getSoupCarrying());
 
             //Band-aid function!  Part of turtle
-            if (enemyHqLoc == null && rc.getRoundNum() > 200 && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL) && rc.getTeamSoup() > 300) {
-                if (designSchoolCount < 1) {
-                    if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
-                        System.out.println("created a design school next to HQ");
-                        designSchoolCount++;
-                    }
+            if (enemyHqLoc == null && rc.getRoundNum() > 200 && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)
+                    && rc.getTeamSoup() > 300 && designSchoolCount < 1) {
+                if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
+                    System.out.println("created a design school next to HQ");
+                    designSchoolCount++;
                 }
             }
+
 
             for (Direction dir : Util.directions)
                 if (tryRefine(dir))
@@ -285,8 +289,8 @@ public class Miner extends Unit {
     }
 
 
-
     public void minerGoToEnemyHQ() throws GameActionException {
+        System.out.println("Moving to enemy HQ");
         if (stuckMoves > 0) {
             for (Direction dir : Util.directions) {
                 if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))
@@ -302,9 +306,35 @@ public class Miner extends Unit {
 
         if (goTo(new MapLocation(targetEnemyX, targetEnemyY))) {
             if (mapLocations.containsKey(rc.getLocation())) {
+                System.out.println("Stuck");
                 stuckMoves = 5;
             } else {
                 mapLocations.put(rc.getLocation(), 1);
+            }
+        }
+    }
+
+    public void getPickedUpFirstMiner() throws GameActionException {
+        for (int i = 1; i < rc.getRoundNum(); i++) {
+            for (Transaction tx : rc.getBlock(i)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == PICKED_UP_MINER) {
+                    enemyPotentialHQNumber = mess[4];
+                    System.out.println("This is the miner after being dropped off! " + enemyPotentialHQNumber);
+                    droppedOff = true;
+                }
+            }
+        }
+    }
+
+    void nearbyEnemyHQLocation() throws GameActionException {
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r : robots) {
+            if (r.getType() == RobotType.HQ && r.team != rc.getTeam()) {
+                targetEnemyX = r.getLocation().x;
+                targetEnemyY = r.getLocation().y;
+                enemyHqLoc = new MapLocation(targetEnemyX, targetEnemyY);
+                return;
             }
         }
     }

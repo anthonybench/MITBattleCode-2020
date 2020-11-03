@@ -7,7 +7,10 @@ public class Robot {
     int teamSecret = 384392;
     static MapLocation hqLoc;
     static MapLocation enemyHqLoc;
-
+    static final int HQ_LOC = 0;
+    static final int ENEMY_HQ_LOC = 1;
+    static final int PICKED_UP_MINER = 2;
+    static final int UBER_REQUEST = 3;
     public Robot(RobotController rc) {
         this.rc = rc;
     }
@@ -56,7 +59,7 @@ public class Robot {
         for (int i = 1; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
-                if (mess[0] == teamSecret && mess[1] == 0) {
+                if (mess[0] == teamSecret && mess[1] == HQ_LOC) {
                     System.out.println("found the HQ!");
                     hqLoc = new MapLocation(mess[2], mess[3]);
                 }
@@ -68,7 +71,7 @@ public class Robot {
         for (int i = 1; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
-                if (mess[0] == teamSecret && mess[1] == 111) {
+                if (mess[0] == teamSecret && mess[1] == ENEMY_HQ_LOC) {
                     System.out.println("got the real enemy HQ coord!");
                     enemyHqLoc = new MapLocation(mess[2], mess[3]);
                 }
