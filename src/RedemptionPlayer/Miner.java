@@ -10,7 +10,7 @@ public class Miner extends Unit {
     static int potentialEnemyHQY = -1;
     static boolean firstMiner = false;
     static int enemyPotentialHQNumber = 1;
-
+    static boolean builtDesignSchool = false;
     static int stuckMoves = 0;
     static int designSchoolCount = 0; //only first miner cares about this for now
     static int currentElevation = 0;
@@ -73,13 +73,31 @@ public class Miner extends Unit {
                         for (Direction dir : Util.directions) {
                             if (tryBuild(RobotType.NET_GUN, dir)) {
                                 break;
+                            } else {
+                                if (!broadcastedHalt && haltProduction) {
+                                    broadcastHaltProduction();
+                                    broadcastedHalt = true;
+                                }
+                                if (!broadcastedCont && !haltProduction) {
+                                    broadcastContinueProduction();
+                                    broadcastedCont = true;
+                                }
                             }
                         }
                     } else if (designSchoolCount < 1) {
                         for (Direction dir : Util.directions) {
                             if (tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                                 designSchoolCount++;
+                                if (!broadcastedHalt && haltProduction) {
+                                    broadcastContinueProduction();
+                                    broadcastedHalt = true;
+                                }
                                 break;
+                            } else {
+                                if (!broadcastedCont && !haltProduction) {
+                                    broadcastHaltProduction();
+                                    broadcastedCont = true;
+                                }
                             }
                         }
                     }

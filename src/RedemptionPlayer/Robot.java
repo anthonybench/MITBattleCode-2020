@@ -11,6 +11,14 @@ public class Robot {
     static final int ENEMY_HQ_LOC = 1;
     static final int PICKED_UP_MINER = 2;
     static final int UBER_REQUEST = 3;
+    static final int HALT_PRODUCTION = 4;
+    static final int CONTINUE_PRODUCTION = 5;
+    static boolean haltProduction = false;
+    static int haltTurn = 0;
+    static int continueTurn = 0;
+    static boolean broadcastedHalt = false;
+    static boolean broadcastedCont = false;
+
     public Robot(RobotController rc) {
         this.rc = rc;
     }
@@ -62,6 +70,7 @@ public class Robot {
                 if (mess[0] == teamSecret && mess[1] == HQ_LOC) {
                     System.out.println("found the HQ!");
                     hqLoc = new MapLocation(mess[2], mess[3]);
+                    return;
                 }
             }
         }
@@ -74,8 +83,61 @@ public class Robot {
                 if (mess[0] == teamSecret && mess[1] == ENEMY_HQ_LOC) {
                     System.out.println("got the real enemy HQ coord!");
                     enemyHqLoc = new MapLocation(mess[2], mess[3]);
+                    return;
                 }
             }
         }
+    }
+
+    public void broadcastHaltProduction() throws GameActionException {
+        int[] message = new int[7];
+        message[0] = teamSecret;
+        message[1] = HALT_PRODUCTION;
+        message[2] = rc.getRoundNum();
+        if (rc.canSubmitTransaction(message, 3))
+            rc.submitTransaction(message, 3);
+        System.out.println("Broadcast halt");
+    }
+
+    public void broadcastContinueProduction() throws GameActionException {
+        int[] message = new int[7];
+        message[0] = teamSecret;
+        message[1] = CONTINUE_PRODUCTION;
+        message[2] = rc.getRoundNum();
+        if (rc.canSubmitTransaction(message, 3))
+            rc.submitTransaction(message, 3);
+        System.out.println("Broadcast continue");
+    }
+
+    public void getHaltProductionFromBlockchain() throws GameActionException {
+        for (int i = 1; i < rc.getRoundNum(); i++) {
+            for (Transaction tx : rc.getBlock(i)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == HALT_PRODUCTION) {
+                    System.out.println("Halt!");
+                    haltProduction = true;
+                    haltTurn = mess[2];
+                    return;
+                }
+            }
+        }
+    }
+
+    public void getContinueProductionFromBlockchain() throws GameActionException {
+        for (int i = 1; i < rc.getRoundNum(); i++) {
+            for (Transaction tx : rc.getBlock(i)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == CONTINUE_PRODUCTION) {
+                    System.out.println("Cont!");
+                    haltProduction = false;
+                    continueTurn = mess[2];
+                    return;
+                }
+            }
+        }
+    }
+
+    public boolean checkHalt() {
+        return haltProduction && haltTurn > continueTurn;
     }
 }
