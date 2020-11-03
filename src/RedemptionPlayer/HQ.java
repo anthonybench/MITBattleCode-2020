@@ -52,6 +52,11 @@ public class HQ extends Building {
                     numMiners++;
                 }
         }
+
+        int targetID = nearbyEnemyDrone();
+        if (targetID != -1 && rc.canShootUnit(targetID)) {
+            rc.shootUnit(targetID);
+        }
     }
 
     public void sendHqLoc(MapLocation loc) throws GameActionException {
