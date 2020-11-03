@@ -17,6 +17,7 @@ public class Miner extends Unit {
     static boolean startAttacking = false;
     static boolean giveUpMinerRush = false;
     static boolean pauseForFlight = false;
+  
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
         mapLocations = new HashMap<>();
@@ -65,17 +66,25 @@ public class Miner extends Unit {
                 if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 6)) {
                     //create design school next to enemy HQ
                     startAttacking = true;
-                    if (designSchoolCount < 1) {
-                        if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
-                            System.out.println("created a design school next to enemy HQ");
-                            designSchoolCount++;
+                    //build net gun if there's enemy delievery drones nearby
+                    if (!nearbyTeamRobot(RobotType.NET_GUN) && nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
+                        for (Direction dir : Util.directions) {
+                            if (tryBuild(RobotType.NET_GUN, dir)) {
+                                break;
+                            }
+                        }
+                    } else if (designSchoolCount < 1) {
+                        for (Direction dir : Util.directions) {
+                            if (tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                                designSchoolCount++;
+                                break;
+                            }
                         }
                     }
                 } else {
                     //move towards enemy HQ to make sure your not divided by water, example map: DidMonkeyMakeThis
                     minerGoToEnemyHQ();
                 }
-
             } else if (giveUpMinerRush && rc.getRoundNum() > 150) {
                 System.out.println("Switching to drone delivery!");
 
@@ -171,7 +180,7 @@ public class Miner extends Unit {
 //                System.out.println("I mined soup! " + rc.getSoupCarrying());
 
             //Band-aid function!  Part of turtle
-            if (enemyHqLoc == null && rc.getRoundNum() > 250 && rc.getTeamSoup() > 500) {
+            if (enemyHqLoc == null && rc.getRoundNum() > 200 && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL) && rc.getTeamSoup() > 300) {
                 if (designSchoolCount < 1) {
                     if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
                         System.out.println("created a design school next to HQ");
@@ -222,24 +231,25 @@ public class Miner extends Unit {
                     } else {
                         System.out.println("Moving towards soup to mine " + closestSoup);
                         // Otherwise, travel towards the detected soup
-                        if (closestSoup.x > rc.getLocation().x) {
-    //                        if (rc.canMove(Direction.EAST))
-    //                            rc.move(Direction.EAST);
-                            tryMove(Direction.EAST);
-                        } else if (closestSoup.x < rc.getLocation().x) {
-    //                        if (rc.canMove(Direction.WEST))
-    //                            rc.move(Direction.WEST);
-                            tryMove(Direction.WEST);
-                        }
-                        if (closestSoup.y > rc.getLocation().y) {
-    //                        if (rc.canMove(Direction.NORTH))
-    //                            rc.move(Direction.NORTH);
-                            tryMove(Direction.NORTH);
-                        } else if (closestSoup.y < rc.getLocation().y) {
-    //                        if (rc.canMove(Direction.SOUTH))
-    //                            rc.move(Direction.SOUTH);
-                            tryMove(Direction.SOUTH);
-                        }
+                        goTo(closestSoup);
+//                        if (closestSoup.x > rc.getLocation().x) {
+//    //                        if (rc.canMove(Direction.EAST))
+//    //                            rc.move(Direction.EAST);
+//                            tryMove(Direction.EAST);
+//                        } else if (closestSoup.x < rc.getLocation().x) {
+//    //                        if (rc.canMove(Direction.WEST))
+//    //                            rc.move(Direction.WEST);
+//                            tryMove(Direction.WEST);
+//                        }
+//                        if (closestSoup.y > rc.getLocation().y) {
+//    //                        if (rc.canMove(Direction.NORTH))
+//    //                            rc.move(Direction.NORTH);
+//                            tryMove(Direction.NORTH);
+//                        } else if (closestSoup.y < rc.getLocation().y) {
+//    //                        if (rc.canMove(Direction.SOUTH))
+//    //                            rc.move(Direction.SOUTH);
+//                            tryMove(Direction.SOUTH);
+//                        }
                     }
                 }
             }
@@ -276,7 +286,7 @@ public class Miner extends Unit {
 
 
 
-    public void minerGoToEnemyHQ () throws GameActionException{
+    public void minerGoToEnemyHQ() throws GameActionException {
         if (stuckMoves > 0) {
             for (Direction dir : Util.directions) {
                 if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))

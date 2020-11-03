@@ -72,7 +72,7 @@ public class Landscaper extends Unit {
                     && rc.canDepositDirt(rc.getLocation().directionTo(enemyHqLoc))) {
                 rc.depositDirt(rc.getLocation().directionTo(enemyHqLoc));
                 System.out.println("Buried Enemy HQ");
-            }
+            } else
             //If not nearby enemy HQ, continue moving towards it
             if (goTo(enemyHqLoc)) {
                 System.out.println("Moving towards enemy HQ");
