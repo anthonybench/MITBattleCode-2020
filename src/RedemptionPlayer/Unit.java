@@ -53,7 +53,8 @@ public class Unit extends Robot {
 
     // tries to move in the general direction of dir
     boolean goTo(Direction dir) throws GameActionException {
-        Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+        Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(),
+        dir.rotateLeft().rotateLeft().rotateLeft(), dir.rotateRight().rotateRight().rotateRight(), dir.rotateLeft().rotateLeft().rotateLeft().rotateLeft()};
         for (Direction d : toTry) {
             if (tryMove(d))
                 return true;

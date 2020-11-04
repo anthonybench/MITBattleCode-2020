@@ -1,4 +1,4 @@
-package examplefuncsplayer;
+package RedemptionPlayer;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
