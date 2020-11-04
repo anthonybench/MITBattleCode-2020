@@ -91,9 +91,8 @@ public class Landscaper extends Unit {
     boolean tryDig(boolean enemyHQ) throws GameActionException {
         Direction dir;
         if (enemyHQ) {
-            do {
-                dir = Util.randomDirection();
-            } while (dir == rc.getLocation().directionTo(enemyHqLoc));
+            //set to dig the spot behind the landscaper
+            dir = rc.getLocation().directionTo(enemyHqLoc).rotateRight().rotateRight().rotateRight().rotateRight();
             if (rc.canDigDirt(dir)) {
                 rc.digDirt(dir);
                 return true;

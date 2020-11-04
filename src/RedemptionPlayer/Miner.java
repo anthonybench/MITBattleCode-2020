@@ -10,7 +10,7 @@ public class Miner extends Unit {
     static int potentialEnemyHQY = -1;
     static boolean firstMiner = false;
     static int enemyPotentialHQNumber = 1;
-
+    static boolean builtDesignSchool = false;
     static int stuckMoves = 0;
     static int designSchoolCount = 0; //only first miner cares about this for now
     static int currentElevation = 0;
@@ -73,13 +73,31 @@ public class Miner extends Unit {
                         for (Direction dir : Util.directions) {
                             if (tryBuild(RobotType.NET_GUN, dir)) {
                                 break;
+                            } else {
+                                if (!broadcastedHalt && haltProduction) {
+                                    broadcastHaltProduction();
+                                    broadcastedHalt = true;
+                                }
+                                if (!broadcastedCont && !haltProduction) {
+                                    broadcastContinueProduction();
+                                    broadcastedCont = true;
+                                }
                             }
                         }
                     } else if (designSchoolCount < 1) {
                         for (Direction dir : Util.directions) {
                             if (tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                                 designSchoolCount++;
+                                if (!broadcastedHalt && haltProduction) {
+                                    broadcastContinueProduction();
+                                    broadcastedHalt = true;
+                                }
                                 break;
+                            } else {
+                                if (!broadcastedCont && !haltProduction) {
+                                    broadcastHaltProduction();
+                                    broadcastedCont = true;
+                                }
                             }
                         }
                     }
@@ -185,10 +203,12 @@ public class Miner extends Unit {
 
             //Band-aid function!  Part of turtle
             if (enemyHqLoc == null && rc.getRoundNum() > 200 && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)
-                    && rc.getTeamSoup() > 300 && designSchoolCount < 1) {
-                if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
-                    System.out.println("created a design school next to HQ");
-                    designSchoolCount++;
+                    && rc.getTeamSoup() > 300 && designSchoolCount < 1 && rc.getLocation().isWithinDistanceSquared(hqLoc, 6)) {
+                for (Direction dir : Util.directions) {
+                    if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                        System.out.println("created a design school next to HQ");
+                        designSchoolCount++;
+                    }
                 }
             }
 

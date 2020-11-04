@@ -7,6 +7,7 @@ public class Drone extends Unit {
     static int enemyPotentialHQNumber = 0;
     static int firstMinerID = 0;
     static boolean droppedOffFirstMiner = false;
+    static int stuckMoves = 5;
 
     public Drone(RobotController rc) throws GameActionException {
         super(rc);
@@ -31,18 +32,22 @@ public class Drone extends Unit {
             potentialEnemyHQY = rc.getMapHeight() - hqLoc.y - 1;
             potentialEnemyHQX = rc.getMapWidth() - hqLoc.x - 1;
 
+            System.out.println(enemyHqLoc);
             if (enemyHqLoc != null) {
                 if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 6)) {
+                    System.out.println("Thanks for choosing Uber!");
                     for (Direction dir : Util.directions) {
-                        if (rc.canDropUnit(dir)) {
+                        System.out.println(rc.canDropUnit(dir));
+                        if (rc.canDropUnit(dir) && !rc.senseFlooding(rc.getLocation().add(dir))) {
                             rc.dropUnit(dir);
                             droppedOffFirstMiner = true;
                             System.out.println("Thanks for choosing Uber!");
                         }
                     }
+                } else {
+                    droneMoveToEnemyHQ();
                 }
-            }
-            if (turnCount > 5 && rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY),
+            } else if (turnCount > 5 && rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY),
                     rc.getCurrentSensorRadiusSquared())) {
                 if (nearbyEnemyRobot(RobotType.HQ)) {
                     System.out.println("Found real enemy HQ coordinates");
@@ -68,10 +73,8 @@ public class Drone extends Unit {
                     targetEnemyY = hqLoc.y;
                     break;
             }
-            MapLocation targetLoc = new MapLocation(targetEnemyX, targetEnemyY);
-            if (rc.canMove(rc.getLocation().directionTo(targetLoc))) {
-                rc.move(rc.getLocation().directionTo(targetLoc));
-            }
+
+            droneMoveToEnemyHQ();
         }
 
         if (droppedOffFirstMiner) {
@@ -116,5 +119,17 @@ public class Drone extends Unit {
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
         System.out.println("Picked Up First Miner");
+    }
+
+    public void droneMoveToEnemyHQ() throws GameActionException {
+        MapLocation targetLoc = new MapLocation(targetEnemyX, targetEnemyY);
+        Direction dirToEnemyHQ = rc.getLocation().directionTo(targetLoc);
+        Direction[] dirs = {dirToEnemyHQ, dirToEnemyHQ.rotateRight(), dirToEnemyHQ.rotateRight().rotateRight()};
+        for (Direction dir : dirs) {
+            if (rc.canMove(dir)) {
+                System.out.println("Moving towards enemy HQ " + dir);
+                rc.move(dir);
+            }
+        }
     }
 }

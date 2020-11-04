@@ -5,6 +5,7 @@ import battlecode.common.*;
 public class DesignSchool extends Building {
     static int landscaperCount = 0;
 
+
     public DesignSchool(RobotController rc) throws GameActionException {
         super(rc);
     }
@@ -13,14 +14,34 @@ public class DesignSchool extends Building {
         //halt building landscapers, to wait for miner to build net guns.
         if (!nearbyTeamRobot(RobotType.NET_GUN) && nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
             return;
-        }
-
-        if (landscaperCount <= 4) {
-            for (Direction dir : Util.directions) {
-                if (tryBuild(RobotType.LANDSCAPER, dir)) {
-                    landscaperCount++;
-                    System.out.println("Made a landscaper");
+        } else if (nearbyEnemyRobot(RobotType.HQ)) {
+            if (landscaperCount <= 2) {
+                if (!broadcastedHalt && !haltProduction && rc.getTeamSoup() < 150) {
+                    broadcastHaltProduction();
+                    broadcastedHalt = true;
                 }
+            } else {
+                if (!broadcastedCont && haltProduction) {
+                    broadcastContinueProduction();
+                    broadcastedCont = true;
+                }
+            }
+            tryBuildDesignSchool();
+        } else if (landscaperCount <= 4) {
+            getHaltProductionFromBlockchain();
+            getContinueProductionFromBlockchain();
+            if (checkHalt()) {
+                return;
+            }
+            tryBuildDesignSchool();
+        }
+    }
+
+    public void tryBuildDesignSchool() throws GameActionException {
+        for (Direction dir : Util.directions) {
+            if (tryBuild(RobotType.LANDSCAPER, dir)) {
+                landscaperCount++;
+                System.out.println("Made a landscaper");
             }
         }
     }
