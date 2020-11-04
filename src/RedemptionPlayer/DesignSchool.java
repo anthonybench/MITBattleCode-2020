@@ -5,7 +5,6 @@ import battlecode.common.*;
 public class DesignSchool extends Building {
     static int landscaperCount = 0;
 
-
     public DesignSchool(RobotController rc) throws GameActionException {
         super(rc);
     }
@@ -26,22 +25,27 @@ public class DesignSchool extends Building {
                     broadcastedCont = true;
                 }
             }
-            tryBuildDesignSchool();
+            //leave some soup for communication
+            if (landscaperCount <= 4 && rc.getTeamSoup() > 160) {
+                System.out.println(landscaperCount + " 1");
+                tryBuildLandscaper();
+            }
         } else if (landscaperCount <= 4) {
             getHaltProductionFromBlockchain();
             getContinueProductionFromBlockchain();
             if (checkHalt()) {
                 return;
             }
-            tryBuildDesignSchool();
+            System.out.println(landscaperCount + " 2");
+            tryBuildLandscaper();
         }
     }
 
-    public void tryBuildDesignSchool() throws GameActionException {
+    public void tryBuildLandscaper() throws GameActionException {
         for (Direction dir : Util.directions) {
             if (tryBuild(RobotType.LANDSCAPER, dir)) {
                 landscaperCount++;
-                System.out.println("Made a landscaper");
+                System.out.println(landscaperCount + " Made a landscaper");
             }
         }
     }
