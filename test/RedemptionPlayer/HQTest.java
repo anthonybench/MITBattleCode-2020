@@ -26,22 +26,22 @@ public class HQTest {
 	}
 
 	@Test
-	public void testSendHQLocSucces() throws GameActionException {
+	public void testSendHQLocSuccess() throws GameActionException {
 		//Prepare test
 		int expectedX = 1;
-		int expectedy = 1;
+		int expectedY = 1;
 		int[] expectedMessage = new int[7];
 		expectedMessage[0] = 384392; //TeamSecret
 		expectedMessage[1] = 0; //HQ_Loc
 		expectedMessage[2] = expectedX;
-		expectedMessage[3] = expectedy;
+		expectedMessage[3] = expectedY;
 
 		RobotController rc = Mockito.mock(RobotController.class);
 		when(rc.canSubmitTransaction(any(int[].class), anyInt())).thenReturn(true);
 
 		//Execute Test
 		HQ hq = new HQ(rc);
-		hq.sendHqLoc(new MapLocation(expectedX,expectedy));
+		hq.sendHqLoc(new MapLocation(expectedX,expectedY));
 
 		//Verify test
 		verify(rc).submitTransaction(expectedMessage,3);
@@ -125,18 +125,18 @@ public class HQTest {
 	@Test
 	public void testHQRunSendHQ() throws GameActionException {
 		int expectedX = 100;
-		int expectedy = 101;
+		int expectedY = 101;
 		int[] expectedMessage = new int[7];
 		expectedMessage[0] = 384392; //TeamSecret
 		expectedMessage[1] = 0; //HQ_Loc \
 		expectedMessage[2] = expectedX;
-		expectedMessage[3] = expectedy;
+		expectedMessage[3] = expectedY;
 
 		//Prep test
 		RobotController rc = mock(RobotController.class);
 		when(rc.isReady()).thenReturn(true);
 		when(rc.canBuildRobot(any(RobotType.class), any(Direction.class))).thenReturn(true);
-		when(rc.getLocation()).thenReturn(new MapLocation(expectedX,expectedy));
+		when(rc.getLocation()).thenReturn(new MapLocation(expectedX,expectedY));
 		when(rc.canSubmitTransaction(any(int[].class), anyInt())).thenReturn(true);
 		when(rc.senseNearbyRobots()).thenReturn(new RobotInfo[0]);
 
