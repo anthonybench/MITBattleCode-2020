@@ -9,7 +9,7 @@ public class HQ extends Building {
     int possibleY = 0;
     int possibleX = 0;
 
-    public HQ (RobotController rc) throws GameActionException{
+    public HQ (RobotController rc) {
         super(rc);
     }
 
