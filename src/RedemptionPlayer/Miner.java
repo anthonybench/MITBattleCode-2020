@@ -245,6 +245,7 @@ public class Miner extends Unit {
                 }
             }
         }
+        System.out.println("Bytecode end" + Clock.getBytecodeNum());
     }
 
     /**
@@ -360,7 +361,7 @@ public class Miner extends Unit {
         System.out.println("Prev split " + prevSplitLocation + " " + rc.getLocation());
 
         if (prevSplitLocation != null && rc.getLocation().equals(prevSplitLocation.getKey())) {
-            System.out.println("At previous split loc " + prevSplitLocation.getKey() + " " + prevSplitLocation.getValue());
+            System.out.println("At previous split loc " + prevSplitLocation.getKey() + " " + discoverDir);
             if (discoverDir.equals("right")) {
                 discoverDir = "left";
                 headBackToPrevSplitLocation = false;
@@ -381,23 +382,26 @@ public class Miner extends Unit {
             }
         } else if (prevSplitLocation != null && rc.getLocation() != prevSplitLocation.getKey() && headBackToPrevSplitLocation) {
             if (!prevLocations.empty()) {
-                MapLocation prevLocation = prevLocations.pop();
+                MapLocation prevLocation = prevLocations.peek();
 //                if (prevLocation.equals(rc.getLocation()) && !prevLocations.empty()) {
 //                    prevLocation = prevLocations.pop();
 //                }
                 System.out.println("Backtracking to " + prevLocation);
-                tryMove(rc.getLocation().directionTo(prevLocation));
+                if (tryMove(rc.getLocation().directionTo(prevLocation))){
+                    prevLocations.pop();
+                }
             }
 //            else if (enemyHqLoc == null){ //this method needs more testing
 //                enemyPotentialHQNumber++;
 //            }
         }
+        MapLocation temp = rc.getLocation(); //add the loc before moving
 
         //first two conditions are to make sure you don't walk back to previous location when discovering, that
         //sometimes causes unit to just move back and forth.
         if (!prevLocations.empty() && !targetDirection.equals(rc.getLocation().directionTo(prevLocations.peek()))
                 && tryMove(targetDirection)) {
-            prevLocations.push(rc.getLocation());
+            prevLocations.push(temp);
             if (split) {
                 split = false;
                 discoverDir = "right";
@@ -420,23 +424,24 @@ public class Miner extends Unit {
             //make sure miner couldn't move when actually trying to move
             if (rc.getCooldownTurns() < 1) {
                 boolean moved = false;
-                MapLocation temp = rc.getLocation(); //add the loc before moving
                 for (Direction dir : dirs) {
                     if (tryMove(dir)) {
                         moved = true;
                         prevLocations.push(temp);
+                        System.out.println("Pushed prev location " + temp);
                     }
                 }
                 if (!moved) {
                     System.out.println("Couldn't move " + discoverDir + " " + prevSplitLocations.size());
-                    headBackToPrevSplitLocation = true;
                     if (!prevSplitLocations.empty()) {
                         prevSplitLocation = prevSplitLocations.peek();
-                        if (discoverDir.equals("left")) {
+                        if (discoverDir.equals("left") && headBackToPrevSplitLocation) {
                             System.out.println("pop " + prevSplitLocations.size());
                             prevSplitLocations.pop();
                         }
                     }
+                    headBackToPrevSplitLocation = true;
+
                 }
             }
         }
@@ -488,7 +493,7 @@ public class Miner extends Unit {
         }
     }
 
-    public void broadcastNewRefinery () {
+    public void broadcastNewRefinery() {
 
     }
 }
