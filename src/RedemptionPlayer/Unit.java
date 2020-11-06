@@ -3,21 +3,47 @@ package RedemptionPlayer;
 import battlecode.common.*;
 
 import java.util.Map;
+import java.util.Stack;
 
 public class Unit extends Robot {
     static int potentialEnemyHQX = -1;
     static int potentialEnemyHQY = -1;
+    static int enemyPotentialHQNumber = 1;
     static MapLocation lastPostiion;
-    static int mapWidth;
-    static int mapHeight;
     static int targetEnemyX = -100;
     static int targetEnemyY = -100;
-
+    static Stack<Pair> prevSplitLocations;
+    static String discoverDir = "right"; // prioritizes discovering to the right;
+    static Stack<MapLocation> prevLocations;
+    static boolean headBackToPrevSplitLocation = false;
+    static Pair prevSplitLocation;
+    static boolean stuck = false;
+    static boolean split = false;
     Map<MapLocation, Integer> mapLocations;
+
+    public class Pair {
+        private MapLocation key;
+        private String value;
+
+        Pair(MapLocation mapLoc, String dir) {
+            this.key = mapLoc;
+            this.value = dir;
+        }
+
+        public MapLocation getKey() {
+            return key;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
 
     public Unit(RobotController rc) throws GameActionException {
         super(rc);
         findHQ();
+        prevSplitLocations = new Stack<>();
+        prevLocations = new Stack<>();
     }
 
     /**
@@ -33,6 +59,86 @@ public class Unit extends Robot {
             rc.move(dir);
             return true;
         } else return false;
+    }
+
+    void discoverEnemyHQ(MapLocation enemyHQ) throws GameActionException {
+        Direction targetDirection = rc.getLocation().directionTo(enemyHQ);
+        System.out.println("============================================");
+        System.out.println("!!!Moving towards " + targetDirection + " " + discoverDir + " " + prevSplitLocations.size());
+        System.out.println("Prev split " + prevSplitLocation + " " + rc.getLocation());
+
+        if (prevSplitLocation != null && rc.getLocation().equals(prevSplitLocation.getKey())) {
+            System.out.println("At previous split loc " + prevSplitLocation.getKey() + " " + prevSplitLocation.getValue());
+            if (discoverDir.equals("right")) {
+                discoverDir = "left";
+                headBackToPrevSplitLocation = false;
+            } else if (discoverDir.equals("left")) {
+                headBackToPrevSplitLocation = true;
+                System.out.println("Left " + prevSplitLocations.size());
+                if (!prevSplitLocations.empty()) {
+                    prevSplitLocation = prevSplitLocations.pop();
+                    discoverDir = "right";
+                } else if (prevSplitLocations.empty()) {
+                    //broadcast
+                    System.out.println("Stuck, switching to drones");
+                    return;
+                }
+            }
+        } else if (prevSplitLocation != null && rc.getLocation() != prevSplitLocation.getKey() && headBackToPrevSplitLocation) {
+            if (!prevLocations.empty()) {
+                MapLocation prevLocation = prevLocations.pop();
+                System.out.println("Backtracking to " + prevLocation);
+                tryMove(rc.getLocation().directionTo(prevLocation));
+            }
+//            else if (enemyHqLoc == null){ //this method needs more testing
+//                enemyPotentialHQNumber++;
+//            }
+        }
+
+        if (tryMove(targetDirection)) {
+            prevLocations.push(rc.getLocation());
+            if (split) {
+                split = false;
+                discoverDir = "right";
+            }
+        } else {
+            System.out.println("Couldn't move towards target direction " + split);
+            if (!split) {
+                System.out.println("SPLIT - push" + rc.getLocation());
+                prevSplitLocations.push(new Pair(rc.getLocation(), discoverDir));
+                split = true;
+            }
+            Direction[] dirs = null;
+            if (discoverDir.equals("right")) {
+                dirs = new Direction[]{targetDirection.rotateRight(), targetDirection.rotateRight().rotateRight(),
+                        targetDirection.rotateRight().rotateRight().rotateRight()};
+            } else if (discoverDir.equals("left")) {
+                dirs = new Direction[]{targetDirection.rotateLeft(), targetDirection.rotateLeft().rotateLeft(),
+                        targetDirection.rotateLeft().rotateLeft().rotateLeft()};
+            }
+            if (rc.getCooldownTurns() < 1) {
+                boolean moved = false;
+                MapLocation temp = rc.getLocation(); //add the loc before moving
+                for (Direction dir : dirs) {
+                    if (tryMove(dir)) {
+                        moved = true;
+                        prevLocations.push(temp);
+                    }
+                }
+                if (!moved) {
+                    System.out.println("Couldn't move " + discoverDir + " " + prevSplitLocations.size());
+                    headBackToPrevSplitLocation = true;
+                    if (!prevSplitLocations.empty()) {
+                        prevSplitLocation = prevSplitLocations.peek();
+                        if (discoverDir.equals("left")) {
+                            System.out.println("pop " + prevSplitLocations.size());
+                            prevSplitLocations.pop();
+                        }
+                    }
+                }
+            }
+        }
+        System.out.println("============================================");
     }
 
     boolean tryMove() throws GameActionException {
@@ -54,7 +160,7 @@ public class Unit extends Robot {
     // tries to move in the general direction of dir
     boolean goTo(Direction dir) throws GameActionException {
         Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(),
-        dir.rotateLeft().rotateLeft().rotateLeft(), dir.rotateRight().rotateRight().rotateRight(), dir.rotateLeft().rotateLeft().rotateLeft().rotateLeft()};
+                dir.rotateLeft().rotateLeft().rotateLeft(), dir.rotateRight().rotateRight().rotateRight(), dir.rotateLeft().rotateLeft().rotateLeft().rotateLeft()};
         for (Direction d : toTry) {
             if (tryMove(d))
                 return true;

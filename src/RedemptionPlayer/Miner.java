@@ -9,7 +9,6 @@ public class Miner extends Unit {
     static int potentialEnemyHQX = -1;
     static int potentialEnemyHQY = -1;
     static boolean firstMiner = false;
-    static int enemyPotentialHQNumber = 1;
     static boolean builtDesignSchool = false;
     static int stuckMoves = 0;
     static int designSchoolCount = 0; //only first miner cares about this for now
@@ -103,7 +102,7 @@ public class Miner extends Unit {
                     }
                 } else {
                     //move towards enemy HQ to make sure your not divided by water, example map: DidMonkeyMakeThis
-                    minerGoToEnemyHQ();
+                    discoverEnemyHQ(new MapLocation(targetEnemyX, targetEnemyY));
                 }
             } else if (giveUpMinerRush && rc.getRoundNum() > 150) {
                 System.out.println("Switching to drone delivery!");
@@ -177,7 +176,12 @@ public class Miner extends Unit {
                     }
                     System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
                 }
-                minerGoToEnemyHQ();
+                //Hills
+                if (rc.getRoundNum() < 16) {
+                    minerGoToEnemyHQ();
+                } else {
+                    discoverEnemyHQ(new MapLocation(targetEnemyX, targetEnemyY));
+                }
             }
         } else {
             System.out.println("Not first miner");
