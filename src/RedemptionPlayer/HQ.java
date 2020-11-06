@@ -16,6 +16,7 @@ public class HQ extends Building {
     public void run() throws GameActionException {
         super.run();
         System.out.println("BOUNDARIES" + mapWidth + " " + mapHeight);
+        System.out.println("Bytecode HQ" + Clock.getBytecodeNum());
 
         if (turnCount == 1) {
             sendHqLoc(rc.getLocation());

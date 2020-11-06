@@ -40,7 +40,12 @@ public class Miner extends Unit {
         }
 
 //        getRefineryLocation();
-        getPickedUpFirstMiner();
+        System.out.println("Bytecode 1" + Clock.getBytecodeNum());
+        if (firstMiner && pauseForFlight && !droppedOff) {
+            //only check for this for the first miner after it built a fulfillment center and waited to be picked up
+            getPickedUpFirstMiner();
+        }
+        System.out.println("Bytecode 2" + Clock.getBytecodeNum());
 
         if (droppedOff) {
             //to restart rush after drone dropping miner off
@@ -350,6 +355,7 @@ public class Miner extends Unit {
     void discoverEnemyHQ(MapLocation enemyHQ) throws GameActionException {
         Direction targetDirection = rc.getLocation().directionTo(enemyHQ);
         System.out.println("============================================");
+        System.out.println("Bytecode 3" + Clock.getBytecodeNum());
         System.out.println("!!!Moving towards " + targetDirection + " " + discoverDir + " " + prevSplitLocations.size());
         System.out.println("Prev split " + prevSplitLocation + " " + rc.getLocation());
 
@@ -376,6 +382,9 @@ public class Miner extends Unit {
         } else if (prevSplitLocation != null && rc.getLocation() != prevSplitLocation.getKey() && headBackToPrevSplitLocation) {
             if (!prevLocations.empty()) {
                 MapLocation prevLocation = prevLocations.pop();
+//                if (prevLocation.equals(rc.getLocation()) && !prevLocations.empty()) {
+//                    prevLocation = prevLocations.pop();
+//                }
                 System.out.println("Backtracking to " + prevLocation);
                 tryMove(rc.getLocation().directionTo(prevLocation));
             }
@@ -431,6 +440,7 @@ public class Miner extends Unit {
                 }
             }
         }
+        System.out.println("Bytecode 4" + Clock.getBytecodeNum());
         System.out.println("============================================");
     }
 
