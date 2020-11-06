@@ -41,6 +41,7 @@ public class Miner extends Unit {
             //to restart rush after drone dropping miner off
             pauseForFlight = false;
             startAttacking = true;
+            switchToDroneRush = false;
             nearbyEnemyHQLocation();
         }
 
@@ -355,8 +356,10 @@ public class Miner extends Unit {
                 if (!prevSplitLocations.empty()) {
                     prevSplitLocation = prevSplitLocations.pop();
                     discoverDir = "right";
-                } else if (prevSplitLocations.empty()) {
+                }
+                if (prevSplitLocations.empty()) {
                     //broadcast
+                    discoverDir = "left"; //to get back into this condition.
                     System.out.println("Stuck, switching to drones");
                     switchToDroneRush = true;
                     return;
