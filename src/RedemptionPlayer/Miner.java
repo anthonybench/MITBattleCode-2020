@@ -2,8 +2,8 @@ package RedemptionPlayer;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 public class Miner extends Unit {
     static int potentialEnemyHQX = -1;
@@ -17,15 +17,18 @@ public class Miner extends Unit {
     static boolean pauseForFlight = false;
     static boolean droppedOff = false;
     static boolean switchToDroneRush = false;
+    static ArrayList<MapLocation> refineLocations;
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
         mapLocations = new HashMap<>();
+        refineLocations = new ArrayList<>();
     }
 
     public void run() throws GameActionException {
         super.run();
 
+        System.out.println("MINER!!!!");
         currentElevation = rc.senseElevation(rc.getLocation());
 
         if (turnCount == 1 && rc.getRoundNum() == 2) {
@@ -33,8 +36,10 @@ public class Miner extends Unit {
             firstMiner = true;
             potentialEnemyHQY = rc.getMapHeight() - hqLoc.y - 1;
             potentialEnemyHQX = rc.getMapWidth() - hqLoc.x - 1;
+            refineLocations.add(hqLoc);
         }
 
+//        getRefineryLocation();
         getPickedUpFirstMiner();
 
         if (droppedOff) {
@@ -50,7 +55,7 @@ public class Miner extends Unit {
 
         if (firstMiner) {
             System.out.println("First miner and Enemy hq is " + enemyHqLoc);
-            if (rc.getRoundNum() > 180 && !startAttacking) {
+            if (rc.getRoundNum() > 200 && !startAttacking) {
                 switchToDroneRush = true;
             }
 
@@ -64,6 +69,7 @@ public class Miner extends Unit {
                 }
 
                 if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 6)) {
+                    System.out.println("Start Attack");
                     //create design school next to enemy HQ
                     startAttacking = true;
                     //build net gun if there's enemy delievery drones nearby
@@ -106,7 +112,7 @@ public class Miner extends Unit {
             } else if (switchToDroneRush && !droppedOff) {
                 System.out.println("Switching to drone delivery!");
                 if (switchToDroneRush)
-                droneRush();
+                    droneRush();
                 //Make fulfillment center
             } else {
                 //If enemy HQ is not found yet and is within miner's sensor radius, broadcast enemy HQ position
@@ -167,15 +173,17 @@ public class Miner extends Unit {
             }
 
 
-            for (Direction dir : Util.directions)
-                if (tryRefine(dir))
+            for (Direction dir : Util.directions) {
+                if (tryRefine(dir)) {
                     System.out.println("I refined soup! " + rc.getTeamSoup());
+                }
+            }
 
-            int whenToStopMiningSoup = 50; //used to be RobotType.MINER.soupLimit;
+//            buildRefineryAtSoupAreaFarFromHQ();
+
+            int whenToStopMiningSoup = RobotType.MINER.soupLimit; //used to be RobotType.MINER.soupLimit;
             if (rc.getSoupCarrying() >= whenToStopMiningSoup) {
-                // time to go back to the HQ
-                if (goTo(hqLoc))
-                    System.out.println("moved towards HQ");
+                depositSoupAtNearestRefineLocation();
             } else {
                 System.out.println("Before trying to find soup");
                 // Try to find soup
@@ -209,7 +217,7 @@ public class Miner extends Unit {
                     } else {
                         System.out.println("Moving towards soup to mine " + closestSoup);
                         // Otherwise, travel towards the detected soup
-                        goTo(closestSoup);
+                        dfsWalk(closestSoup);
 //                        if (closestSoup.x > rc.getLocation().x) {
 //    //                        if (rc.canMove(Direction.EAST))
 //    //                            rc.move(Direction.EAST);
@@ -313,7 +321,7 @@ public class Miner extends Unit {
         }
     }
 
-    void droneRush() throws  GameActionException {
+    void droneRush() throws GameActionException {
         //ensure that there's enough soup to send message after building fulfillment center
         if (rc.getTeamSoup() > 154) {
             for (Direction dir : Util.directions) {
@@ -376,7 +384,10 @@ public class Miner extends Unit {
 //            }
         }
 
-        if (tryMove(targetDirection)) {
+        //first two conditions are to make sure you don't walk back to previous location when discovering, that
+        //sometimes causes unit to just move back and forth.
+        if (!prevLocations.empty() && !targetDirection.equals(rc.getLocation().directionTo(prevLocations.peek()))
+                && tryMove(targetDirection)) {
             prevLocations.push(rc.getLocation());
             if (split) {
                 split = false;
@@ -397,6 +408,7 @@ public class Miner extends Unit {
                 dirs = new Direction[]{targetDirection.rotateLeft(), targetDirection.rotateLeft().rotateLeft(),
                         targetDirection.rotateLeft().rotateLeft().rotateLeft()};
             }
+            //make sure miner couldn't move when actually trying to move
             if (rc.getCooldownTurns() < 1) {
                 boolean moved = false;
                 MapLocation temp = rc.getLocation(); //add the loc before moving
@@ -420,5 +432,53 @@ public class Miner extends Unit {
             }
         }
         System.out.println("============================================");
+    }
+
+    public void getRefineryLocation() throws GameActionException {
+        for (int i = 1; i < rc.getRoundNum(); i++) {
+            for (Transaction tx : rc.getBlock(i)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == REFINERY_LOCATION) {
+                    refineLocations.add(new MapLocation(mess[2], mess[3]));
+                    System.out.println("GOT REFINERY LOCATION");
+                }
+            }
+        }
+    }
+
+    public void depositSoupAtNearestRefineLocation() throws GameActionException {
+        // time to deposit soup, go to the nearest soup refine location
+        MapLocation closestRefineLoc = hqLoc;
+        int closestRefineDistance = 1000;
+        for (MapLocation refineLoc : refineLocations) {
+            if (rc.getLocation().distanceSquaredTo(refineLoc) < closestRefineDistance) {
+                closestRefineLoc = refineLoc;
+            }
+        }
+        System.out.println("Deposit at " + closestRefineLoc);
+        dfsWalk(closestRefineLoc);
+    }
+
+    public void buildRefineryAtSoupAreaFarFromHQ() throws GameActionException {
+        if (rc.senseNearbySoup().length > 5) {
+            //check if have refine spots nearby
+            boolean hasNearby = false;
+            for (MapLocation loc : refineLocations) {
+                if (loc.distanceSquaredTo(rc.getLocation()) < 50) {
+                    hasNearby = true;
+                }
+            }
+            if (!hasNearby) {
+                for (Direction dir : Util.directions) {
+                    if (tryBuild(RobotType.REFINERY, dir)) {
+                        broadcastNewRefinery();
+                    }
+                }
+            }
+        }
+    }
+
+    public void broadcastNewRefinery () {
+
     }
 }

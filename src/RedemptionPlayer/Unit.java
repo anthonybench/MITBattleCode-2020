@@ -97,7 +97,7 @@ public class Unit extends Robot {
 
     void dfsWalk(MapLocation destination) throws GameActionException {
         Direction targetDirection = rc.getLocation().directionTo(destination);
-
+        System.out.println(destination + " " + targetDirection);
         if (prevSplitLocation != null && rc.getLocation().equals(prevSplitLocation.getKey())) {
             if (discoverDir.equals("right")) {
                 discoverDir = "left";
@@ -108,7 +108,10 @@ public class Unit extends Robot {
                 if (!prevSplitLocations.empty()) {
                     prevSplitLocation = prevSplitLocations.pop();
                     discoverDir = "right";
-                } else if (prevSplitLocations.empty()) {
+                }
+                //This condition is met if couldn't get to destination after one entire cycle, and should be called
+                //at the first split location (instead of all the way to the start).
+                if (prevSplitLocations.empty()) {
                     //start all over again
                     prevLocations.clear();
                     discoverDir = "right";
@@ -123,7 +126,10 @@ public class Unit extends Robot {
             }
         }
 
-        if (tryMove(targetDirection)) {
+        //first two conditions are to make sure you don't walk back to previous location when discovering, that
+        //sometimes causes unit to just move back and forth.
+        if (!prevLocations.empty() && !targetDirection.equals(rc.getLocation().directionTo(prevLocations.peek()))
+                && tryMove(targetDirection)) {
             prevLocations.push(rc.getLocation());
             if (split) {
                 split = false;
@@ -137,10 +143,10 @@ public class Unit extends Robot {
             Direction[] dirs = null;
             if (discoverDir.equals("right")) {
                 dirs = new Direction[]{targetDirection.rotateRight(), targetDirection.rotateRight().rotateRight(),
-                        targetDirection.rotateRight().rotateRight().rotateRight()};
+                        targetDirection.rotateRight().rotateRight().rotateRight(), targetDirection.opposite()};
             } else if (discoverDir.equals("left")) {
                 dirs = new Direction[]{targetDirection.rotateLeft(), targetDirection.rotateLeft().rotateLeft(),
-                        targetDirection.rotateLeft().rotateLeft().rotateLeft()};
+                        targetDirection.rotateLeft().rotateLeft().rotateLeft(), targetDirection.opposite()};
             }
             if (rc.getCooldownTurns() < 1) {
                 boolean moved = false;
@@ -163,19 +169,6 @@ public class Unit extends Robot {
             }
         }
     }
-//    public void getPotentialEnemyHQCoordinates() throws GameActionException {
-//        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
-//            int[] mess = tx.getMessage();
-//            if (mess[0] == teamSecret && mess[1] == 11) {
-//                System.out.println("Got potential enemy HQ coordinates");
-//                potentialEnemyHQX = mess[2];
-//                potentialEnemyHQY = mess[3];
-//                mapWidth = mess[4];
-//                mapHeight = mess[5];
-//                System.out.println(potentialEnemyHQX + potentialEnemyHQY);
-//            }
-//        }
-//    }
 
     void findHQ() throws GameActionException {
         if (hqLoc == null) {

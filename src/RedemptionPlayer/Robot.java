@@ -13,6 +13,7 @@ public class Robot {
     static final int UBER_REQUEST = 3;
     static final int HALT_PRODUCTION = 4;
     static final int CONTINUE_PRODUCTION = 5;
+    static final int REFINERY_LOCATION = 6;
     static boolean haltProduction = false;
     static int haltTurn = 0;
     static int continueTurn = 0;

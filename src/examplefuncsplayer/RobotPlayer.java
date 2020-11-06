@@ -167,8 +167,8 @@ public strictfp class RobotPlayer {
 //                System.out.println("Couldn't move to enemy HQ");
 //            }
 //        }
-        if (!nearbyRobot(RobotType.DESIGN_SCHOOL)) {
-            if (tryBuild(RobotType.DESIGN_SCHOOL, randomDirection()))
+        if (!nearbyRobot(RobotType.NET_GUN)) {
+            if (tryBuild(RobotType.NET_GUN, randomDirection()))
                 System.out.println("created a design school");
         }
 
