@@ -9,15 +9,14 @@ public class Unit extends Robot {
     static int potentialEnemyHQX = -1;
     static int potentialEnemyHQY = -1;
     static int enemyPotentialHQNumber = 1;
-    static MapLocation lastPostiion;
     static int targetEnemyX = -100;
     static int targetEnemyY = -100;
+    //might need to move variables below to miner, not sure yet.
     static Stack<Pair> prevSplitLocations;
     static String discoverDir = "right"; // prioritizes discovering to the right;
     static Stack<MapLocation> prevLocations;
     static boolean headBackToPrevSplitLocation = false;
     static Pair prevSplitLocation;
-    static boolean stuck = false;
     static boolean split = false;
     Map<MapLocation, Integer> mapLocations;
 
@@ -61,14 +60,45 @@ public class Unit extends Robot {
         } else return false;
     }
 
-    void discoverEnemyHQ(MapLocation enemyHQ) throws GameActionException {
-        Direction targetDirection = rc.getLocation().directionTo(enemyHQ);
-        System.out.println("============================================");
-        System.out.println("!!!Moving towards " + targetDirection + " " + discoverDir + " " + prevSplitLocations.size());
-        System.out.println("Prev split " + prevSplitLocation + " " + rc.getLocation());
+
+    boolean tryMove() throws GameActionException {
+        for (Direction dir : Util.directions)
+            if (tryMove(dir))
+                return true;
+        return false;
+        // MapLocation loc = rc.getLocation();
+        // if (loc.x < 10 && loc.x < loc.y)
+        //     return tryMove(Direction.EAST);
+        // else if (loc.x < 10)
+        //     return tryMove(Direction.SOUTH);
+        // else if (loc.x > loc.y)
+        //     return tryMove(Direction.WEST);
+        // else
+        //     return tryMove(Direction.NORTH);
+    }
+
+    // tries to move in the general direction of dir
+    boolean goTo(Direction dir) throws GameActionException {
+        System.out.println("Goto");
+        Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(),
+                dir.rotateLeft().rotateLeft().rotateLeft(), dir.rotateRight().rotateRight().rotateRight(), dir.rotateLeft().rotateLeft().rotateLeft().rotateLeft()};
+        for (Direction d : toTry) {
+            if (tryMove(d))
+                return true;
+        }
+        return false;
+    }
+
+
+    // navigate towards a particular location
+    boolean goTo(MapLocation destination) throws GameActionException {
+        return goTo(rc.getLocation().directionTo(destination));
+    }
+
+    void dfsWalk(MapLocation destination) throws GameActionException {
+        Direction targetDirection = rc.getLocation().directionTo(destination);
 
         if (prevSplitLocation != null && rc.getLocation().equals(prevSplitLocation.getKey())) {
-            System.out.println("At previous split loc " + prevSplitLocation.getKey() + " " + prevSplitLocation.getValue());
             if (discoverDir.equals("right")) {
                 discoverDir = "left";
                 headBackToPrevSplitLocation = false;
@@ -79,20 +109,18 @@ public class Unit extends Robot {
                     prevSplitLocation = prevSplitLocations.pop();
                     discoverDir = "right";
                 } else if (prevSplitLocations.empty()) {
-                    //broadcast
-                    System.out.println("Stuck, switching to drones");
-                    return;
+                    //start all over again
+                    prevLocations.clear();
+                    discoverDir = "right";
+                    split = false;
+                    headBackToPrevSplitLocation = false;
                 }
             }
         } else if (prevSplitLocation != null && rc.getLocation() != prevSplitLocation.getKey() && headBackToPrevSplitLocation) {
             if (!prevLocations.empty()) {
                 MapLocation prevLocation = prevLocations.pop();
-                System.out.println("Backtracking to " + prevLocation);
                 tryMove(rc.getLocation().directionTo(prevLocation));
             }
-//            else if (enemyHqLoc == null){ //this method needs more testing
-//                enemyPotentialHQNumber++;
-//            }
         }
 
         if (tryMove(targetDirection)) {
@@ -102,9 +130,7 @@ public class Unit extends Robot {
                 discoverDir = "right";
             }
         } else {
-            System.out.println("Couldn't move towards target direction " + split);
             if (!split) {
-                System.out.println("SPLIT - push" + rc.getLocation());
                 prevSplitLocations.push(new Pair(rc.getLocation(), discoverDir));
                 split = true;
             }
@@ -126,54 +152,17 @@ public class Unit extends Robot {
                     }
                 }
                 if (!moved) {
-                    System.out.println("Couldn't move " + discoverDir + " " + prevSplitLocations.size());
                     headBackToPrevSplitLocation = true;
                     if (!prevSplitLocations.empty()) {
                         prevSplitLocation = prevSplitLocations.peek();
                         if (discoverDir.equals("left")) {
-                            System.out.println("pop " + prevSplitLocations.size());
                             prevSplitLocations.pop();
                         }
                     }
                 }
             }
         }
-        System.out.println("============================================");
     }
-
-    boolean tryMove() throws GameActionException {
-        for (Direction dir : Util.directions)
-            if (tryMove(dir))
-                return true;
-        return false;
-        // MapLocation loc = rc.getLocation();
-        // if (loc.x < 10 && loc.x < loc.y)
-        //     return tryMove(Direction.EAST);
-        // else if (loc.x < 10)
-        //     return tryMove(Direction.SOUTH);
-        // else if (loc.x > loc.y)
-        //     return tryMove(Direction.WEST);
-        // else
-        //     return tryMove(Direction.NORTH);
-    }
-
-    // tries to move in the general direction of dir
-    boolean goTo(Direction dir) throws GameActionException {
-        Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(),
-                dir.rotateLeft().rotateLeft().rotateLeft(), dir.rotateRight().rotateRight().rotateRight(), dir.rotateLeft().rotateLeft().rotateLeft().rotateLeft()};
-        for (Direction d : toTry) {
-            if (tryMove(d))
-                return true;
-        }
-        return false;
-    }
-
-
-    // navigate towards a particular location
-    boolean goTo(MapLocation destination) throws GameActionException {
-        return goTo(rc.getLocation().directionTo(destination));
-    }
-
 //    public void getPotentialEnemyHQCoordinates() throws GameActionException {
 //        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
 //            int[] mess = tx.getMessage();

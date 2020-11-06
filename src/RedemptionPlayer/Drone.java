@@ -7,8 +7,7 @@ public class Drone extends Unit {
     static int enemyPotentialHQNumber = 0;
     static int firstMinerID = 0;
     static boolean droppedOffFirstMiner = false;
-    static int stuckMoves = 5;
-
+    static boolean isPickupDrone = false;
     public Drone(RobotController rc) throws GameActionException {
         super(rc);
     }
@@ -37,7 +36,6 @@ public class Drone extends Unit {
                 if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 6)) {
                     System.out.println("Thanks for choosing Uber!");
                     for (Direction dir : Util.directions) {
-                        System.out.println(rc.canDropUnit(dir));
                         if (rc.canDropUnit(dir) && !rc.senseFlooding(rc.getLocation().add(dir))) {
                             rc.dropUnit(dir);
                             droppedOffFirstMiner = true;

@@ -14,9 +14,9 @@ public class Miner extends Unit {
     static int designSchoolCount = 0; //only first miner cares about this for now
     static int currentElevation = 0;
     static boolean startAttacking = false;
-    static boolean giveUpMinerRush = false;
     static boolean pauseForFlight = false;
     static boolean droppedOff = false;
+    static boolean switchToDroneRush = false;
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
@@ -40,7 +40,6 @@ public class Miner extends Unit {
         if (droppedOff) {
             //to restart rush after drone dropping miner off
             pauseForFlight = false;
-            giveUpMinerRush = false;
             startAttacking = true;
             nearbyEnemyHQLocation();
         }
@@ -50,12 +49,11 @@ public class Miner extends Unit {
 
         if (firstMiner) {
             System.out.println("First miner and Enemy hq is " + enemyHqLoc);
-            System.out.println(startAttacking + " " + giveUpMinerRush);
-            if (rc.getRoundNum() > 150 && !startAttacking) {
-                giveUpMinerRush = true;
+            if (rc.getRoundNum() > 180 && !startAttacking) {
+                switchToDroneRush = true;
             }
 
-            if (enemyHqLoc != null && !giveUpMinerRush) {
+            if (enemyHqLoc != null && !switchToDroneRush) {
                 System.out.println("rushing");
                 //if miner is the first miner and enemy HQ is found, keep broadcasting
                 //enemy HQ to new units and (build design schools nearby enemy HQ) -> this behavior should be optimized
@@ -104,40 +102,11 @@ public class Miner extends Unit {
                     //move towards enemy HQ to make sure your not divided by water, example map: DidMonkeyMakeThis
                     discoverEnemyHQ(new MapLocation(targetEnemyX, targetEnemyY));
                 }
-            } else if (giveUpMinerRush && rc.getRoundNum() > 150) {
+            } else if (switchToDroneRush && !droppedOff) {
                 System.out.println("Switching to drone delivery!");
-
+                if (switchToDroneRush)
+                droneRush();
                 //Make fulfillment center
-                for (Direction dir : Util.directions) {
-                    if (tryBuild(RobotType.FULFILLMENT_CENTER, dir)) {
-                        System.out.println("\n=====================");
-                        System.out.println("Fulfillmment center created!");
-                        System.out.println("=====================\n");
-
-                        pauseForFlight = true;
-                        int[] message = new int[7];
-                        message[0] = teamSecret;
-                        message[1] = UBER_REQUEST;
-                        message[2] = rc.getID(); // supply id for pickup
-                        message[3] = enemyPotentialHQNumber; // supply next target location
-                        message[4] = rc.getLocation().x;
-                        message[5] = rc.getLocation().y;
-                        if (rc.canSubmitTransaction(message, 3))
-                            rc.submitTransaction(message, 3);
-                        System.out.println("Broadcasting uber request");
-                        break;
-                    }
-                }
-                //Band-aid function!  Part of turtle
-//                if (nearbyTeamRobot(RobotType.HQ)) {
-//                    if (designSchoolCount < 1) {
-//                        if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection())) {
-//                            System.out.println("created a design school next to HQ");
-//                            designSchoolCount++;
-//                        }
-//                    }
-//                }
-//                goTo(hqLoc);
             } else {
                 //If enemy HQ is not found yet and is within miner's sensor radius, broadcast enemy HQ position
                 System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
@@ -185,29 +154,9 @@ public class Miner extends Unit {
             }
         } else {
             System.out.println("Not first miner");
-            //        if (enemyHqX == -1 && enemyHqY == -1) {
-//            getEnemyHQCoordinates();
-//            enemyHqLoc = new MapLocation(enemyHqX, enemyHqY);
-//        } else if (enemyHqY != -1 && enemyHqX != -1) {
-//            System.out.println("Enemy HQ" + enemyHqLoc);
-//            if (goTo(enemyHqLoc)) {
-//                System.out.println("Went to possible enemy HQ coordinate" + enemyHqX + ", " + enemyHqY);
-//            } else {
-//                System.out.println("Couldn't move to enemy HQ");
-//            }
-//        }
-//            if (!nearbyRobot(RobotType.DESIGN_SCHOOL)) {
-//                if (tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
-//                    System.out.println("created a design school");
-//            }
 
-//        for (Direction dir : directions)
-//            if (tryMine(dir))
-//                System.out.println("I mined soup! " + rc.getSoupCarrying());
-
-            //Band-aid function!  Part of turtle
-            if (enemyHqLoc == null && rc.getRoundNum() > 200 && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)
-                    && rc.getTeamSoup() > 300 && designSchoolCount < 1 && rc.getLocation().isWithinDistanceSquared(hqLoc, 6)) {
+            //HQ defense
+            if (rc.getTeamSoup() > 150 && rc.getLocation().isAdjacentTo(hqLoc) && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
                 for (Direction dir : Util.directions) {
                     if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                         System.out.println("created a design school next to HQ");
@@ -351,7 +300,7 @@ public class Miner extends Unit {
         }
     }
 
-    void nearbyEnemyHQLocation() throws GameActionException {
+    void nearbyEnemyHQLocation() {
         RobotInfo[] robots = rc.senseNearbyRobots();
         for (RobotInfo r : robots) {
             if (r.getType() == RobotType.HQ && r.team != rc.getTeam()) {
@@ -361,5 +310,112 @@ public class Miner extends Unit {
                 return;
             }
         }
+    }
+
+    void droneRush() throws  GameActionException {
+        //ensure that there's enough soup to send message after building fulfillment center
+        if (rc.getTeamSoup() > 154) {
+            for (Direction dir : Util.directions) {
+                if (tryBuild(RobotType.FULFILLMENT_CENTER, dir)) {
+                    System.out.println("\n=====================");
+                    System.out.println("Fulfillmment center created!");
+                    System.out.println("=====================\n");
+
+                    pauseForFlight = true;
+                    int[] message = new int[7];
+                    message[0] = teamSecret;
+                    message[1] = UBER_REQUEST;
+                    message[2] = rc.getID(); // supply id for pickup
+                    message[3] = enemyPotentialHQNumber; // supply next target location
+                    message[4] = rc.getLocation().x;
+                    message[5] = rc.getLocation().y;
+                    if (rc.canSubmitTransaction(message, 3))
+                        rc.submitTransaction(message, 3);
+                    System.out.println("Broadcasting uber request");
+                    break;
+                }
+            }
+        }
+    }
+
+    void discoverEnemyHQ(MapLocation enemyHQ) throws GameActionException {
+        Direction targetDirection = rc.getLocation().directionTo(enemyHQ);
+        System.out.println("============================================");
+        System.out.println("!!!Moving towards " + targetDirection + " " + discoverDir + " " + prevSplitLocations.size());
+        System.out.println("Prev split " + prevSplitLocation + " " + rc.getLocation());
+
+        if (prevSplitLocation != null && rc.getLocation().equals(prevSplitLocation.getKey())) {
+            System.out.println("At previous split loc " + prevSplitLocation.getKey() + " " + prevSplitLocation.getValue());
+            if (discoverDir.equals("right")) {
+                discoverDir = "left";
+                headBackToPrevSplitLocation = false;
+            } else if (discoverDir.equals("left")) {
+                headBackToPrevSplitLocation = true;
+                System.out.println("Left " + prevSplitLocations.size());
+                if (!prevSplitLocations.empty()) {
+                    prevSplitLocation = prevSplitLocations.pop();
+                    discoverDir = "right";
+                } else if (prevSplitLocations.empty()) {
+                    //broadcast
+                    System.out.println("Stuck, switching to drones");
+                    switchToDroneRush = true;
+                    return;
+                }
+            }
+        } else if (prevSplitLocation != null && rc.getLocation() != prevSplitLocation.getKey() && headBackToPrevSplitLocation) {
+            if (!prevLocations.empty()) {
+                MapLocation prevLocation = prevLocations.pop();
+                System.out.println("Backtracking to " + prevLocation);
+                tryMove(rc.getLocation().directionTo(prevLocation));
+            }
+//            else if (enemyHqLoc == null){ //this method needs more testing
+//                enemyPotentialHQNumber++;
+//            }
+        }
+
+        if (tryMove(targetDirection)) {
+            prevLocations.push(rc.getLocation());
+            if (split) {
+                split = false;
+                discoverDir = "right";
+            }
+        } else {
+            System.out.println("Couldn't move towards target direction " + split);
+            if (!split) {
+                System.out.println("SPLIT - push" + rc.getLocation());
+                prevSplitLocations.push(new Pair(rc.getLocation(), discoverDir));
+                split = true;
+            }
+            Direction[] dirs = null;
+            if (discoverDir.equals("right")) {
+                dirs = new Direction[]{targetDirection.rotateRight(), targetDirection.rotateRight().rotateRight(),
+                        targetDirection.rotateRight().rotateRight().rotateRight()};
+            } else if (discoverDir.equals("left")) {
+                dirs = new Direction[]{targetDirection.rotateLeft(), targetDirection.rotateLeft().rotateLeft(),
+                        targetDirection.rotateLeft().rotateLeft().rotateLeft()};
+            }
+            if (rc.getCooldownTurns() < 1) {
+                boolean moved = false;
+                MapLocation temp = rc.getLocation(); //add the loc before moving
+                for (Direction dir : dirs) {
+                    if (tryMove(dir)) {
+                        moved = true;
+                        prevLocations.push(temp);
+                    }
+                }
+                if (!moved) {
+                    System.out.println("Couldn't move " + discoverDir + " " + prevSplitLocations.size());
+                    headBackToPrevSplitLocation = true;
+                    if (!prevSplitLocations.empty()) {
+                        prevSplitLocation = prevSplitLocations.peek();
+                        if (discoverDir.equals("left")) {
+                            System.out.println("pop " + prevSplitLocations.size());
+                            prevSplitLocations.pop();
+                        }
+                    }
+                }
+            }
+        }
+        System.out.println("============================================");
     }
 }

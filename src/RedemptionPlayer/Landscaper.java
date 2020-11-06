@@ -11,8 +11,7 @@ public class Landscaper extends Unit {
 
     public void run() throws GameActionException {
         super.run();
-
-        if (nearbyEnemyRobot(RobotType.HQ)) {
+        if (turnCount == 1 && nearbyEnemyRobot(RobotType.HQ)) {
             rushType = true;
         }
 
@@ -21,7 +20,7 @@ public class Landscaper extends Unit {
             getRealEnemyHQFromBlockchain();
         }
 
-        if (enemyHqLoc == null && rc.getRoundNum() > 200) {
+        if (!rushType) {
             //if rush is cancelled switch strategy to defense
 
             // first, save HQ by trying to remove dirt from it
@@ -36,34 +35,34 @@ public class Landscaper extends Unit {
                 tryDig(false);
             }
 
-            MapLocation bestPlaceToBuildWall = null;
-            // find best place to build
-            if (hqLoc != null) {
-                int lowestElevation = 9999999;
-                for (Direction dir : Util.directions) {
-                    MapLocation tileToCheck = hqLoc.add(dir);
-                    if (rc.getLocation().distanceSquaredTo(tileToCheck) < 4
-                            && rc.canDepositDirt(rc.getLocation().directionTo(tileToCheck))) {
-                        if (rc.senseElevation(tileToCheck) < lowestElevation) {
-                            lowestElevation = rc.senseElevation(tileToCheck);
-                            bestPlaceToBuildWall = tileToCheck;
-                        }
-                    }
-                }
-            }
+//            MapLocation bestPlaceToBuildWall = null;
+//            // find best place to build
+//            if (hqLoc != null) {
+//                int lowestElevation = 9999999;
+//                for (Direction dir : Util.directions) {
+//                    MapLocation tileToCheck = hqLoc.add(dir);
+//                    if (rc.getLocation().distanceSquaredTo(tileToCheck) < 4
+//                            && rc.canDepositDirt(rc.getLocation().directionTo(tileToCheck))) {
+//                        if (rc.senseElevation(tileToCheck) < lowestElevation) {
+//                            lowestElevation = rc.senseElevation(tileToCheck);
+//                            bestPlaceToBuildWall = tileToCheck;
+//                        }
+//                    }
+//                }
+//            }
 
-            if (Math.random() < 0.8) {
-                // build the wall
-                if (bestPlaceToBuildWall != null) {
-                    rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
-                    rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
-                    System.out.println("building a wall");
-                }
-            }
+//            if (Math.random() < 0.8) {
+//                // build the wall
+//                if (bestPlaceToBuildWall != null) {
+//                    rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
+//                    rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
+//                    System.out.println("building a wall");
+//                }
+//            }
 
             // otherwise try to get to the hq
             if (hqLoc != null) {
-                goTo(hqLoc);
+                turtle();
             } else {
                 goTo(Util.randomDirection());
             }
@@ -72,27 +71,27 @@ public class Landscaper extends Unit {
                 tryDig(true);
                 System.out.println("Try dig");
             }
-            System.out.println("Enemy HQ" + enemyHqLoc);
-            //If nearby enemy HQ, bury it
-            if (rc.getLocation().distanceSquaredTo(enemyHqLoc) < 4
+            else if (rc.getLocation().distanceSquaredTo(enemyHqLoc) < 4
                     && rc.canDepositDirt(rc.getLocation().directionTo(enemyHqLoc))) {
+                //If nearby enemy HQ, bury it
                 rc.depositDirt(rc.getLocation().directionTo(enemyHqLoc));
                 System.out.println("Buried Enemy HQ");
-            } else
-            //If not nearby enemy HQ, continue moving towards it
-            if (goTo(enemyHqLoc)) {
-                System.out.println("Moving towards enemy HQ");
             } else {
-                System.out.println("Couldn't move to enemy HQ");
+                //If not nearby enemy HQ, continue moving towards it
+                if (goTo(enemyHqLoc)) {
+                    System.out.println("Moving towards enemy HQ");
+                } else {
+                    System.out.println("Couldn't move to enemy HQ");
+                }
             }
         }
     }
 
     boolean tryDig(boolean enemyHQ) throws GameActionException {
         Direction dir;
-        if (enemyHQ) {
+        if (enemyHQ && enemyHqLoc != null) {
             //set to dig the spot behind the landscaper
-            dir = rc.getLocation().directionTo(enemyHqLoc).rotateRight().rotateRight().rotateRight().rotateRight();
+            dir = rc.getLocation().directionTo(enemyHqLoc).opposite();
             if (rc.canDigDirt(dir)) {
                 rc.digDirt(dir);
                 return true;
@@ -111,5 +110,13 @@ public class Landscaper extends Unit {
             }
         }
         return false;
+    }
+
+    void turtle () throws GameActionException {
+        if (!rc.getLocation().isAdjacentTo(hqLoc)) {
+            for (Direction dir : Util.directions) {
+                dfsWalk(hqLoc.add(dir));
+            }
+        }
     }
 }
