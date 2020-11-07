@@ -25,6 +25,7 @@ public class Landscaper extends Unit {
         if (rushType && enemyHqLoc == null) {
             getRealEnemyHQFromBlockchain();
         }
+        System.out.println("RUSH " + rushType + " " + enemyHqLoc);
 
         if (!rushType) {
 //            if (turnCount == 1) {
@@ -168,7 +169,7 @@ public class Landscaper extends Unit {
     void surroundEnemyHQ() throws GameActionException {
         if (!rc.getLocation().isAdjacentTo(enemyHqLoc)) {
             for (Direction dir : Util.directions) {
-                dfsWalk(enemyHqLoc.add(dir));
+                goTo(enemyHqLoc.add(dir));
             }
         }
     }

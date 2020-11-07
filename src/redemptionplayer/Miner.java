@@ -22,6 +22,7 @@ public class Miner extends Unit {
     static Set<MapLocation> seenSoupLocs;
     static boolean backupMiner = false;
     static int netGuns = 0;
+    static MapLocation lastNewSoupsLocation;
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
@@ -98,7 +99,7 @@ public class Miner extends Unit {
                     //build net gun if there's enemy delievery drones nearby
                     if (!nearbyTeamRobot(RobotType.NET_GUN) && nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
                         for (Direction dir : Util.directions) {
-                            if (tryBuild(RobotType.NET_GUN, dir)) {
+                            if (rc.getTeamSoup() > 254 && tryBuild(RobotType.NET_GUN, dir)) {
                                 if (!broadcastedCont && broadcastedHalt) {
                                     broadcastContinueProduction();
                                     broadcastedCont = true;
@@ -112,7 +113,7 @@ public class Miner extends Unit {
                         }
                     } else if (designSchoolCount < 1) {
                         for (Direction dir : Util.directions) {
-                            if (tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                            if (rc.getTeamSoup() > 154 && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                                 designSchoolCount++;
                                 if (!broadcastedCont && broadcastedHalt) {
                                     broadcastContinueProduction();
@@ -174,6 +175,12 @@ public class Miner extends Unit {
                     }
                     System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
                 }
+                //Broadcast soup locations found while discovering enemy HQ
+                MapLocation[] soupToMine = rc.senseNearbySoup();
+                if (soupToMine.length > 3 && (lastNewSoupsLocation == null
+                        || !rc.getLocation().isWithinDistanceSquared(lastNewSoupsLocation, 50))) {
+                    broadcastSoupNewSoupLoc(soupToMine[0].x, soupToMine[0].y);
+                }
                 //Hills
                 if (rc.getRoundNum() < 16) {
                     minerGoToEnemyHQ();
@@ -213,6 +220,7 @@ public class Miner extends Unit {
             if (nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
                 //Build fulfillment center next to hq
                 if (rc.getRoundNum() > 300 && !nearbyTeamRobot(RobotType.FULFILLMENT_CENTER)) {
+                    System.out.println("Try build fulfillment center");
                     for (Direction dir : Util.directions) {
                         if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.FULFILLMENT_CENTER, dir)) {
                             System.out.println("created a fulfillment next to HQ");
@@ -264,8 +272,8 @@ public class Miner extends Unit {
                 }
             }
         } else {
-            System.out.println("Not first miner");
-
+            System.out.println("Not first miner or backup miner");
+            getSoupLocation();
             for (Direction dir : Util.directions) {
                 if (tryRefine(dir)) {
                     System.out.println("I refined soup! " + rc.getTeamSoup());
@@ -295,14 +303,26 @@ public class Miner extends Unit {
                         closestSoup = soupLoc;
                     }
                 }
-                soupLocation = closestSoup;
+                if (checkIfSoupLocIsNew()) {
+                    broadcastSoupNewSoupLoc(rc.getLocation().x, rc.getLocation().y);
+                }
+
+                if (soupLocation == null) {
+                    soupLocation = closestSoup;
+                }
+
                 if (soupToMine.length == 0 || closestSoup == null) {
                     // If no soup is nearby, search for soup by moving randomly
                     System.out.println("No soup nearby");
-                    if (!soupLocations.isEmpty()) {
+                    //if soup at soup loc is all gone
+                    if (rc.getLocation().equals(soupLocation)) {
+                        soupLocation = null;
+                    }
+                    if (!soupLocations.isEmpty() && soupLocation == null) {
                         soupLocation = soupLocations.remove();
                     }
                     if (soupLocation != null) {
+                        System.out.println("Walking to " + soupLocation);
                         dfsWalk(soupLocation);
                     } else if (goTo(Util.randomDirection())) {
                         System.out.println("I moved randomly!");
@@ -581,7 +601,7 @@ public class Miner extends Unit {
             }
             if (!hasNearby && hqLoc.distanceSquaredTo(rc.getLocation()) > 9) {
                 for (Direction dir : Util.directions) {
-                    if (tryBuild(RobotType.REFINERY, dir)) {
+                    if (!rc.getLocation().add(dir).isAdjacentTo(hqLoc) && tryBuild(RobotType.REFINERY, dir)) {
                         MapLocation refineryLoc = rc.getLocation().add(dir);
                         broadcastNewRefinery(refineryLoc.x, refineryLoc.y);
                         refineLocations.add(refineryLoc);
@@ -609,13 +629,23 @@ public class Miner extends Unit {
         message[1] = SOUP_LOCATION;
         message[2] = x; // possible x coord of enemy HQ
         message[3] = y; // possible y coord of enemy HQ
-        if (rc.canSubmitTransaction(message, 3))
-            rc.submitTransaction(message, 3);
+        if (rc.canSubmitTransaction(message, 2))
+            rc.submitTransaction(message, 2);
         System.out.println("New Soup");
     }
 
+    boolean checkIfSoupLocIsNew() {
+        MapLocation currentLocation = rc.getLocation();
+        for (MapLocation loc : soupLocations) {
+            if (loc.isWithinDistanceSquared(currentLocation, 50)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void getSoupLocation() throws GameActionException {
-        for (int i = rc.getRoundNum() - 5; i < rc.getRoundNum(); i++) {
+        for (int i = rc.getRoundNum() - 3; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
                 if (mess[0] == teamSecret && mess[1] == SOUP_LOCATION) {
@@ -626,41 +656,3 @@ public class Miner extends Unit {
         }
     }
 }
-
-//                if (soupLocations.isEmpty()) {
-//                        System.out.println("No soup locations");
-//                        MapLocation[] soupToMine = rc.senseNearbySoup();
-//                        for (MapLocation soup : soupToMine) {
-//                        if (seenSoupLocs.contains(soup)) {
-//                        continue;
-//                        }
-//                        seenSoupLocs.add(soup);
-//                        soupLocations.add(soup);
-//                        }
-//                        }
-//
-//                        if (soupLocation == null && !soupLocations.isEmpty()) {
-//                        soupLocation = soupLocations.remove();
-//                        System.out.println("target new soup loc");
-//                        }
-//
-//                        if (soupLocation != null) {
-//                        System.out.println("Has target soup loc");
-//                        if (rc.getLocation().isAdjacentTo(soupLocation)) {
-//                        System.out.println("next to target soup");
-//                        clearMovement();
-//                        if (!tryMine(rc.getLocation().directionTo(soupLocation))) {
-//                        soupLocation = soupLocations.remove();
-//                        System.out.println("Couldn't mine");
-//                        } else {
-//                        System.out.println("Mined soup------------------+ " + rc.getSoupCarrying());
-//                        }
-//                        } else {
-//                        System.out.println("Walking to soup " + soupLocation);
-//                        dfsWalk(soupLocation);
-//                        }
-//                        } else {
-//                        if (goTo(Util.randomDirection())) {
-//                        System.out.println("I moved randomly!");
-//                        }
-//                        }

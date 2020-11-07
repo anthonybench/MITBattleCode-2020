@@ -1,6 +1,7 @@
 package examplefuncsplayer;
 
 import battlecode.common.*;
+import redemptionplayer.Util;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -144,32 +145,34 @@ public strictfp class RobotPlayer {
         }
         System.out.println("Possible points" + possibleX + " " + possibleY);
 
-        broadcastEnemyHQCoordinates();
+//        broadcastEnemyHQCoordinates();
 
-        if (numMiners < 10) {
+        if (numMiners < 6) {
             for (Direction dir : directions)
                 if (tryBuild(RobotType.MINER, dir)) {
                     numMiners++;
                 }
         }
     }
+    static boolean nearbyTeamRobot(RobotType target) throws GameActionException {
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r : robots) {
+            if (r.getType() == target && r.team == rc.getTeam()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     static void runMiner() throws GameActionException {
         tryBlockchain();
-//        if (enemyHqX == -1 && enemyHqY == -1) {
-//            getEnemyHQCoordinates();
-//            enemyHqLoc = new MapLocation(enemyHqX, enemyHqY);
-//        } else if (enemyHqY != -1 && enemyHqX != -1) {
-//            System.out.println("Enemy HQ" + enemyHqLoc);
-//            if (goTo(enemyHqLoc)) {
-//                System.out.println("Went to possible enemy HQ coordinate" + enemyHqX + ", " + enemyHqY);
-//            } else {
-//                System.out.println("Couldn't move to enemy HQ");
-//            }
-//        }
-        if (!nearbyRobot(RobotType.NET_GUN)) {
-            if (tryBuild(RobotType.NET_GUN, randomDirection()))
-                System.out.println("created a design school");
+
+        if (rc.getLocation().isAdjacentTo(hqLoc) && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
+            for (Direction dir : directions) {
+                if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                    System.out.println("created a design school next to HQ");
+                }
+            }
         }
 
         for (Direction dir : directions)
@@ -241,30 +244,49 @@ public strictfp class RobotPlayer {
     }
 
     static void runLandscaper() throws GameActionException {
-        if (rc.getDirtCarrying() == 0) {
+// first, save HQ by trying to remove dirt from it
+        if (hqLoc != null && hqLoc.isAdjacentTo(rc.getLocation())) {
+            Direction dirtohq = rc.getLocation().directionTo(hqLoc);
+            if(rc.canDigDirt(dirtohq)){
+                rc.digDirt(dirtohq);
+            }
+        }
+
+        if(rc.getDirtCarrying() == 0){
             tryDig();
         }
 
-        //Gets the enemy HQ coordinate, if gotten already sends landscrapers to enemy HQ
-        if (enemyHqX == -1 && enemyHqY == -1) {
-            getEnemyHQCoordinates();
-            enemyHqLoc = new MapLocation(enemyHqX, enemyHqY);
-        } else if (enemyHqY != -1 && enemyHqX != -1) {
-            System.out.println("Enemy HQ" + enemyHqLoc);
-            //If nearby enemy HQ, bury it
-            if (rc.getLocation().distanceSquaredTo(enemyHqLoc) < 4
-                    && rc.canDepositDirt(rc.getLocation().directionTo(enemyHqLoc))) {
-                rc.depositDirt(rc.getLocation().directionTo(enemyHqLoc));
-            }
-            //If not nearby enemy HQ, continue moving towards it
-            if (goTo(enemyHqLoc)) {
-                System.out.println("Went to possible enemy HQ coordinate" + enemyHqX + ", " + enemyHqY);
-            } else {
-                System.out.println("Couldn't move to enemy HQ");
+        MapLocation bestPlaceToBuildWall = null;
+        // find best place to build
+        if(hqLoc != null) {
+            int lowestElevation = 9999999;
+            for (Direction dir : directions) {
+                MapLocation tileToCheck = hqLoc.add(dir);
+                if(rc.getLocation().distanceSquaredTo(tileToCheck) < 4
+                        && rc.canDepositDirt(rc.getLocation().directionTo(tileToCheck))) {
+                    if (rc.senseElevation(tileToCheck) < lowestElevation) {
+                        lowestElevation = rc.senseElevation(tileToCheck);
+                        bestPlaceToBuildWall = tileToCheck;
+                    }
+                }
             }
         }
 
+        if (Math.random() < 0.8){
+            // build the wall
+            if (bestPlaceToBuildWall != null) {
+                rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
+                rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
+                System.out.println("building a wall");
+            }
+        }
 
+        // otherwise try to get to the hq
+        if(hqLoc != null){
+            goTo(hqLoc);
+        } else {
+            goTo(randomDirection());
+        }
     }
 
     static void runDeliveryDrone() throws GameActionException {
