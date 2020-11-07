@@ -7,25 +7,41 @@ public class Drone extends Unit {
     static int enemyPotentialHQNumber = 0;
     static int firstMinerID = 0;
     static boolean droppedOffFirstMiner = false;
-    static boolean isPickupDrone = false;
+    static boolean notPickupDrone = false;
     public Drone(RobotController rc) throws GameActionException {
         super(rc);
     }
 
     public void run() throws GameActionException {
         super.run();
-
+        System.out.println("Drone " + notPickupDrone + " " + enemyHqLoc);
+        if (notPickupDrone) {
+            if (enemyHqLoc == null) {
+                getRealEnemyHQFromBlockchain();
+            } else if (enemyHqLoc != null) {
+                if (!nearbyEnemyRobot(RobotType.NET_GUN) && !nearbyEnemyRobot(RobotType.HQ)) {
+                    goTo(enemyHqLoc);
+                }
+            }
+        }
         if (!rc.isCurrentlyHoldingUnit() && !droppedOffFirstMiner) {
-            if (minerLoc == null)
+            if (minerLoc == null) {
                 getUberRequest();
-            System.out.println("Next HQ to try: " + enemyPotentialHQNumber);
-            System.out.println("Miner Found: " + firstMinerID);
-            if (rc.canPickUpUnit(firstMinerID)) {
-                System.out.println("I can pick up a miner!");
-                broadcastPickedUpFirstMiner(); //broadcast here because drone could be destroyed by net guns before dropping off
-                rc.pickUpUnit(firstMinerID);
+            }
+            if (minerLoc != null) {
+                //This is the drone to pick up miner
+                System.out.println("Next HQ to try: " + enemyPotentialHQNumber);
+                System.out.println("Miner Found: " + firstMinerID);
+                if (rc.canPickUpUnit(firstMinerID)) {
+                    System.out.println("I can pick up a miner!");
+                    broadcastPickedUpFirstMiner(); //broadcast here because drone could be destroyed by net guns before dropping off
+                    rc.pickUpUnit(firstMinerID);
+                } else {
+                    goTo(minerLoc);
+                }
             } else {
-                goTo(minerLoc);
+                //This is drones spawned near our HQ
+                notPickupDrone = true;
             }
         } else {
             potentialEnemyHQY = rc.getMapHeight() - hqLoc.y - 1;
@@ -33,7 +49,7 @@ public class Drone extends Unit {
 
             System.out.println(enemyHqLoc);
             if (enemyHqLoc != null) {
-                if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 6)) {
+                if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 21)) {
                     System.out.println("Thanks for choosing Uber!");
                     for (Direction dir : Util.directions) {
                         if (rc.canDropUnit(dir) && !rc.senseFlooding(rc.getLocation().add(dir))) {
@@ -94,7 +110,7 @@ public class Drone extends Unit {
     }
 
     public void getUberRequest() throws GameActionException {
-        for (int i = 1; i < rc.getRoundNum(); i++) {
+        for (int i = rc.getRoundNum() - 20; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
                 if (mess[0] == teamSecret && mess[1] == UBER_REQUEST) {

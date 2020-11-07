@@ -30,15 +30,19 @@ public class DesignSchool extends Building {
                 System.out.println(landscaperCount + " 1");
                 tryBuildLandscaper();
             }
-        } else if (landscaperCount <= 4) {
-            getHaltProductionFromBlockchain();
-            getContinueProductionFromBlockchain();
+        } else if (landscaperCount <= 2 || rc.getTeamSoup() > 400) {
+            if (enemyHqLoc != null) {
+                getHaltProductionFromBlockchain();
+                getContinueProductionFromBlockchain();
+            }
             if (checkHalt()) {
                 return;
             }
             System.out.println(landscaperCount + " 2");
             tryBuildLandscaper();
         }
+
+        System.out.println("BC " + Clock.getBytecodeNum());
     }
 
     public void tryBuildLandscaper() throws GameActionException {

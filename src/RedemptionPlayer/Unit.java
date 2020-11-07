@@ -210,4 +210,13 @@ public class Unit extends Robot {
             rc.submitTransaction(message, 3);
         System.out.println("Broadcasting real enemy HQ coordinates " + targetEnemyX + " " + targetEnemyY);
     }
+
+    public void clearMovement () {
+        prevSplitLocations.clear();
+        discoverDir = "right";
+        prevLocations.clear();
+        headBackToPrevSplitLocation = false;
+        prevSplitLocation = null;
+        split = false;
+    }
 }

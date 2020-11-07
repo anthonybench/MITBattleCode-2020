@@ -36,7 +36,7 @@ public class Miner extends Unit {
             firstMiner = true;
             potentialEnemyHQY = rc.getMapHeight() - hqLoc.y - 1;
             potentialEnemyHQX = rc.getMapWidth() - hqLoc.x - 1;
-            refineLocations.add(hqLoc);
+//            refineLocations.add(hqLoc);
         }
 
 //        getRefineryLocation();
@@ -53,6 +53,7 @@ public class Miner extends Unit {
             startAttacking = true;
             switchToDroneRush = false;
             nearbyEnemyHQLocation();
+            clearMovement();
         }
 
         if (pauseForFlight)
@@ -161,14 +162,15 @@ public class Miner extends Unit {
                 if (rc.getRoundNum() < 16) {
                     minerGoToEnemyHQ();
                 } else {
+                    System.out.println("Moving to " + targetEnemyX + " " + targetEnemyY);
                     discoverEnemyHQ(new MapLocation(targetEnemyX, targetEnemyY));
                 }
             }
         } else {
             System.out.println("Not first miner");
 
-            //HQ defense
-            if (rc.getTeamSoup() > 150 && rc.getLocation().isAdjacentTo(hqLoc) && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
+            //HQ defense - build design school next to hq
+            if (rc.getRoundNum() > 200 && rc.getTeamSoup() > 150 && rc.getLocation().isAdjacentTo(hqLoc) && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
                 for (Direction dir : Util.directions) {
                     if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                         System.out.println("created a design school next to HQ");
@@ -177,6 +179,14 @@ public class Miner extends Unit {
                 }
             }
 
+            //Build fulfillment center next to hq
+            if (rc.getTeamSoup() > 150 && rc.getLocation().isAdjacentTo(hqLoc) && !nearbyTeamRobot(RobotType.FULFILLMENT_CENTER)) {
+                for (Direction dir : Util.directions) {
+                    if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.FULFILLMENT_CENTER, dir)) {
+                        System.out.println("created a fulfillment next to HQ");
+                    }
+                }
+            }
 
             for (Direction dir : Util.directions) {
                 if (tryRefine(dir)) {
@@ -184,7 +194,7 @@ public class Miner extends Unit {
                 }
             }
 
-//            buildRefineryAtSoupAreaFarFromHQ();
+            buildRefineryNearSoupArea();
 
             int whenToStopMiningSoup = RobotType.MINER.soupLimit; //used to be RobotType.MINER.soupLimit;
             if (rc.getSoupCarrying() >= whenToStopMiningSoup) {
@@ -217,6 +227,7 @@ public class Miner extends Unit {
                         for (Direction dir : Util.directions) {
                             if (tryMine(dir)) {
                                 System.out.println("I mined soup! " + rc.getSoupCarrying());
+                                break;
                             }
                         }
                     } else {
@@ -397,10 +408,10 @@ public class Miner extends Unit {
         }
         MapLocation temp = rc.getLocation(); //add the loc before moving
 
-        //first two conditions are to make sure you don't walk back to previous location when discovering, that
+        //to make sure you don't walk back to previous location when discovering, that
         //sometimes causes unit to just move back and forth.
-        if (!prevLocations.empty() && !targetDirection.equals(rc.getLocation().directionTo(prevLocations.peek()))
-                && tryMove(targetDirection)) {
+        boolean walkingPrevDirection = !prevLocations.empty() && targetDirection.equals(rc.getLocation().directionTo(prevLocations.peek()));
+        if (!walkingPrevDirection && tryMove(targetDirection)) {
             prevLocations.push(temp);
             if (split) {
                 split = false;
@@ -474,8 +485,9 @@ public class Miner extends Unit {
         dfsWalk(closestRefineLoc);
     }
 
-    public void buildRefineryAtSoupAreaFarFromHQ() throws GameActionException {
-        if (rc.senseNearbySoup().length > 5) {
+    public void buildRefineryNearSoupArea() throws GameActionException {
+        System.out.println("Build refinery");
+        if (rc.senseNearbySoup().length > 5 && !nearbyTeamRobot(RobotType.REFINERY)) {
             //check if have refine spots nearby
             boolean hasNearby = false;
             for (MapLocation loc : refineLocations) {
@@ -483,10 +495,12 @@ public class Miner extends Unit {
                     hasNearby = true;
                 }
             }
-            if (!hasNearby) {
+            if (!hasNearby && hqLoc.distanceSquaredTo(rc.getLocation()) > 9) {
                 for (Direction dir : Util.directions) {
                     if (tryBuild(RobotType.REFINERY, dir)) {
                         broadcastNewRefinery();
+                        refineLocations.add(rc.getLocation().add(dir));
+                        break;
                     }
                 }
             }
