@@ -100,7 +100,7 @@ public class Robot {
         message[2] = rc.getRoundNum();
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
-        System.out.println("Broadcast halt");
+        System.out.println("Broadcast halt!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         broadcastedHalt = true;
     }
 
@@ -111,7 +111,7 @@ public class Robot {
         message[2] = rc.getRoundNum();
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
-        System.out.println("Broadcast continue");
+        System.out.println("Broadcast continue!!!!!!!!!!!!!!!!!!!!!!!");
         broadcastedCont = true;
     }
 

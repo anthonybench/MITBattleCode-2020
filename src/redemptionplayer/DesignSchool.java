@@ -20,7 +20,9 @@ public class DesignSchool extends Building {
                     broadcastedHalt = true;
                 }
             } else {
-                if (!broadcastedCont && haltProduction) {
+                System.out.println("Should broadcast cont " + broadcastedCont + " " + haltProduction);
+                if (!broadcastedCont && broadcastedHalt) {
+                    System.out.println("does broadcast cont");
                     broadcastContinueProduction();
                     broadcastedCont = true;
                 }

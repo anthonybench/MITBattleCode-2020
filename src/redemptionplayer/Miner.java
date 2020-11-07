@@ -66,7 +66,7 @@ public class Miner extends Unit {
 
         if (pauseForFlight) {
             if (nearbyTeamRobot(RobotType.DELIVERY_DRONE)) {
-                if (!broadcastedCont && !haltProduction) {
+                if (!broadcastedCont && broadcastedHalt) {
                     broadcastContinueProduction();
                     broadcastedCont = true;
                 }
@@ -97,12 +97,12 @@ public class Miner extends Unit {
                     if (!nearbyTeamRobot(RobotType.NET_GUN) && nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
                         for (Direction dir : Util.directions) {
                             if (tryBuild(RobotType.NET_GUN, dir)) {
-                                if (!broadcastedCont && !haltProduction) {
+                                if (!broadcastedCont && broadcastedHalt) {
                                     broadcastContinueProduction();
                                     broadcastedCont = true;
                                 }
                             } else {
-                                if (!broadcastedHalt && haltProduction) {
+                                if (!broadcastedHalt) {
                                     broadcastHaltProduction();
                                     broadcastedHalt = true;
                                 }
