@@ -78,11 +78,7 @@ public class Landscaper extends Unit {
                 System.out.println("Buried Enemy HQ");
             } else {
                 //If not nearby enemy HQ, continue moving towards it
-                if (goTo(enemyHqLoc)) {
-                    System.out.println("Moving towards enemy HQ");
-                } else {
-                    System.out.println("Couldn't move to enemy HQ");
-                }
+                surroundEnemyHQ();
             }
         }
     }
@@ -120,4 +116,11 @@ public class Landscaper extends Unit {
         }
     }
 
+    void surroundEnemyHQ () throws  GameActionException {
+        if (!rc.getLocation().isAdjacentTo(enemyHqLoc)) {
+            for (Direction dir : Util.directions) {
+                dfsWalk(enemyHqLoc.add(dir));
+            }
+        }
+    }
 }

@@ -98,7 +98,7 @@ public class Unit extends Robot {
     void dfsWalk(MapLocation destination) throws GameActionException {
         Direction targetDirection = rc.getLocation().directionTo(destination);
         System.out.println("============================================");
-        System.out.println("Bytecode 3" + Clock.getBytecodeNum());
+        System.out.println("Bytecode 3 " + Clock.getBytecodeNum());
         System.out.println("!!!Moving towards " + targetDirection + " " + discoverDir + " " + prevSplitLocations.size());
         System.out.println("Prev split " + prevSplitLocation + " " + rc.getLocation());
 
@@ -135,16 +135,15 @@ public class Unit extends Robot {
                     prevLocations.pop();
                 }
             }
-//            else if (enemyHqLoc == null){ //this method needs more testing
-//                enemyPotentialHQNumber++;
-//            }
         }
         MapLocation temp = rc.getLocation(); //add the loc before moving
 
         //to make sure you don't walk back to previous location when discovering, that
         //sometimes causes unit to just move back and forth.
         boolean walkingPrevDirection = !prevLocations.empty() && targetDirection.equals(rc.getLocation().directionTo(prevLocations.peek()));
+        System.out.println("TEST!!! " + walkingPrevDirection + " " + tileGoingToFlood(targetDirection));
         if (!walkingPrevDirection && tryMove(targetDirection)) {
+            System.out.println("Walked in desired dir");
             prevLocations.push(temp);
             if (split) {
                 split = false;
@@ -155,6 +154,7 @@ public class Unit extends Robot {
             if (!split) {
                 System.out.println("SPLIT - push" + rc.getLocation());
                 prevSplitLocations.push(new Pair(rc.getLocation(), discoverDir));
+                prevSplitLocation = new Pair(rc.getLocation(), discoverDir);
                 split = true;
             }
             Direction[] dirs = null;
@@ -179,6 +179,7 @@ public class Unit extends Robot {
                     System.out.println("Couldn't move " + discoverDir + " " + prevSplitLocations.size());
                     if (!prevSplitLocations.empty()) {
                         prevSplitLocation = prevSplitLocations.peek();
+                        System.out.println("Prev split " + prevSplitLocation);
                         if (discoverDir.equals("left") && headBackToPrevSplitLocation) {
                             System.out.println("pop " + prevSplitLocations.size());
                             prevSplitLocations.pop();
@@ -189,7 +190,7 @@ public class Unit extends Robot {
                 }
             }
         }
-        System.out.println("Bytecode 4" + Clock.getBytecodeNum());
+        System.out.println("Bytecode 4 " + Clock.getBytecodeNum());
         System.out.println("============================================");
     }
 
