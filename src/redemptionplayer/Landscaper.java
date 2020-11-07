@@ -125,15 +125,15 @@ public class Landscaper extends Unit {
             if (rc.canSenseLocation(topLeft)
                     && !rc.isLocationOccupied(topLeft)) {
                 dfsWalk(topLeft);
-            } else if (rc.canSenseLocation(topRight)
-                    && !rc.isLocationOccupied(topRight)) {
-                dfsWalk(topRight);
             } else if (rc.canSenseLocation(bottomLeft)
                     && !rc.isLocationOccupied(bottomLeft)) {
                 dfsWalk(bottomLeft);
             } else if (rc.canSenseLocation(bottomRight)
                     && !rc.isLocationOccupied(bottomRight)) {
                 dfsWalk(bottomRight);
+            } else if (rc.canSenseLocation(topRight)
+                    && !rc.isLocationOccupied(topRight)) {
+                dfsWalk(topRight);
             } else {
                 dfsWalk(hqLoc);
             }

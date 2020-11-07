@@ -116,7 +116,7 @@ public class Robot {
     }
 
     public void getHaltProductionFromBlockchain() throws GameActionException {
-        for (int i = rc.getRoundNum() - 5; i < rc.getRoundNum(); i++) {
+        for (int i = rc.getRoundNum() - 3; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
                 if (mess[0] == teamSecret && mess[1] == HALT_PRODUCTION) {
@@ -130,7 +130,7 @@ public class Robot {
     }
 
     public void getContinueProductionFromBlockchain() throws GameActionException {
-        for (int i = rc.getRoundNum() - 5; i < rc.getRoundNum(); i++) {
+        for (int i = rc.getRoundNum() - 3; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
                 if (mess[0] == teamSecret && mess[1] == CONTINUE_PRODUCTION) {
