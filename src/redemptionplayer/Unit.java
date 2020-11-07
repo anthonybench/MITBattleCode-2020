@@ -1,4 +1,4 @@
-package RedemptionPlayer;
+package redemptionplayer;
 
 import battlecode.common.*;
 
@@ -192,22 +192,6 @@ public class Unit extends Robot {
         }
         System.out.println("Bytecode 4 " + Clock.getBytecodeNum());
         System.out.println("============================================");
-    }
-
-    void findHQ() throws GameActionException {
-        if (hqLoc == null) {
-            // search surroundings for HQ
-            RobotInfo[] robots = rc.senseNearbyRobots();
-            for (RobotInfo robot : robots) {
-                if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
-                    hqLoc = robot.location;
-                }
-            }
-            if (hqLoc == null) {
-                // if still null, search the blockchain
-                getHqLocFromBlockchain();
-            }
-        }
     }
 
     boolean tileGoingToFlood(Direction currentDir) throws GameActionException {

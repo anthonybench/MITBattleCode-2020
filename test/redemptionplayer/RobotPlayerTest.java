@@ -1,11 +1,9 @@
-package RedemptionPlayer;
+package redemptionplayer;
 
 import battlecode.common.*;
 import battlecode.common.RobotController;
-import javafx.beans.binding.When;
 import org.junit.Assert;
 import org.junit.Test;
-import RedemptionPlayer.RobotPlayer;
 import org.mockito.Mockito;
 
 		import static org.junit.Assert.assertEquals;

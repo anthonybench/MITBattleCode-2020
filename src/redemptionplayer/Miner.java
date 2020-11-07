@@ -1,4 +1,4 @@
-package RedemptionPlayer;
+package redemptionplayer;
 
 import battlecode.common.*;
 
@@ -20,6 +20,8 @@ public class Miner extends Unit {
     static Queue<MapLocation> soupLocations;
     static MapLocation soupLocation;
     static Set<MapLocation> seenSoupLocs;
+    static boolean backupMiner = false;
+
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
         mapLocations = new HashMap<>();
@@ -34,7 +36,9 @@ public class Miner extends Unit {
         System.out.println("MINER!!!!");
         currentElevation = rc.senseElevation(rc.getLocation());
 
-        if (turnCount == 1 && rc.getRoundNum() == 2) {
+        if (!backupMiner && turnCount == 1 && rc.getRoundNum() >= backupRound) {
+            backupMiner = true;
+        } else if (turnCount == 1 && rc.getRoundNum() == 2) {
             //Sets the first spawned miner to the first miner (that will be discovring enemy HQ)
             firstMiner = true;
             potentialEnemyHQY = rc.getMapHeight() - hqLoc.y - 1;
@@ -42,7 +46,6 @@ public class Miner extends Unit {
 //            refineLocations.add(hqLoc);
         }
 
-//        getRefineryLocation();
         System.out.println("Bytecode 1" + Clock.getBytecodeNum());
         if (firstMiner && pauseForFlight && !droppedOff) {
             //only check for this for the first miner after it built a fulfillment center and waited to be picked up
@@ -55,12 +58,21 @@ public class Miner extends Unit {
             pauseForFlight = false;
             startAttacking = true;
             switchToDroneRush = false;
+            broadcastedCont = false;
+            broadcastedHalt = false;
             nearbyEnemyHQLocation();
             clearMovement();
         }
 
-        if (pauseForFlight)
+        if (pauseForFlight) {
+            if (nearbyTeamRobot(RobotType.DELIVERY_DRONE)) {
+                if (!broadcastedCont && !haltProduction) {
+                    broadcastContinueProduction();
+                    broadcastedCont = true;
+                }
+            }
             return;
+        }
 
         if (firstMiner) {
             System.out.println("First miner and Enemy hq is " + enemyHqLoc);
@@ -168,11 +180,20 @@ public class Miner extends Unit {
                     discoverEnemyHQ(new MapLocation(targetEnemyX, targetEnemyY));
                 }
             }
-        } else {
-            System.out.println("Not first miner");
-
+        } else if (backupMiner) {
+            System.out.println("Backup miner");
+            if (rc.getLocation().isAdjacentTo(hqLoc)) {
+                Direction temp = rc.getLocation().directionTo(hqLoc);
+                Direction[] dirs = {temp.opposite(), temp.opposite().rotateRight(), temp.opposite().rotateLeft()};
+                for (Direction dir : dirs) {
+                    if (tryMove(dir)) {
+                        break;
+                    }
+                }
+            }
             //HQ defense - build design school next to hq
-            if (rc.getTeamSoup() > 355 && rc.getLocation().isAdjacentTo(hqLoc) && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
+            if (!nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
+
                 for (Direction dir : Util.directions) {
                     if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                         System.out.println("created a design school next to HQ");
@@ -182,13 +203,17 @@ public class Miner extends Unit {
             }
 
             //Build fulfillment center next to hq
-//            if (rc.getTeamSoup() > 150 && rc.getLocation().isAdjacentTo(hqLoc) && !nearbyTeamRobot(RobotType.FULFILLMENT_CENTER)) {
+//            if (nearbyTeamRobot(RobotType.DESIGN_SCHOOL)
+//                    &&!nearbyTeamRobot(RobotType.FULFILLMENT_CENTER)) {
 //                for (Direction dir : Util.directions) {
 //                    if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.FULFILLMENT_CENTER, dir)) {
 //                        System.out.println("created a fulfillment next to HQ");
 //                    }
 //                }
 //            }
+        }
+        else {
+            System.out.println("Not first miner");
 
             for (Direction dir : Util.directions) {
                 if (tryRefine(dir)) {
@@ -336,7 +361,7 @@ public class Miner extends Unit {
 
     void droneRush() throws GameActionException {
         //ensure that there's enough soup to send message after building fulfillment center
-        if (rc.getTeamSoup() > 154) {
+        if (rc.getTeamSoup() > 310) {
             for (Direction dir : Util.directions) {
                 if (tryBuild(RobotType.FULFILLMENT_CENTER, dir)) {
                     System.out.println("\n=====================");
@@ -354,6 +379,10 @@ public class Miner extends Unit {
                     if (rc.canSubmitTransaction(message, 3))
                         rc.submitTransaction(message, 3);
                     System.out.println("Broadcasting uber request");
+                    if (!broadcastedHalt && !haltProduction) {
+                        broadcastHaltProduction();
+                        broadcastedHalt = true;
+                    }
                     break;
                 }
             }

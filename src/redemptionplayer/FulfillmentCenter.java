@@ -1,4 +1,4 @@
-package RedemptionPlayer;
+package redemptionplayer;
 
 import battlecode.common.*;
 
@@ -10,9 +10,12 @@ public class FulfillmentCenter extends Building {
     }
 
     public void run() throws GameActionException {
-
-        if (nearbyTeamRobot(RobotType.HQ)) {
+        findHQ();
+        if (rc.getLocation().isWithinDistanceSquared(hqLoc, 5)) {
             //fulfillment center near our HQ can build more than one drone
+            if (rc.getLocation().isAdjacentTo(hqLoc) && droneCount >= 1) {
+                rc.disintegrate(); //Map - in a ditch
+            }
             if (droneCount < 20) {
                 for (Direction dir : Util.directions) {
                     if (!madeDrone && tryBuild(RobotType.DELIVERY_DRONE, dir)) {

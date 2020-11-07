@@ -1,13 +1,10 @@
-package RedemptionPlayer;
+package redemptionplayer;
 
 import battlecode.common.*;
 
 public class HQ extends Building {
-    int mapWidth = 30;
-    int mapHeight = 30;
     int numMiners = 0;
-    int possibleY = 0;
-    int possibleX = 0;
+    static boolean builtMinerAfter100 = false;
 
     public HQ (RobotController rc) throws GameActionException{
         super(rc);
@@ -15,7 +12,6 @@ public class HQ extends Building {
 
     public void run() throws GameActionException {
         super.run();
-        System.out.println("BOUNDARIES" + mapWidth + " " + mapHeight);
         System.out.println("Bytecode HQ" + Clock.getBytecodeNum());
 
         if (turnCount == 1) {
@@ -23,10 +19,22 @@ public class HQ extends Building {
         }
 
         if (numMiners < 5) {
-            for (Direction dir : Util.directions)
+            for (Direction dir : Util.directions) {
                 if (tryBuild(RobotType.MINER, dir)) {
                     numMiners++;
+                    break;
                 }
+            }
+        }
+
+        if (!builtMinerAfter100 && rc.getRoundNum() >= backupRound) {
+            for (Direction dir : Util.directions) {
+                if (tryBuild(RobotType.MINER, dir)) {
+                    numMiners++;
+                    builtMinerAfter100 = true;
+                    break;
+                }
+            }
         }
 
         int targetID = nearbyEnemyDrone();

@@ -1,4 +1,4 @@
-package RedemptionPlayer;
+package redemptionplayer;
 
 import battlecode.common.*;
 
@@ -26,15 +26,14 @@ public class DesignSchool extends Building {
                 }
             }
             //leave some soup for communication
-            if (landscaperCount <= 4 && rc.getTeamSoup() > 160) {
+            if (landscaperCount <= 3 && rc.getTeamSoup() > 160) {
                 System.out.println(landscaperCount + " 1");
                 tryBuildLandscaper();
             }
-        } else if (landscaperCount <= 2 || rc.getTeamSoup() > 400) {
-            if (enemyHqLoc != null) {
-                getHaltProductionFromBlockchain();
-                getContinueProductionFromBlockchain();
-            }
+        } else if (landscaperCount <= 3) {
+            getHaltProductionFromBlockchain();
+            getContinueProductionFromBlockchain();
+
             if (checkHalt()) {
                 return;
             }

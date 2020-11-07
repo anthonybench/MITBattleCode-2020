@@ -1,10 +1,7 @@
-package RedemptionPlayer;
+package redemptionplayer;
 
 import battlecode.common.*;
-import org.junit.Assert;
 import org.junit.Test;
-import RedemptionPlayer.RobotPlayer;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.*;
@@ -74,7 +71,7 @@ public class HQTest {
 		hq.run();
 
 		//verify
-		assertEquals(hq.numMiners, 12);
+		assertEquals(hq.numMiners, 5);
 	}
 
 	@Test

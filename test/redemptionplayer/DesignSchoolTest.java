@@ -1,11 +1,10 @@
-package RedemptionPlayer;
+package redemptionplayer;
 
 import battlecode.common.*;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
