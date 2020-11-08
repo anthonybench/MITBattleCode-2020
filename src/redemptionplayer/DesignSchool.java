@@ -28,6 +28,10 @@ public class DesignSchool extends Building {
             }
             System.out.println(landscaperCount + " 2");
             tryBuildLandscaper();
+        } else {
+            if (nearbyTeamRobot(RobotType.DELIVERY_DRONE) && landscaperCount <= 7) {
+               tryBuildLandscaper();
+            }
         }
 
         System.out.println("BC " + Clock.getBytecodeNum());

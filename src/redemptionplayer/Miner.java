@@ -25,6 +25,7 @@ public class Miner extends Unit {
     static int buildPriority = 0;
     static boolean rushing;
     static boolean broadCastedGiveUpMinerRush = false;
+    static int fulfillmentCenterCount = 0;
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
@@ -40,6 +41,11 @@ public class Miner extends Unit {
 
         if (rc.getRoundNum() > 50) {
             getGiveUpMinerRush();
+        }
+        if (rc.getRoundNum() > 300 && rc.getLocation().isAdjacentTo(hqLoc)) {
+            //blocking the turtle and there's probably no other soup locations discovered that's why it deposited
+            //at HQ
+            rc.disintegrate();
         }
         rushing = rc.getRoundNum() < 250 && !giveUpMinerRush;
         setBuildPriority();
@@ -222,13 +228,14 @@ public class Miner extends Unit {
 
             if (designSchoolCount > 0) {
                 //Build fulfillment center next to hq
-                if (rc.getRoundNum() > 300 && !nearbyTeamRobot(RobotType.FULFILLMENT_CENTER)) {
+                if (fulfillmentCenterCount == 0) {
                     System.out.println("Try build fulfillment center");
                     for (Direction dir : Util.directions) {
                         System.out.println(rc.getLocation().add(dir) + " " + !hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir), 4));
                         if (!hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir), 4)
                                 && tryBuild(RobotType.FULFILLMENT_CENTER, dir)) {
                             System.out.println("created a fulfillment next to HQ");
+                            fulfillmentCenterCount++;
                             return;
                         }
                     }

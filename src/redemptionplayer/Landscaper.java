@@ -10,6 +10,7 @@ public class Landscaper extends Unit {
     static MapLocation[] innerCircle;
     static int turtlePosition = 0;
     static boolean gotBlockchainMess = false;
+    static boolean stopWalking = false;
 
     public Landscaper(RobotController rc) throws GameActionException {
         super(rc);
@@ -34,18 +35,6 @@ public class Landscaper extends Unit {
         System.out.println("RUSH " + rushType + " " + enemyHqLoc);
 
         if (!rushType) {
-            // first, save HQ by trying to remove dirt from it
-            if (hqLoc != null && hqLoc.isAdjacentTo(rc.getLocation())) {
-                Direction dirtohq = rc.getLocation().directionTo(hqLoc);
-                if (rc.canDigDirt(dirtohq)) {
-                    rc.digDirt(dirtohq);
-                }
-            }
-
-            if (rc.getDirtCarrying() == 0) {
-                tryDig(false);
-            }
-
             // otherwise try to get to the hq
             if (hqLoc != null) {
                 turtle();
@@ -95,16 +84,20 @@ public class Landscaper extends Unit {
         Direction dir;
         if (enemyHQ && enemyHqLoc != null) {
             //set to dig the spot behind the landscaper
-            dir = rc.getLocation().directionTo(enemyHqLoc).opposite();
-            if (rc.canDigDirt(dir)) {
-                rc.digDirt(dir);
-                return true;
+            for (Direction dirs : Util.directions) {
+                if (rc.canDigDirt(dirs) && !rc.getLocation().add(dirs).equals(enemyHqLoc)) {
+                    rc.digDirt(dirs);
+                    System.out.println("Dug");
+                    return true;
+                }
             }
         } else {
             //always dig away from HQ
             for (Direction dirs : Util.directions) {
-                if (!rc.getLocation().add(dirs).isAdjacentTo(hqLoc) && rc.canDigDirt(dirs)) {
+                if (!rc.getLocation().add(dirs).isAdjacentTo(hqLoc) && rc.canDigDirt(dirs)
+                && !rc.isLocationOccupied(rc.getLocation().add(dirs))) {
                     rc.digDirt(dirs);
+                    System.out.println("Dug");
                     return true;
                 }
             }
@@ -118,6 +111,18 @@ public class Landscaper extends Unit {
         MapLocation bottomLeft = hqLoc.add(Util.directions[5]);
         MapLocation bottomRight = hqLoc.add(Util.directions[3]);
 
+        // first, save HQ by trying to remove dirt from it
+        if (hqLoc != null && hqLoc.isAdjacentTo(rc.getLocation())) {
+            Direction dirtohq = rc.getLocation().directionTo(hqLoc);
+            if (rc.canDigDirt(dirtohq)) {
+                rc.digDirt(dirtohq);
+            }
+        }
+
+        if (rc.getDirtCarrying() == 0) {
+            System.out.println("Try dig");
+            tryDig(false);
+        }
 
         if (!rc.getLocation().isWithinDistanceSquared(hqLoc, 4)) {
             dfsWalk(hqLoc);
@@ -137,15 +142,25 @@ public class Landscaper extends Unit {
                     }
                 }
 
-
-                if (Math.random() < 0.8) {
-                    if (bestPlaceToBuildWall != null) {
-                        rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
-                        rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
-                        System.out.println("building a wall");
+                for (Direction dir : Util.directions) {
+                    if (rc.canMove(dir)) {
+                        if (Math.random() < 0.8) {
+                            if (bestPlaceToBuildWall != null) {
+                                rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
+                                rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
+                                System.out.println("building a wall");
+                            }
+                        } else {
+                            goTo(Util.randomDirection());
+                        }
+                        break;
+                    } else {
+                        if (bestPlaceToBuildWall != null) {
+                            rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
+                            rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
+                            System.out.println("building a wall");
+                        }
                     }
-                } else {
-                    goTo(Util.randomDirection());
                 }
             }
         }

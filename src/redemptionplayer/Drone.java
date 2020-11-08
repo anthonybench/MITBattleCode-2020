@@ -9,6 +9,8 @@ public class Drone extends Unit {
     static int pickUpID = -1;
     static RobotType pickUpType;
     static MapLocation pickUpLocation;
+    static boolean sameTeam = true;
+    static MapLocation nearestWater;
 
     public Drone(RobotController rc) throws GameActionException {
         super(rc);
@@ -25,30 +27,54 @@ public class Drone extends Unit {
         //Has unit to pick up
         if (pickUpID == -1) {
             for (RobotInfo robot : robotInfos) {
-                if (robot.getType() == RobotType.LANDSCAPER && (!robot.getLocation().equals(topLeft) &&
-                        !robot.getLocation().equals(topRight) && !robot.getLocation().equals(bottomLeft)
-                        && !robot.getLocation().equals(bottomRight))) {
+                if (robot.getType() == RobotType.LANDSCAPER &&
+                        robot.getTeam() != rc.getTeam()) {
                     pickUpID = robot.ID;
                     pickUpLocation = robot.getLocation();
                     pickUpType = RobotType.LANDSCAPER;
+                    sameTeam = false;
+                    break;
                 }
+            }
+
+            for (RobotInfo robot : robotInfos) {
+                if (robot.getType() == RobotType.LANDSCAPER && !robot.getLocation().isAdjacentTo(hqLoc) &&
+                        robot.getTeam() == rc.getTeam()) {
+                    pickUpID = robot.ID;
+                    pickUpLocation = robot.getLocation();
+                    pickUpType = RobotType.LANDSCAPER;
+                    break;
+                }
+//                else if (robot.getType() == RobotType.MINER && (!robot.getLocation().isAdjacentTo(hqLoc))) {
+//                    dabating on adding this or just have miners suicide
+//                    pickUpID = robot.ID;
+//                    pickUpLocation = robot.getLocation();
+//                    pickUpType = RobotType.MINER;
+//                }
+            }
+            if (pickUpID == -1) {
+                moveRandomlyAroundHQ();
             }
         } else {
             if (rc.isCurrentlyHoldingUnit()) {
                 if (pickUpType == RobotType.LANDSCAPER) {
-                    for (Direction dir : Util.directions) {
-                        MapLocation targetLoc = rc.getLocation().add(dir);
-                        if ((targetLoc.equals(topLeft) || targetLoc.equals(topRight)
-                                || targetLoc.equals(bottomLeft) || targetLoc.equals(bottomRight))
-                                && rc.canDropUnit(dir)) {
-                            rc.dropUnit(dir);
-                            pickUpType = null;
-                            pickUpLocation = null;
-                            pickUpID = -1;
+                    if (sameTeam) {
+                        for (Direction dir : Util.directions) {
+                            MapLocation targetLoc = rc.getLocation().add(dir);
+                            if (targetLoc.isAdjacentTo(hqLoc)
+                                    && rc.canDropUnit(rc.getLocation().directionTo(targetLoc))) {
+                                rc.dropUnit(dir);
+                                pickUpType = null;
+                                pickUpLocation = null;
+                                pickUpID = -1;
+                                sameTeam = true;
+                            }
                         }
-                    }
-                    if (!rc.getLocation().equals(hqLoc)) {
-                        dfsWalk(hqLoc);
+                        if (!rc.getLocation().equals(hqLoc)) {
+                            dfsWalk(hqLoc);
+                        }
+                    } else {
+                        dropInWater();
                     }
                 }
             } else {
@@ -106,5 +132,41 @@ public class Drone extends Unit {
             rc.move(dir);
             return true;
         } else return false;
+    }
+
+    void moveRandomlyAroundHQ() throws GameActionException {
+        for (Direction dir : Util.directions) {
+            if (hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir), 10)) {
+                tryMove(dir);
+                clearMovement();
+            } else {
+                dfsWalk(hqLoc);
+            }
+        }
+    }
+
+    void dropInWater () throws GameActionException {
+        if (nearestWater != null) {
+            if (rc.getLocation().isAdjacentTo(nearestWater)
+                    && rc.canDropUnit(rc.getLocation().directionTo(nearestWater))) {
+                rc.dropUnit(rc.getLocation().directionTo(nearestWater));
+                pickUpID = -1;
+            }
+            dfsWalk(nearestWater);
+        } else {
+            int sensorRadius = rc.getCurrentSensorRadiusSquared();
+            for (int i = -sensorRadius; i < sensorRadius; i++) {
+                for (int j = -sensorRadius; j < sensorRadius; j++) {
+                    MapLocation mapLoc = new MapLocation(rc.getLocation().x + i, rc.getLocation().y + j);
+                    if (rc.canSenseLocation(mapLoc) && rc.senseFlooding(mapLoc)) {
+                        nearestWater = mapLoc;
+                        break;
+                    }
+                }
+            }
+            goTo(Util.randomDirection());
+
+            System.out.println("AFTER ALL THAT " + Clock.getBytecodesLeft());
+        }
     }
 }
