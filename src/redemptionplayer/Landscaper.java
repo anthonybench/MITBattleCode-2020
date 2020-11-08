@@ -169,7 +169,7 @@ public class Landscaper extends Unit {
     void surroundEnemyHQ() throws GameActionException {
         if (!rc.getLocation().isAdjacentTo(enemyHqLoc)) {
             for (Direction dir : Util.directions) {
-                goTo(enemyHqLoc.add(dir));
+                dfsWalk(enemyHqLoc.add(dir));
             }
         }
     }

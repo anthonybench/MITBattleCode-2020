@@ -38,6 +38,7 @@ public class Robot {
      * @throws GameActionException
      */
     boolean tryBuild(RobotType type, Direction dir) throws GameActionException {
+        System.out.println(rc.isReady() + " " + rc.canBuildRobot(type, dir));
         if (rc.isReady() && rc.canBuildRobot(type, dir)) {
             rc.buildRobot(type, dir);
             return true;

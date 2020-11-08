@@ -17,15 +17,7 @@ public class Drone extends Unit {
 //        System.out.println("Drone " + notPickupDrone + " " + enemyHqLoc);
 
         if (notPickupDrone) {
-//            if (enemyHqLoc == null) {
-//                getRealEnemyHQFromBlockchain();
-//            } else if (enemyHqLoc != null) {
-//                System.out.println(!nearbyEnemyRobot(RobotType.HQ));
-//                if (!nearbyEnemyRobot(RobotType.NET_GUN) && !nearbyEnemyRobot(RobotType.HQ)) {
-////                    System.out.println("GO to EHQ");
-//                    goTo(enemyHqLoc);
-//                }
-//            }
+
         } else {
             if (!rc.isCurrentlyHoldingUnit() && !droppedOffFirstMiner) {
                 if (minerLoc == null) {

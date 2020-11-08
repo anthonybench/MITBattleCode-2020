@@ -14,21 +14,8 @@ public class DesignSchool extends Building {
         if (!nearbyTeamRobot(RobotType.NET_GUN) && nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
             return;
         } else if (nearbyEnemyRobot(RobotType.HQ)) {
-            if (landscaperCount <= 2) {
-                if (!broadcastedHalt && !haltProduction && rc.getTeamSoup() < 150) {
-                    broadcastHaltProduction();
-                    broadcastedHalt = true;
-                }
-            } else {
-                System.out.println("Should broadcast cont " + broadcastedCont + " " + haltProduction);
-                if (!broadcastedCont && broadcastedHalt) {
-                    System.out.println("does broadcast cont");
-                    broadcastContinueProduction();
-                    broadcastedCont = true;
-                }
-            }
             //leave some soup for communication
-            if (landscaperCount <= 3 && rc.getTeamSoup() > 160) {
+            if (rc.getRoundNum() < 250 && landscaperCount <= 5) {
                 System.out.println(landscaperCount + " 1");
                 tryBuildLandscaper();
             }

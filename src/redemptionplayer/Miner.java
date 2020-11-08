@@ -15,7 +15,7 @@ public class Miner extends Unit {
     static boolean startAttacking = false;
     static boolean pauseForFlight = false;
     static boolean droppedOff = false;
-    static boolean switchToDroneRush = false;
+    static boolean giveUpMinerRush = false;
     static ArrayList<MapLocation> refineLocations;
     static Queue<MapLocation> soupLocations;
     static MapLocation soupLocation;
@@ -23,6 +23,8 @@ public class Miner extends Unit {
     static boolean backupMiner = false;
     static int netGuns = 0;
     static MapLocation lastNewSoupsLocation;
+    static MapLocation rushDesignSchoolLocation;
+    static int buildPriority = 0;
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
@@ -35,7 +37,10 @@ public class Miner extends Unit {
     public void run() throws GameActionException {
         super.run();
 
+        setBuildPriority();
         System.out.println("MINER!!!!");
+        boolean rushing = rc.getRoundNum() < 250 && !giveUpMinerRush;
+
         currentElevation = rc.senseElevation(rc.getLocation());
 
         if (!backupMiner && turnCount == 1 && rc.getRoundNum() >= backupRound) {
@@ -59,7 +64,7 @@ public class Miner extends Unit {
             //to restart rush after drone dropping miner off
             pauseForFlight = false;
             startAttacking = true;
-            switchToDroneRush = false;
+            giveUpMinerRush = false;
             broadcastedCont = false;
             broadcastedHalt = false;
             droppedOff = false; //most important
@@ -80,10 +85,10 @@ public class Miner extends Unit {
         if (firstMiner) {
             System.out.println("First miner and Enemy hq is " + enemyHqLoc);
             if (rc.getRoundNum() > 200 && !startAttacking) {
-                switchToDroneRush = true;
+                giveUpMinerRush = true;
             }
 
-            if (enemyHqLoc != null && !switchToDroneRush) {
+            if (enemyHqLoc != null && !giveUpMinerRush) {
                 System.out.println("rushing");
                 //if miner is the first miner and enemy HQ is found, keep broadcasting
                 //enemy HQ to new units and (build design schools nearby enemy HQ) -> this behavior should be optimized
@@ -92,11 +97,7 @@ public class Miner extends Unit {
                     broadcastRealEnemyHQCoordinates();
                 }
 
-                if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 6)) {
-                    System.out.println("Start Attack");
-                    //create design school next to enemy HQ
-                    startAttacking = true;
-                    //build net gun if there's enemy delievery drones nearby
+                if (rushDesignSchoolLocation != null) {
                     if (!nearbyTeamRobot(RobotType.NET_GUN) && nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
                         for (Direction dir : Util.directions) {
                             if (rc.getTeamSoup() > 254 && tryBuild(RobotType.NET_GUN, dir)) {
@@ -111,10 +112,22 @@ public class Miner extends Unit {
                                 }
                             }
                         }
-                    } else if (designSchoolCount < 1) {
+                    }
+                    MapLocation waitingPosition = enemyHqLoc.add(enemyHqLoc.directionTo(rushDesignSchoolLocation).opposite());
+                    if (!rc.getLocation().equals(waitingPosition)) {
+                        dfsWalk(waitingPosition);
+                    }
+                } else if (rc.getLocation().isAdjacentTo(enemyHqLoc)) {
+                    System.out.println("Start Attack");
+                    //create design school next to enemy HQ
+                    startAttacking = true;
+                    //build net gun if there's enemy delievery drones nearby
+                    if (designSchoolCount < 1) {
                         for (Direction dir : Util.directions) {
-                            if (rc.getTeamSoup() > 154 && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                            if (rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) &&
+                                    rc.getTeamSoup() > 154 && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                                 designSchoolCount++;
+                                rushDesignSchoolLocation = rc.getLocation().add(dir);
                                 if (!broadcastedCont && broadcastedHalt) {
                                     broadcastContinueProduction();
                                     broadcastedCont = true;
@@ -129,20 +142,19 @@ public class Miner extends Unit {
                         }
                     }
                 } else {
-                    //move towards enemy HQ to make sure your not divided by water, example map: DidMonkeyMakeThis
+                    //move towards enemy HQ to make sure your not divided by water
                     discoverEnemyHQ(new MapLocation(targetEnemyX, targetEnemyY));
                 }
-            } else if (switchToDroneRush && !droppedOff) {
+            } else if (giveUpMinerRush && !droppedOff) {
                 System.out.println("Switching to drone delivery!");
-                if (switchToDroneRush)
+                if (giveUpMinerRush)
                     droneRush();
                 //Make fulfillment center
             } else {
                 //If enemy HQ is not found yet and is within miner's sensor radius, broadcast enemy HQ position
                 System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
                 //Checks if the enemyHQ is within the current robots sensor radius
-                if (turnCount > 5 &&
-                        rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), rc.getCurrentSensorRadiusSquared())) {
+                if (rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), rc.getCurrentSensorRadiusSquared())) {
                     if (nearbyEnemyRobot(RobotType.HQ)) {
                         System.out.println("Found real enemy HQ coordinates");
                         nearbyEnemyHQLocation(); //Special case is map spiral, two potential locations can be sensed together.
@@ -210,19 +222,22 @@ public class Miner extends Unit {
             //HQ defense - build design school next to hq
             if (designSchoolCount == 0 && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
                 for (Direction dir : Util.directions) {
-                    if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                    if (rc.getTeamSoup() > 150 + buildPriority && !hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir),
+                            4) && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                         System.out.println("created a design school next to HQ");
                         designSchoolCount++;
                     }
                 }
             }
 
-            if (nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
+            if (designSchoolCount > 0) {
                 //Build fulfillment center next to hq
                 if (rc.getRoundNum() > 300 && !nearbyTeamRobot(RobotType.FULFILLMENT_CENTER)) {
                     System.out.println("Try build fulfillment center");
                     for (Direction dir : Util.directions) {
-                        if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.FULFILLMENT_CENTER, dir)) {
+                        System.out.println(rc.getLocation().add(dir) + " " + !hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir), 4));
+                        if (!hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir), 4)
+                                && tryBuild(RobotType.FULFILLMENT_CENTER, dir)) {
                             System.out.println("created a fulfillment next to HQ");
                             return;
                         }
@@ -240,7 +255,7 @@ public class Miner extends Unit {
                         }
                     }
                 }
-
+                System.out.println(landscaperCount);
                 if (landscaperCount < 4) {
                     return;
                 }
@@ -450,12 +465,17 @@ public class Miner extends Unit {
                     if (rc.canSubmitTransaction(message, 3))
                         rc.submitTransaction(message, 3);
                     System.out.println("Broadcasting uber request");
-                    if (!broadcastedHalt && !haltProduction) {
-                        broadcastHaltProduction();
-                        broadcastedHalt = true;
+                    if (!broadcastedCont && broadcastedHalt) {
+                        broadcastContinueProduction();
+                        broadcastedCont = true;
                     }
                     break;
                 }
+            }
+        } else {
+            if (!broadcastedHalt && !haltProduction) {
+                broadcastHaltProduction();
+                broadcastedHalt = true;
             }
         }
     }
@@ -483,7 +503,7 @@ public class Miner extends Unit {
                     //broadcast
                     discoverDir = "left"; //to get back into this condition.
                     System.out.println("Stuck, switching to drones");
-                    switchToDroneRush = true;
+                    giveUpMinerRush = true;
                     return;
                 }
             }
@@ -590,7 +610,8 @@ public class Miner extends Unit {
             return;
         }
 
-        if (rc.senseNearbySoup().length >= 4 && rc.getTeamSoup() > 154 && !nearbyTeamRobot(RobotType.REFINERY)) {
+        if (rc.senseNearbySoup().length >= 4 && rc.getTeamSoup() > 204 + buildPriority
+                && !nearbyTeamRobot(RobotType.REFINERY)) {
             //check if have refine spots nearby
             boolean hasNearby = false;
             for (MapLocation loc : refineLocations) {
@@ -653,6 +674,15 @@ public class Miner extends Unit {
                     System.out.println("GOT SOUP LOC");
                 }
             }
+        }
+    }
+
+    public void setBuildPriority () {
+        int roundNum = rc.getRoundNum();
+        if (roundNum < 250) {
+            buildPriority = 150; //prioritize building miners and design schools during rush period.
+        } else {
+            buildPriority = 0;
         }
     }
 }
