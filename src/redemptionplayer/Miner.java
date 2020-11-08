@@ -210,7 +210,7 @@ public class Miner extends Unit {
             }
             System.out.println("Build!");
             //HQ defense - build design school next to hq
-            if (designSchoolCount == 0 && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
+            if (!nearbyTeamRobot(RobotType.LANDSCAPER) && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
                 for (Direction dir : Util.directions) {
                     if (rc.getTeamSoup() > 150 + buildPriority && !hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir),
                             4) && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
@@ -328,7 +328,7 @@ public class Miner extends Unit {
                     }
                     if (soupLocation != null) {
                         System.out.println("Walking to " + soupLocation);
-                        dfsWalk(soupLocation);
+                        goTo(soupLocation);
                     } else if (goTo(Util.randomDirection())) {
                         System.out.println("I moved randomly!");
                     }
@@ -347,7 +347,7 @@ public class Miner extends Unit {
                     } else {
                         System.out.println("Moving towards soup to mine " + closestSoup);
                         // Otherwise, travel towards the detected soup
-                        dfsWalk(closestSoup);
+                        goTo(closestSoup);
                     }
                 }
 

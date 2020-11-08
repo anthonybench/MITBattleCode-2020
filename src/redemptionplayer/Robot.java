@@ -87,7 +87,6 @@ public class Robot {
         for (int i = 1; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
-                System.out.println(i + " " + mess[1]);
                 if (mess[0] == teamSecret && mess[1] == ENEMY_HQ_LOC) {
                     System.out.println("got the real enemy HQ coord!");
                     enemyHqLoc = new MapLocation(mess[2], mess[3]);
