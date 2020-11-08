@@ -22,9 +22,8 @@ public class Landscaper extends Unit {
         }
 
         //Gets the enemy HQ coordinate, if gotten already sends landscrapers to enemy HQ
-        if (rushType && enemyHqLoc == null) {
-            getRealEnemyHQFromBlockchain();
-        }
+        findEnemyHQ();
+
         System.out.println("RUSH " + rushType + " " + enemyHqLoc);
 
         if (!rushType) {

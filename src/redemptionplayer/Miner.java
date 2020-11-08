@@ -8,13 +8,11 @@ public class Miner extends Unit {
     static int potentialEnemyHQX = -1;
     static int potentialEnemyHQY = -1;
     static boolean firstMiner = false;
-    static boolean builtDesignSchool = false;
     static int stuckMoves = 0;
     static int designSchoolCount = 0; //only first miner cares about this for now
     static int currentElevation = 0;
     static boolean startAttacking = false;
     static boolean pauseForFlight = false;
-    static boolean droppedOff = false;
     static boolean giveUpMinerRush = false;
     static ArrayList<MapLocation> refineLocations;
     static Queue<MapLocation> soupLocations;
@@ -25,6 +23,8 @@ public class Miner extends Unit {
     static MapLocation lastNewSoupsLocation;
     static MapLocation rushDesignSchoolLocation;
     static int buildPriority = 0;
+    static boolean rushing;
+    static boolean broadCastedGiveUpMinerRush = false;
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
@@ -36,16 +36,20 @@ public class Miner extends Unit {
 
     public void run() throws GameActionException {
         super.run();
-
-        setBuildPriority();
         System.out.println("MINER!!!!");
-        boolean rushing = rc.getRoundNum() < 250 && !giveUpMinerRush;
+
+        if (rc.getRoundNum() > 50) {
+            getGiveUpMinerRush();
+        }
+        rushing = rc.getRoundNum() < 250 && !giveUpMinerRush;
+        setBuildPriority();
 
         currentElevation = rc.senseElevation(rc.getLocation());
 
         if (!backupMiner && turnCount == 1 && rc.getRoundNum() >= backupRound) {
             backupMiner = true;
         } else if (turnCount == 1 && rc.getRoundNum() == 2) {
+            System.out.println("IM FIRST MINER");
             //Sets the first spawned miner to the first miner (that will be discovring enemy HQ)
             firstMiner = true;
             potentialEnemyHQY = rc.getMapHeight() - hqLoc.y - 1;
@@ -54,23 +58,7 @@ public class Miner extends Unit {
         }
 
         System.out.println("Bytecode 1" + Clock.getBytecodeNum());
-        if (firstMiner && pauseForFlight && !droppedOff) {
-            //only check for this for the first miner after it built a fulfillment center and waited to be picked up
-            getPickedUpFirstMiner();
-        }
         System.out.println("Bytecode 2" + Clock.getBytecodeNum());
-
-        if (droppedOff) {
-            //to restart rush after drone dropping miner off
-            pauseForFlight = false;
-            startAttacking = true;
-            giveUpMinerRush = false;
-            broadcastedCont = false;
-            broadcastedHalt = false;
-            droppedOff = false; //most important
-            nearbyEnemyHQLocation();
-            clearMovement();
-        }
 
         if (pauseForFlight) {
             if (nearbyTeamRobot(RobotType.DELIVERY_DRONE)) {
@@ -84,7 +72,7 @@ public class Miner extends Unit {
 
         if (firstMiner) {
             System.out.println("First miner and Enemy hq is " + enemyHqLoc);
-            if (rc.getRoundNum() > 200 && !startAttacking) {
+            if (rc.getRoundNum() > 185 && !startAttacking) {
                 giveUpMinerRush = true;
             }
 
@@ -96,7 +84,6 @@ public class Miner extends Unit {
                     //Temporary way to stop broadcasting every turn when miner is around enemy HQ, because it uses too much soup.
                     broadcastRealEnemyHQCoordinates();
                 }
-
                 if (rushDesignSchoolLocation != null) {
                     if (!nearbyTeamRobot(RobotType.NET_GUN) && nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
                         for (Direction dir : Util.directions) {
@@ -145,10 +132,13 @@ public class Miner extends Unit {
                     //move towards enemy HQ to make sure your not divided by water
                     discoverEnemyHQ(new MapLocation(targetEnemyX, targetEnemyY));
                 }
-            } else if (giveUpMinerRush && !droppedOff) {
-                System.out.println("Switching to drone delivery!");
-                if (giveUpMinerRush)
-                    droneRush();
+            } else if (giveUpMinerRush) {
+                System.out.println("GUMR------------------!");
+                if (!broadCastedGiveUpMinerRush) {
+                    broadcastGiveUpMinerRush();
+                } else {
+                    firstMiner = false;
+                }
                 //Make fulfillment center
             } else {
                 //If enemy HQ is not found yet and is within miner's sensor radius, broadcast enemy HQ position
@@ -420,19 +410,6 @@ public class Miner extends Unit {
         }
     }
 
-    public void getPickedUpFirstMiner() throws GameActionException {
-        for (int i = 1; i < rc.getRoundNum(); i++) {
-            for (Transaction tx : rc.getBlock(i)) {
-                int[] mess = tx.getMessage();
-                if (mess[0] == teamSecret && mess[1] == PICKED_UP_MINER) {
-                    enemyPotentialHQNumber = mess[4];
-                    System.out.println("This is the miner after being dropped off! " + enemyPotentialHQNumber);
-                    droppedOff = true;
-                }
-            }
-        }
-    }
-
     void nearbyEnemyHQLocation() {
         RobotInfo[] robots = rc.senseNearbyRobots();
         for (RobotInfo r : robots) {
@@ -445,37 +422,26 @@ public class Miner extends Unit {
         }
     }
 
-    void droneRush() throws GameActionException {
-        //ensure that there's enough soup to send message after building fulfillment center
-        if (rc.getTeamSoup() > 310) {
-            for (Direction dir : Util.directions) {
-                if (tryBuild(RobotType.FULFILLMENT_CENTER, dir)) {
-                    System.out.println("\n=====================");
-                    System.out.println("Fulfillmment center created!");
-                    System.out.println("=====================\n");
+    void broadcastGiveUpMinerRush() throws GameActionException {
+        int[] message = new int[7];
+        message[0] = teamSecret;
+        message[1] = GIVE_UP_MINER_RUSH;
+        if (rc.canSubmitTransaction(message, 3)) {
+            rc.submitTransaction(message, 3);
+            broadCastedGiveUpMinerRush = true;
+        }
+        System.out.println("GUMR");
+    }
 
-                    pauseForFlight = true;
-                    int[] message = new int[7];
-                    message[0] = teamSecret;
-                    message[1] = UBER_REQUEST;
-                    message[2] = rc.getID(); // supply id for pickup
-                    message[3] = enemyPotentialHQNumber; // supply next target location
-                    message[4] = rc.getLocation().x;
-                    message[5] = rc.getLocation().y;
-                    if (rc.canSubmitTransaction(message, 3))
-                        rc.submitTransaction(message, 3);
-                    System.out.println("Broadcasting uber request");
-                    if (!broadcastedCont && broadcastedHalt) {
-                        broadcastContinueProduction();
-                        broadcastedCont = true;
-                    }
-                    break;
+    public void getGiveUpMinerRush() throws GameActionException {
+        for (int i = rc.getRoundNum() - 5; i < rc.getRoundNum(); i++) {
+            for (Transaction tx : rc.getBlock(i)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == GIVE_UP_MINER_RUSH) {
+                    rushing = false;
+                    giveUpMinerRush = true;
+                    System.out.println("GOT GUMR");
                 }
-            }
-        } else {
-            if (!broadcastedHalt && !haltProduction) {
-                broadcastHaltProduction();
-                broadcastedHalt = true;
             }
         }
     }
@@ -679,7 +645,14 @@ public class Miner extends Unit {
 
     public void setBuildPriority () {
         int roundNum = rc.getRoundNum();
-        if (roundNum < 250) {
+        System.out.println("RUSHING " + rushing);
+        if (!rushing) {
+            buildPriority = 0;
+            return;
+        }
+        if (roundNum < 185) {
+            buildPriority = 1000; //technically we don't want to waste resources when rushing;
+        } else if (roundNum < 250) {
             buildPriority = 150; //prioritize building miners and design schools during rush period.
         } else {
             buildPriority = 0;

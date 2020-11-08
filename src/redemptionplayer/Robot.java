@@ -1,4 +1,5 @@
 package redemptionplayer;
+
 import battlecode.common.*;
 
 public class Robot {
@@ -15,6 +16,7 @@ public class Robot {
     static final int CONTINUE_PRODUCTION = 5;
     static final int REFINERY_LOCATION = 6;
     static final int SOUP_LOCATION = 7;
+    static final int GIVE_UP_MINER_RUSH = 8;
     static boolean haltProduction = false;
     static int haltTurn = 0;
     static int continueTurn = 0;
@@ -29,11 +31,12 @@ public class Robot {
     public void run() throws GameActionException {
         turnCount += 1;
     }
+
     /**
      * Attempts to build a given robot in a given direction.
      *
      * @param type The type of the robot to build
-     * @param dir The intended direction of movement
+     * @param dir  The intended direction of movement
      * @return true if a move was performed
      * @throws GameActionException
      */
