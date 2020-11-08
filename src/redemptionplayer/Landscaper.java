@@ -78,7 +78,7 @@ public class Landscaper extends Unit {
             } else if (rc.getLocation().distanceSquaredTo(enemyHqLoc) < 4
                     && rc.canDepositDirt(rc.getLocation().directionTo(enemyHqLoc))) {
                 //If nearby enemy HQ, bury it
-                rc.depositDirt(rc.getLocation().directionTo(enemyHqLoc));
+//                rc.depositDirt(rc.getLocation().directionTo(enemyHqLoc));
                 System.out.println("Buried Enemy HQ");
             } else {
                 //If not nearby enemy HQ, continue moving towards it
@@ -105,10 +105,13 @@ public class Landscaper extends Unit {
                 //always dig away from HQ
                 dir = hqLoc.directionTo(rc.getLocation()).rotateRight().rotateRight();
             }
-            if (rc.canDigDirt(dir)) {
-                rc.digDirt(dir);
-                rc.setIndicatorDot(rc.getLocation().add(dir), 255, 0, 0);
-                return true;
+            Direction[] dirs = {dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft()};
+            for (Direction canDigDir : dirs) {
+                if (rc.canDigDirt(canDigDir)) {
+                    rc.digDirt(canDigDir);
+                    rc.setIndicatorDot(rc.getLocation().add(dir), 255, 0, 0);
+                    return true;
+                }
             }
         }
         return false;

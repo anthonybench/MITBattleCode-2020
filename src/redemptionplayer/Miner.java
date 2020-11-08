@@ -251,7 +251,19 @@ public class Miner extends Unit {
                 }
                 if (netGuns == 0) {
                     MapLocation topRight = new MapLocation(hqLoc.x + 2, hqLoc.y + 2);
-                    if (rc.getLocation().isAdjacentTo(topRight)) {
+                    MapLocation topLeft = new MapLocation(hqLoc.x - 2, hqLoc.y + 2);
+                    MapLocation bottomLeft = new MapLocation(hqLoc.x - 2, hqLoc.y - 2);
+                    MapLocation bottomRight = new MapLocation(hqLoc.x + 2, hqLoc.y - 2);
+                    MapLocation[] locs = {topLeft, topRight, bottomLeft, bottomRight};
+                    MapLocation closestPosition = null;
+                    int closestDistance = 1000;
+                    for (MapLocation loc : locs) {
+                        if (rc.getLocation().distanceSquaredTo(loc) < closestDistance) {
+                            closestDistance = rc.getLocation().distanceSquaredTo(loc);
+                            closestPosition = loc;
+                        }
+                    }
+                    if (rc.getLocation().isAdjacentTo(closestPosition)) {
                         for (Direction dir : Util.directions) {
                             if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.NET_GUN, dir)) {
                                 System.out.println("created a net gun next to HQ");
@@ -260,19 +272,7 @@ public class Miner extends Unit {
                             }
                         }
                     } else {
-                        dfsWalk(topRight);
-                    }
-                } else if (netGuns == 1) {
-                    MapLocation bottomLeft = new MapLocation(hqLoc.x - 2, hqLoc.y - 2);
-                    if (rc.getLocation().isAdjacentTo(bottomLeft)) {
-                        for (Direction dir : Util.directions) {
-                            if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.NET_GUN, dir)) {
-                                System.out.println("created a net gun next to HQ");
-                                netGuns++;
-                            }
-                        }
-                    } else {
-                        dfsWalk(bottomLeft);
+                        dfsWalk(closestPosition);
                     }
                 }
             }
