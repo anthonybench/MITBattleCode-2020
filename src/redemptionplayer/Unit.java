@@ -99,7 +99,7 @@ public class Unit extends Robot {
         Direction targetDirection = rc.getLocation().directionTo(destination);
         System.out.println("============================================");
         System.out.println("Bytecode 3 " + Clock.getBytecodeNum());
-        System.out.println("!!!Moving towards " + targetDirection + " " + discoverDir + " " + prevSplitLocations.size());
+        System.out.println("!!!Moving towards " + destination + " " + targetDirection + " " + discoverDir + " " + prevSplitLocations.size());
         System.out.println("Prev split " + prevSplitLocation + " " + rc.getLocation());
 
         if (prevSplitLocation != null && rc.getLocation().equals(prevSplitLocation.getKey())) {

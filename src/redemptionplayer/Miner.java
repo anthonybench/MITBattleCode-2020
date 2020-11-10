@@ -686,4 +686,14 @@ public class Miner extends Unit {
             }
         }
     }
+
+    @Override
+    boolean tryBuild(RobotType type, Direction dir) throws GameActionException {
+        System.out.println(rc.isReady() + " " + rc.canBuildRobot(type, dir));
+        if (rc.isReady() && rc.canBuildRobot(type, dir) && rc.getLocation().add(dir).distanceSquaredTo(hqLoc) != 1) {
+            rc.buildRobot(type, dir);
+            return true;
+        }
+        return false;
+    }
 }

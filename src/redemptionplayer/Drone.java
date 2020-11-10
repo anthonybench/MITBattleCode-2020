@@ -78,7 +78,9 @@ public class Drone extends Unit {
                     }
                 }
             } else {
-                if (rc.canPickUpUnit(pickUpID)) {
+                if (rc.getLocation().isAdjacentTo(pickUpLocation) && !rc.canPickUpUnit(pickUpID)) {
+                    pickUpID = -1;
+                } else if (rc.canPickUpUnit(pickUpID)) {
                     rc.pickUpUnit(pickUpID);
                 } else {
                     dfsWalk(pickUpLocation);
