@@ -58,8 +58,6 @@ public class Miner extends Unit {
             System.out.println("IM FIRST MINER");
             //Sets the first spawned miner to the first miner (that will be discovring enemy HQ)
             firstMiner = true;
-            potentialEnemyHQY = rc.getMapHeight() - hqLoc.y - 1;
-            potentialEnemyHQX = rc.getMapWidth() - hqLoc.x - 1;
 //            refineLocations.add(hqLoc);
         }
 
@@ -86,10 +84,10 @@ public class Miner extends Unit {
                 System.out.println("rushing");
                 //if miner is the first miner and enemy HQ is found, keep broadcasting
                 //enemy HQ to new units and (build design schools nearby enemy HQ) -> this behavior should be optimized
-                if (turnCount % 10 == 0) {
-                    //Temporary way to stop broadcasting every turn when miner is around enemy HQ, because it uses too much soup.
-                    broadcastRealEnemyHQCoordinates();
-                }
+//                if (turnCount % 10 == 0) {
+//                    //Temporary way to stop broadcasting every turn when miner is around enemy HQ, because it uses too much soup.
+//                    broadcastRealEnemyHQCoordinates();
+//                }
                 if (rushDesignSchoolLocation != null) {
                     if (!nearbyTeamRobot(RobotType.NET_GUN) && nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
                         for (Direction dir : Util.directions) {
@@ -165,30 +163,14 @@ public class Miner extends Unit {
                 }
 
                 if (enemyHqLoc == null) {
-                    System.out.println("Target HQ " + enemyPotentialHQNumber);
-                    //Sets the first miner's targeted locations
-                    switch (enemyPotentialHQNumber) {
-                        case 1:
-                            targetEnemyX = hqLoc.x;
-                            targetEnemyY = potentialEnemyHQY;
-                            break;
-                        case 2:
-                            targetEnemyX = potentialEnemyHQX;
-                            targetEnemyY = potentialEnemyHQY;
-                            break;
-                        case 3:
-                            targetEnemyX = potentialEnemyHQX;
-                            targetEnemyY = hqLoc.y;
-                            break;
-                    }
-                    System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
+                    enemyBaseFindingLogic();
                 }
-                //Broadcast soup locations found while discovering enemy HQ
-                MapLocation[] soupToMine = rc.senseNearbySoup();
-                if (soupToMine.length > 3 && (lastNewSoupsLocation == null
-                        || !rc.getLocation().isWithinDistanceSquared(lastNewSoupsLocation, 50))) {
-                    broadcastSoupNewSoupLoc(soupToMine[0].x, soupToMine[0].y);
-                }
+//                //Broadcast soup locations found while discovering enemy HQ
+//                MapLocation[] soupToMine = rc.senseNearbySoup();
+//                if (soupToMine.length > 3 && (lastNewSoupsLocation == null
+//                        || !rc.getLocation().isWithinDistanceSquared(lastNewSoupsLocation, 50))) {
+//                    broadcastSoupNewSoupLoc(soupToMine[0].x, soupToMine[0].y);
+//                }
                 //Hills
                 if (rc.getRoundNum() < 16) {
                     minerGoToEnemyHQ();
@@ -577,7 +559,7 @@ public class Miner extends Unit {
     }
 
     public void buildRefineryNearSoupArea() throws GameActionException {
-        System.out.println("Build refinery");
+        System.out.println("Build refinery " + buildPriority);
         getHaltProductionFromBlockchain();
         getContinueProductionFromBlockchain();
 
@@ -585,6 +567,19 @@ public class Miner extends Unit {
             return;
         }
 
+        //has landscapers building walls but still no refinery, then build refinery
+        if (rc.canSenseLocation(hqLoc) && nearbyTeamRobot(RobotType.LANDSCAPER) && refineLocations.isEmpty() && !nearbyTeamRobot(RobotType.REFINERY)) {
+            for (Direction dir : Util.directions) {
+                if (!rc.getLocation().add(dir).isAdjacentTo(hqLoc) && tryBuild(RobotType.REFINERY, dir)) {
+                    MapLocation refineryLoc = rc.getLocation().add(dir);
+                    broadcastNewRefinery(refineryLoc.x, refineryLoc.y);
+                    refineLocations.add(refineryLoc);
+                    break;
+                }
+            }
+        }
+
+        //if finds soup area and no refinery nearby, build refinery
         if (rc.senseNearbySoup().length >= 4 && rc.getTeamSoup() > 204 + buildPriority
                 && !nearbyTeamRobot(RobotType.REFINERY)) {
             //check if have refine spots nearby

@@ -41,6 +41,8 @@ public class Unit extends Robot {
     public Unit(RobotController rc) throws GameActionException {
         super(rc);
         findHQ();
+        potentialEnemyHQY = rc.getMapHeight() - hqLoc.y - 1;
+        potentialEnemyHQX = rc.getMapWidth() - hqLoc.x - 1;
         prevSplitLocations = new Stack<>();
         prevLocations = new Stack<>();
     }
@@ -131,7 +133,7 @@ public class Unit extends Robot {
 //                    prevLocation = prevLocations.pop();
 //                }
                 System.out.println("Backtracking to " + prevLocation);
-                if (tryMove(rc.getLocation().directionTo(prevLocation))){
+                if (tryMove(rc.getLocation().directionTo(prevLocation))) {
                     prevLocations.pop();
                 }
             }
@@ -219,7 +221,7 @@ public class Unit extends Robot {
         System.out.println("Broadcasting real enemy HQ coordinates " + targetEnemyX + " " + targetEnemyY);
     }
 
-    public void clearMovement () {
+    public void clearMovement() {
         prevSplitLocations.clear();
         discoverDir = "right";
         prevLocations.clear();
@@ -242,5 +244,25 @@ public class Unit extends Robot {
                 getRealEnemyHQFromBlockchain();
             }
         }
+    }
+
+    void enemyBaseFindingLogic() {
+        System.out.println("Target HQ " + enemyPotentialHQNumber);
+        //Sets the first miner's targeted locations
+        switch (enemyPotentialHQNumber) {
+            case 1:
+                targetEnemyX = hqLoc.x;
+                targetEnemyY = potentialEnemyHQY;
+                break;
+            case 2:
+                targetEnemyX = potentialEnemyHQX;
+                targetEnemyY = potentialEnemyHQY;
+                break;
+            case 3:
+                targetEnemyX = potentialEnemyHQX;
+                targetEnemyY = hqLoc.y;
+                break;
+        }
+        System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
     }
 }

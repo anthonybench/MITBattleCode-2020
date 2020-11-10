@@ -23,14 +23,11 @@ public class Landscaper extends Unit {
             rushType = true;
         }
 
-        if (rc.getRoundNum() > 250 && rushType) {
-            rushType = false;
-        }
         //Gets the enemy HQ coordinate, if gotten already sends landscrapers to enemy HQ
-        if (!gotBlockchainMess) {
-            findEnemyHQ();
-            gotBlockchainMess = true;
-        }
+//        if (!gotBlockchainMess && !rushType) {
+//            findEnemyHQ();
+//            gotBlockchainMess = true;
+//        }
 
         System.out.println("RUSH " + rushType + " " + enemyHqLoc);
 

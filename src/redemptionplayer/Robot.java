@@ -84,7 +84,7 @@ public class Robot {
     }
 
     public void getRealEnemyHQFromBlockchain() throws GameActionException {
-        for (int i = 1; i < rc.getRoundNum(); i++) {
+        for (int i = rc.getRoundNum() - 5; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
                 if (mess[0] == teamSecret && mess[1] == ENEMY_HQ_LOC) {

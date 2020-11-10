@@ -11,7 +11,7 @@ public class FulfillmentCenter extends Building {
 
     public void run() throws GameActionException {
         findHQ();
-        if (rc.getLocation().isWithinDistanceSquared(hqLoc, 10)) {
+        if (rc.getLocation().isWithinDistanceSquared(hqLoc, 20)) {
             //fulfillment center near our HQ can build more than one drone
             if (droneCount < 20) {
                 for (Direction dir : Util.directions) {
