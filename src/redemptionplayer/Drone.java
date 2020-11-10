@@ -198,7 +198,8 @@ public class Drone extends Unit {
                 return true;
             } else return false;
         } else {
-            if (rc.isReady() && rc.canMove(dir) && !rc.getLocation().isWithinDistanceSquared(enemyHqLoc, GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)) {
+            if (rc.isReady() && rc.canMove(dir)
+                    && !rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 25)) {
                 rc.move(dir);
                 return true;
             } else return false;

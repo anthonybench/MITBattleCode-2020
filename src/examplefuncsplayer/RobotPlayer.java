@@ -128,6 +128,12 @@ public strictfp class RobotPlayer {
         if (turnCount == 1) {
             sendHqLoc(rc.getLocation());
         }
+
+        int targetID = nearbyEnemyDrone();
+        if (targetID != -1 && rc.canShootUnit(targetID)) {
+            rc.shootUnit(targetID);
+        }
+
         if (mapWidth == 30 && mapHeight == 30) {
             //find current map width
             while (rc.onTheMap(new MapLocation(mapWidth + 1, 0))) {
@@ -536,5 +542,15 @@ public strictfp class RobotPlayer {
                 System.out.println(enemyHqX + enemyHqY);
             }
         }
+    }
+
+    public static int nearbyEnemyDrone() throws GameActionException {
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r : robots) {
+            if (r.getType() == RobotType.DELIVERY_DRONE && r.team != rc.getTeam()) {
+                return r.getID();
+            }
+        }
+        return -1;
     }
 }
