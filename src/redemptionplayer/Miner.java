@@ -42,7 +42,7 @@ public class Miner extends Unit {
         if (rc.getRoundNum() > 50) {
             getGiveUpMinerRush();
         }
-        if (rc.getRoundNum() > 300 && rc.getLocation().isAdjacentTo(hqLoc)) {
+        if (rc.getRoundNum() > 300 && rc.getLocation().isAdjacentTo(hqLoc) && nearbyTeamRobot(RobotType.LANDSCAPER)) {
             //blocking the turtle and there's probably no other soup locations discovered that's why it deposited
             //at HQ
             rc.disintegrate();
@@ -283,6 +283,8 @@ public class Miner extends Unit {
                     }
                 }
             }
+
+            moveAroundHQ();
         } else {
             System.out.println("Not first miner or backup miner");
             getSoupLocation();
@@ -663,6 +665,25 @@ public class Miner extends Unit {
             buildPriority = 150; //prioritize building miners and design schools during rush period.
         } else {
             buildPriority = 0;
+        }
+    }
+
+    public void moveAroundHQ () throws GameActionException{
+        for (Direction dir : Util.directions) {
+            if (rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 10)) {
+                if (rc.getLocation().distanceSquaredTo(hqLoc) == 1
+                        && rc.getLocation().add(dir).distanceSquaredTo(hqLoc) == 2 && tryMove(dir)) {
+                    //was perpendicular to hq, and now moving to a spot diagonal to hq loc
+                    break;
+                } else if (rc.getLocation().isAdjacentTo(hqLoc) && !rc.getLocation().add(dir).isAdjacentTo(hqLoc)
+                && tryMove(dir)) {
+                    //was at a spot diagonal to hq loc now moving to a spot not adjacent to hq loc
+                    break;
+                } else if (!rc.getLocation().add(dir).isAdjacentTo(hqLoc) && tryMove(dir)) {
+                    //wasn't adjacent to hq, and don't try to move adjacent to hq again.
+                    break;
+                }
+            }
         }
     }
 }

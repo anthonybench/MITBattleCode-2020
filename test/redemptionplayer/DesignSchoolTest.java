@@ -13,7 +13,7 @@ public class DesignSchoolTest {
 
 
 	@Test
-	public void BuildLandscaperTest() throws	GameActionException {
+	public void BuildLandscaperTest() throws GameActionException {
 		//Arrange
 		RobotController rc = Mockito.mock(RobotController.class);
 		RobotInfo enemyHQ = new RobotInfo(10001, Team.NEUTRAL, RobotType.HQ, 0, false, 0, 0,0, null);
