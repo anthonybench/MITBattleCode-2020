@@ -92,7 +92,7 @@ public class Landscaper extends Unit {
             //always dig away from HQ
             for (Direction dirs : Util.directions) {
                 if (!rc.getLocation().add(dirs).isAdjacentTo(hqLoc) && rc.canDigDirt(dirs)
-                && !rc.isLocationOccupied(rc.getLocation().add(dirs))) {
+                        && !rc.isLocationOccupied(rc.getLocation().add(dirs))) {
                     rc.digDirt(dirs);
                     System.out.println("Dug");
                     return true;
@@ -140,27 +140,23 @@ public class Landscaper extends Unit {
                     }
                 }
 
+                boolean stillCanMove = false;
                 for (Direction dir : Util.directions) {
                     if (rc.canMove(dir)) {
-                        if (Math.random() < 0.8) {
-                            if (bestPlaceToBuildWall != null) {
-                                rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
-                                rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
-                                System.out.println("building a wall");
-                                break;
-                            }
-                        } else {
-                            goTo(Util.randomDirection());
-                        }
-                    } else {
-                        if (bestPlaceToBuildWall != null) {
-                            rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
-                            rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
-                            System.out.println("building a wall");
-                            break;
-                        }
+                        stillCanMove = true;
+                        break;
                     }
                 }
+
+                if (stillCanMove && Math.random() < 0.2) {
+                    goTo(Util.randomDirection());
+                }
+                if (bestPlaceToBuildWall != null) {
+                    rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
+                    rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
+                    System.out.println("building a wall");
+                }
+
             }
         }
     }
