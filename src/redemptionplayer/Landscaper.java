@@ -28,7 +28,7 @@ public class Landscaper extends Unit {
 //            findEnemyHQ();
 //            gotBlockchainMess = true;
 //        }
-
+        findEnemyHQ();
         System.out.println("RUSH " + rushType + " " + enemyHqLoc);
 
         if (!rushType) {
