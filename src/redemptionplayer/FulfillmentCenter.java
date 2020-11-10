@@ -13,7 +13,7 @@ public class FulfillmentCenter extends Building {
         findHQ();
         if (rc.getLocation().isWithinDistanceSquared(hqLoc, 20)) {
             //fulfillment center near our HQ can build more than one drone
-            if (droneCount < 20) {
+            if (droneCount < 2 || rc.getRoundNum() > 300) {
                 for (Direction dir : Util.directions) {
                     if (!madeDrone && tryBuild(RobotType.DELIVERY_DRONE, dir)) {
                         System.out.println("Made a Drone!");
