@@ -83,6 +83,8 @@ public strictfp class RobotPlayer {
                     case NET_GUN:
                         runNetGun();
                         break;
+                    default:
+                        break;
                 }
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again

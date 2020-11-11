@@ -84,6 +84,8 @@ public strictfp class RobotPlayer {
                     case NET_GUN:
                         runNetGun();
                         break;
+                    default:
+                        break;
                 }
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
@@ -159,6 +161,7 @@ public strictfp class RobotPlayer {
                 }
         }
     }
+
     static boolean nearbyTeamRobot(RobotType target) throws GameActionException {
         RobotInfo[] robots = rc.senseNearbyRobots();
         for (RobotInfo r : robots) {
@@ -252,22 +255,22 @@ public strictfp class RobotPlayer {
 // first, save HQ by trying to remove dirt from it
         if (hqLoc != null && hqLoc.isAdjacentTo(rc.getLocation())) {
             Direction dirtohq = rc.getLocation().directionTo(hqLoc);
-            if(rc.canDigDirt(dirtohq)){
+            if (rc.canDigDirt(dirtohq)) {
                 rc.digDirt(dirtohq);
             }
         }
 
-        if(rc.getDirtCarrying() == 0){
+        if (rc.getDirtCarrying() == 0) {
             tryDig();
         }
 
         MapLocation bestPlaceToBuildWall = null;
         // find best place to build
-        if(hqLoc != null) {
+        if (hqLoc != null) {
             int lowestElevation = 9999999;
             for (Direction dir : directions) {
                 MapLocation tileToCheck = hqLoc.add(dir);
-                if(rc.getLocation().distanceSquaredTo(tileToCheck) < 4
+                if (rc.getLocation().distanceSquaredTo(tileToCheck) < 4
                         && rc.canDepositDirt(rc.getLocation().directionTo(tileToCheck))) {
                     if (rc.senseElevation(tileToCheck) < lowestElevation) {
                         lowestElevation = rc.senseElevation(tileToCheck);
@@ -277,7 +280,7 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (Math.random() < 0.8){
+        if (Math.random() < 0.8) {
             // build the wall
             if (bestPlaceToBuildWall != null) {
                 rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
@@ -287,7 +290,7 @@ public strictfp class RobotPlayer {
         }
 
         // otherwise try to get to the hq
-        if(hqLoc != null){
+        if (hqLoc != null) {
             goTo(hqLoc);
         } else {
             goTo(randomDirection());
