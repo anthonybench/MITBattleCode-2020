@@ -120,7 +120,6 @@ public strictfp class RobotPlayer {
                     enemyHqLoc = robot.location;
                 }
             }
-            // TODO later: use blockchain to communicate
         }
     }
 

@@ -5,8 +5,7 @@ import battlecode.common.*;
 import java.util.*;
 
 public class Miner extends Unit {
-    static int potentialEnemyHQX = -1;
-    static int potentialEnemyHQY = -1;
+
     static boolean firstMiner = false;
     static int stuckMoves = 0;
     static int designSchoolCount = 0; //only first miner cares about this for now
@@ -42,11 +41,13 @@ public class Miner extends Unit {
         if (rc.getRoundNum() > 50) {
             getGiveUpMinerRush();
         }
+
         if (rc.getRoundNum() > 300 && rc.getLocation().isAdjacentTo(hqLoc) && nearbyTeamRobot(RobotType.LANDSCAPER)) {
             //blocking the turtle and there's probably no other soup locations discovered that's why it deposited
             //at HQ
             rc.disintegrate();
         }
+
         rushing = rc.getRoundNum() < 250 && !giveUpMinerRush;
         setBuildPriority();
 
@@ -114,35 +115,17 @@ public class Miner extends Unit {
                     startAttacking = true;
                     //build net gun if there's enemy delievery drones nearby
                     if (designSchoolCount < 1) {
-                        //TODO make this part more intelligent and use less bytecode
                         if (rc.getTeamSoup() > 154 &&
                                 tryBuild(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(new MapLocation(enemyHqLoc.x - 1, enemyHqLoc.y)))) {
                             designSchoolCount++;
                             rushDesignSchoolLocation = rc.getLocation().add(rc.getLocation().directionTo(new MapLocation(enemyHqLoc.x - 1, enemyHqLoc.y)));
-                            if (!broadcastedCont && broadcastedHalt) {
-                                broadcastContinueProduction();
-                                broadcastedCont = true;
-                            }
                         } else {
-                            if (!broadcastedHalt && !haltProduction) {
-                                broadcastHaltProduction();
-                                broadcastedHalt = true;
-                            }
-                        }
-                        for (Direction dir : Util.directions) {
-                            if (rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) &&
-                                    rc.getTeamSoup() > 154 && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
-                                designSchoolCount++;
-                                rushDesignSchoolLocation = rc.getLocation().add(dir);
-                                if (!broadcastedCont && broadcastedHalt) {
-                                    broadcastContinueProduction();
-                                    broadcastedCont = true;
-                                }
-                                break;
-                            } else {
-                                if (!broadcastedHalt && !haltProduction) {
-                                    broadcastHaltProduction();
-                                    broadcastedHalt = true;
+                            for (Direction dir : Util.directions) {
+                                if (rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) &&
+                                        rc.getTeamSoup() > 154 && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                                    designSchoolCount++;
+                                    rushDesignSchoolLocation = rc.getLocation().add(dir);
+                                    break;
                                 }
                             }
                         }
@@ -662,7 +645,7 @@ public class Miner extends Unit {
         }
     }
 
-    public void setBuildPriority () {
+    public void setBuildPriority() {
         int roundNum = rc.getRoundNum();
         System.out.println("RUSHING " + rushing);
         if (!rushing) {
@@ -678,7 +661,7 @@ public class Miner extends Unit {
         }
     }
 
-    public void moveAroundHQ () throws GameActionException{
+    public void moveAroundHQ() throws GameActionException {
         for (Direction dir : Util.directions) {
             if (rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 10)) {
                 if (rc.getLocation().distanceSquaredTo(hqLoc) == 1
@@ -686,7 +669,7 @@ public class Miner extends Unit {
                     //was perpendicular to hq, and now moving to a spot diagonal to hq loc
                     break;
                 } else if (rc.getLocation().isAdjacentTo(hqLoc) && !rc.getLocation().add(dir).isAdjacentTo(hqLoc)
-                && tryMove(dir)) {
+                        && tryMove(dir)) {
                     //was at a spot diagonal to hq loc now moving to a spot not adjacent to hq loc
                     break;
                 } else if (!rc.getLocation().add(dir).isAdjacentTo(hqLoc) && tryMove(dir)) {

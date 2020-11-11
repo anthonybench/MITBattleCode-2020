@@ -34,6 +34,14 @@ public class Drone extends Unit {
                         sameTeam = false;
                         break;
                     }
+
+                    if (robot.getType() == RobotType.COW) {
+                        pickUpID = robot.ID;
+                        pickUpLocation = robot.getLocation();
+                        pickUpType = RobotType.LANDSCAPER;
+                        sameTeam = false;
+                        break;
+                    }
                 }
             } else {
                 if (rc.isCurrentlyHoldingUnit()) {
