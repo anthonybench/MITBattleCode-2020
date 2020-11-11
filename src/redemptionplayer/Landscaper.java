@@ -89,10 +89,19 @@ public class Landscaper extends Unit {
 
     boolean tryDig(boolean enemyHQ) throws GameActionException {
         if (enemyHQ && enemyHqLoc != null) {
-            //set to dig the spot behind the landscaper
+            //try dig the enemy wall first
             for (Direction dir : Util.directions) {
                 if (rc.canDigDirt(dir) && !rc.getLocation().add(dir).equals(enemyHqLoc)
                 && rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && outerRushLandscaperCanDig(rc.getLocation().add(dir))) {
+                    rc.digDirt(dir);
+                    System.out.println("Dug " + dir);
+                    return true;
+                }
+            }
+
+            for (Direction dir : Util.directions) {
+                if (rc.canDigDirt(dir) && !rc.getLocation().add(dir).equals(enemyHqLoc)
+                        && outerRushLandscaperCanDig(rc.getLocation().add(dir))) {
                     rc.digDirt(dir);
                     System.out.println("Dug " + dir);
                     return true;
@@ -161,7 +170,7 @@ public class Landscaper extends Unit {
                 if (stillCanMove && Math.random() < 0.2) {
                     goTo(Util.randomDirection());
                 }
-                if (bestPlaceToBuildWall != null) {
+                if (bestPlaceToBuildWall != null && rc.canDepositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall))) {
                     rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
                     rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
                     System.out.println("building a wall");
