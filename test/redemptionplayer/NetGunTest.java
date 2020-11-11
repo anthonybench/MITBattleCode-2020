@@ -1,7 +1,6 @@
-package RedemptionPlayer;
+package redemptionplayer;
 
 import battlecode.common.*;
-import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 

@@ -1,4 +1,4 @@
-package RedemptionPlayer;
+package redemptionplayer;
 
 import battlecode.common.*;
 
@@ -14,31 +14,27 @@ public class DesignSchool extends Building {
         if (!nearbyTeamRobot(RobotType.NET_GUN) && nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
             return;
         } else if (nearbyEnemyRobot(RobotType.HQ)) {
-            if (landscaperCount <= 2) {
-                if (!broadcastedHalt && !haltProduction && rc.getTeamSoup() < 150) {
-                    broadcastHaltProduction();
-                    broadcastedHalt = true;
-                }
-            } else {
-                if (!broadcastedCont && haltProduction) {
-                    broadcastContinueProduction();
-                    broadcastedCont = true;
-                }
-            }
             //leave some soup for communication
-            if (landscaperCount <= 4 && rc.getTeamSoup() > 160) {
+            if (rc.getRoundNum() < 250 && landscaperCount <= 5) {
                 System.out.println(landscaperCount + " 1");
                 tryBuildLandscaper();
             }
-        } else if (landscaperCount <= 4) {
+        } else if (landscaperCount <= 3) {
             getHaltProductionFromBlockchain();
             getContinueProductionFromBlockchain();
+
             if (checkHalt()) {
                 return;
             }
             System.out.println(landscaperCount + " 2");
             tryBuildLandscaper();
+        } else {
+            if (nearbyTeamRobot(RobotType.DELIVERY_DRONE) && landscaperCount <= 7) {
+               tryBuildLandscaper();
+            }
         }
+
+        System.out.println("BC " + Clock.getBytecodeNum());
     }
 
     public void tryBuildLandscaper() throws GameActionException {

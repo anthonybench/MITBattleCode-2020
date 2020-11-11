@@ -1,7 +1,5 @@
-package RedemptionPlayer;
+package redemptionplayer;
 import battlecode.common.*;
-
-import java.util.Map;
 
 //Common utilities that don't interact with the game and is used in multiple places.
 public class Util {

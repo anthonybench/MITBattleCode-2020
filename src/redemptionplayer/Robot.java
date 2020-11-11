@@ -1,4 +1,5 @@
-package RedemptionPlayer;
+package redemptionplayer;
+
 import battlecode.common.*;
 
 public class Robot {
@@ -13,11 +14,15 @@ public class Robot {
     static final int UBER_REQUEST = 3;
     static final int HALT_PRODUCTION = 4;
     static final int CONTINUE_PRODUCTION = 5;
+    static final int REFINERY_LOCATION = 6;
+    static final int SOUP_LOCATION = 7;
+    static final int GIVE_UP_MINER_RUSH = 8;
     static boolean haltProduction = false;
     static int haltTurn = 0;
     static int continueTurn = 0;
     static boolean broadcastedHalt = false;
     static boolean broadcastedCont = false;
+    static final int backupRound = 90;
 
     public Robot(RobotController rc) {
         this.rc = rc;
@@ -26,15 +31,17 @@ public class Robot {
     public void run() throws GameActionException {
         turnCount += 1;
     }
+
     /**
      * Attempts to build a given robot in a given direction.
      *
      * @param type The type of the robot to build
-     * @param dir The intended direction of movement
+     * @param dir  The intended direction of movement
      * @return true if a move was performed
      * @throws GameActionException
      */
     boolean tryBuild(RobotType type, Direction dir) throws GameActionException {
+        System.out.println(rc.isReady() + " " + rc.canBuildRobot(type, dir));
         if (rc.isReady() && rc.canBuildRobot(type, dir)) {
             rc.buildRobot(type, dir);
             return true;
@@ -77,10 +84,9 @@ public class Robot {
     }
 
     public void getRealEnemyHQFromBlockchain() throws GameActionException {
-        for (int i = 1; i < rc.getRoundNum(); i++) {
+        for (int i = rc.getRoundNum() - 5; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
-                System.out.println(i + " " + mess[1]);
                 if (mess[0] == teamSecret && mess[1] == ENEMY_HQ_LOC) {
                     System.out.println("got the real enemy HQ coord!");
                     enemyHqLoc = new MapLocation(mess[2], mess[3]);
@@ -97,7 +103,8 @@ public class Robot {
         message[2] = rc.getRoundNum();
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
-        System.out.println("Broadcast halt");
+        System.out.println("Broadcast halt!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        broadcastedHalt = true;
     }
 
     public void broadcastContinueProduction() throws GameActionException {
@@ -107,11 +114,12 @@ public class Robot {
         message[2] = rc.getRoundNum();
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
-        System.out.println("Broadcast continue");
+        System.out.println("Broadcast continue!!!!!!!!!!!!!!!!!!!!!!!");
+        broadcastedCont = true;
     }
 
     public void getHaltProductionFromBlockchain() throws GameActionException {
-        for (int i = 1; i < rc.getRoundNum(); i++) {
+        for (int i = rc.getRoundNum() - 3; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
                 if (mess[0] == teamSecret && mess[1] == HALT_PRODUCTION) {
@@ -125,7 +133,7 @@ public class Robot {
     }
 
     public void getContinueProductionFromBlockchain() throws GameActionException {
-        for (int i = 1; i < rc.getRoundNum(); i++) {
+        for (int i = rc.getRoundNum() - 3; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
                 if (mess[0] == teamSecret && mess[1] == CONTINUE_PRODUCTION) {
@@ -140,5 +148,21 @@ public class Robot {
 
     public boolean checkHalt() {
         return haltProduction && haltTurn > continueTurn;
+    }
+
+    void findHQ() throws GameActionException {
+        if (hqLoc == null) {
+            // search surroundings for HQ
+            RobotInfo[] robots = rc.senseNearbyRobots();
+            for (RobotInfo robot : robots) {
+                if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
+                    hqLoc = robot.location;
+                }
+            }
+            if (hqLoc == null) {
+                // if still null, search the blockchain
+                getHqLocFromBlockchain();
+            }
+        }
     }
 }

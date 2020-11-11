@@ -1,4 +1,4 @@
-package RedemptionPlayer;
+package redemptionplayer;
 import battlecode.common.*;
 
 public class Building extends Robot {
