@@ -265,4 +265,14 @@ public class Unit extends Robot {
         }
         System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
     }
+
+    public boolean locationOccupiedWithSameTeamRobot (MapLocation mapLoc) throws GameActionException{
+        if (rc.canSenseLocation(mapLoc) && rc.isLocationOccupied(mapLoc)) {
+            RobotInfo robot =  rc.senseRobotAtLocation(mapLoc);
+            if (robot.getTeam() == rc.getTeam()) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

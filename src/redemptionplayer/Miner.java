@@ -108,12 +108,27 @@ public class Miner extends Unit {
                     if (!rc.getLocation().equals(waitingPosition)) {
                         dfsWalk(waitingPosition);
                     }
-                } else if (rc.getLocation().isAdjacentTo(enemyHqLoc)) {
+                } else if (rc.getLocation().isAdjacentTo(new MapLocation(enemyHqLoc.x - 1, enemyHqLoc.y))) {
                     System.out.println("Start Attack");
                     //create design school next to enemy HQ
                     startAttacking = true;
                     //build net gun if there's enemy delievery drones nearby
                     if (designSchoolCount < 1) {
+                        //TODO make this part more intelligent and use less bytecode
+                        if (rc.getTeamSoup() > 154 &&
+                                tryBuild(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(new MapLocation(enemyHqLoc.x - 1, enemyHqLoc.y)))) {
+                            designSchoolCount++;
+                            rushDesignSchoolLocation = rc.getLocation().add(rc.getLocation().directionTo(new MapLocation(enemyHqLoc.x - 1, enemyHqLoc.y)));
+                            if (!broadcastedCont && broadcastedHalt) {
+                                broadcastContinueProduction();
+                                broadcastedCont = true;
+                            }
+                        } else {
+                            if (!broadcastedHalt && !haltProduction) {
+                                broadcastHaltProduction();
+                                broadcastedHalt = true;
+                            }
+                        }
                         for (Direction dir : Util.directions) {
                             if (rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) &&
                                     rc.getTeamSoup() > 154 && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
@@ -134,7 +149,7 @@ public class Miner extends Unit {
                     }
                 } else {
                     //move towards enemy HQ to make sure your not divided by water
-                    discoverEnemyHQ(new MapLocation(targetEnemyX, targetEnemyY));
+                    discoverEnemyHQ(new MapLocation(targetEnemyX - 1, targetEnemyY));
                 }
             } else if (giveUpMinerRush) {
                 System.out.println("GUMR------------------!");

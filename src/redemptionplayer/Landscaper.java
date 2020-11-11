@@ -42,12 +42,12 @@ public class Landscaper extends Unit {
             RobotInfo[] robotInfos = rc.senseNearbyRobots();
 
             MapLocation target = enemyHqLoc;
-            for (RobotInfo robot : robotInfos) {
-                if (robot.getType() == RobotType.DESIGN_SCHOOL && robot.getTeam() != rc.getTeam()) {
-                    target = robot.getLocation();
-                    break;
-                }
-            }
+//            for (RobotInfo robot : robotInfos) {
+//                if (robot.getType() == RobotType.DESIGN_SCHOOL && robot.getTeam() != rc.getTeam()) {
+//                    target = robot.getLocation();
+//                    break;
+//                }
+//            }
 
             if (rc.getDirtCarrying() == 0) {
                 tryDig(true);
@@ -56,7 +56,15 @@ public class Landscaper extends Unit {
                     && rc.canDepositDirt(rc.getLocation().directionTo(enemyHqLoc))) {
                 //If nearby enemy HQ, bury it
                 rc.depositDirt(rc.getLocation().directionTo(enemyHqLoc));
-                System.out.println("Buried Enemy HQ");
+                System.out.println("Buried Enemy HQ " + rc.getLocation().directionTo(enemyHqLoc));
+            } else if (rc.getLocation().distanceSquaredTo(enemyHqLoc) < 8) {
+                //don't deposit dirt to help enemy build wall.
+                for (Direction dir : Util.directions) {
+                    if (!rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && rc.canDepositDirt(dir)) {
+                        rc.depositDirt(dir);
+                        break;
+                    }
+                }
             } else if (target != null) {
                 if (rc.getLocation().distanceSquaredTo(target) < 4
                         && rc.canDepositDirt(rc.getLocation().directionTo(target))) {
@@ -68,7 +76,9 @@ public class Landscaper extends Unit {
                         }
                     }
                 }
-            } else {
+            }
+
+            if (rc.getCooldownTurns() < 1) {
                 //If not nearby enemy HQ, continue moving towards it
                 surroundEnemyHQ();
             }
@@ -78,13 +88,13 @@ public class Landscaper extends Unit {
     }
 
     boolean tryDig(boolean enemyHQ) throws GameActionException {
-        Direction dir;
         if (enemyHQ && enemyHqLoc != null) {
             //set to dig the spot behind the landscaper
-            for (Direction dirs : Util.directions) {
-                if (rc.canDigDirt(dirs) && !rc.getLocation().add(dirs).equals(enemyHqLoc)) {
-                    rc.digDirt(dirs);
-                    System.out.println("Dug");
+            for (Direction dir : Util.directions) {
+                if (rc.canDigDirt(dir) && !rc.getLocation().add(dir).equals(enemyHqLoc)
+                && rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && outerRushLandscaperCanDig(rc.getLocation().add(dir))) {
+                    rc.digDirt(dir);
+                    System.out.println("Dug " + dir);
                     return true;
                 }
             }
@@ -156,7 +166,6 @@ public class Landscaper extends Unit {
                     rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
                     System.out.println("building a wall");
                 }
-
             }
         }
     }
@@ -167,6 +176,10 @@ public class Landscaper extends Unit {
                 dfsWalk(enemyHqLoc.add(dir));
             }
         }
+    }
+
+    public boolean outerRushLandscaperCanDig (MapLocation mapLoc) throws GameActionException{
+        return !locationOccupiedWithSameTeamRobot(mapLoc) || (rc.senseElevation(mapLoc) > 5);
     }
 }
 
