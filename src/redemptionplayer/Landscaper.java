@@ -3,6 +3,7 @@ package redemptionplayer;
 import battlecode.common.*;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 public class Landscaper extends Unit {
     static boolean rushType = false;
@@ -92,7 +93,7 @@ public class Landscaper extends Unit {
             //try dig the enemy wall first
             for (Direction dir : Util.directions) {
                 if (rc.canDigDirt(dir) && !rc.getLocation().add(dir).equals(enemyHqLoc)
-                && rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && outerRushLandscaperCanDig(rc.getLocation().add(dir))) {
+                        && rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && outerRushLandscaperCanDig(rc.getLocation().add(dir))) {
                     rc.digDirt(dir);
                     System.out.println("Dug " + dir);
                     return true;
@@ -108,10 +109,31 @@ public class Landscaper extends Unit {
                 }
             }
         } else {
-            //always dig away from HQ
+            //dig at predefined locations first, if can't then dig at random loc away from HQ and not part of the wall
+            MapLocation left = new MapLocation(hqLoc.x - 2, hqLoc.y);
+            if (rc.getLocation().x < hqLoc.x && !locationOccupiedWithSameTeamRobot(left)
+                    && rc.canDigDirt(rc.getLocation().directionTo(left))) {
+                rc.digDirt(rc.getLocation().directionTo(left));
+            }
+            MapLocation right = new MapLocation(hqLoc.x + 2, hqLoc.y);
+            if (rc.getLocation().x > hqLoc.x && !locationOccupiedWithSameTeamRobot(right)
+                    && rc.canDigDirt(rc.getLocation().directionTo(right))) {
+                rc.digDirt(rc.getLocation().directionTo(right));
+            }
+            MapLocation top = new MapLocation(hqLoc.x, hqLoc.y + 2);
+            if (rc.getLocation().y > hqLoc.y && !locationOccupiedWithSameTeamRobot(top)
+                    && rc.canDigDirt(rc.getLocation().directionTo(top))) {
+                rc.digDirt(rc.getLocation().directionTo(top));
+            }
+            MapLocation bottom = new MapLocation(hqLoc.x, hqLoc.y - 2);
+            if (rc.getLocation().y < hqLoc.y && !locationOccupiedWithSameTeamRobot(bottom)
+                    && rc.canDigDirt(rc.getLocation().directionTo(bottom))) {
+                rc.digDirt(rc.getLocation().directionTo(bottom));
+            }
+
             for (Direction dirs : Util.directions) {
                 if (!rc.getLocation().add(dirs).isAdjacentTo(hqLoc) && rc.canDigDirt(dirs)
-                        && !rc.isLocationOccupied(rc.getLocation().add(dirs))) {
+                        && !locationOccupiedWithSameTeamRobot(rc.getLocation().add(dirs))) {
                     rc.digDirt(dirs);
                     System.out.println("Dug");
                     return true;
@@ -161,8 +183,9 @@ public class Landscaper extends Unit {
 
                 boolean stillCanMove = false;
                 for (Direction dir : Util.directions) {
-                    if (rc.canMove(dir)) {
+                    if (rc.canMove(dir) && rc.getLocation().add(dir).isAdjacentTo(hqLoc)) {
                         stillCanMove = true;
+                        System.out.println("Can Move");
                         break;
                     }
                 }
@@ -170,6 +193,7 @@ public class Landscaper extends Unit {
                 if (stillCanMove && Math.random() < 0.2) {
                     goTo(Util.randomDirection());
                 }
+
                 if (bestPlaceToBuildWall != null && rc.canDepositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall))) {
                     rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
                     rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
@@ -187,7 +211,7 @@ public class Landscaper extends Unit {
         }
     }
 
-    public boolean outerRushLandscaperCanDig (MapLocation mapLoc) throws GameActionException{
+    public boolean outerRushLandscaperCanDig(MapLocation mapLoc) throws GameActionException {
         return !locationOccupiedWithSameTeamRobot(mapLoc) || (rc.senseElevation(mapLoc) > 5);
     }
 }

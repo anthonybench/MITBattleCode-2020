@@ -25,6 +25,7 @@ public class Miner extends Unit {
     static boolean rushing;
     static boolean broadCastedGiveUpMinerRush = false;
     static int fulfillmentCenterCount = 0;
+    static boolean checkGiveUpRush = false;
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
@@ -37,10 +38,6 @@ public class Miner extends Unit {
     public void run() throws GameActionException {
         super.run();
         System.out.println("MINER!!!!");
-
-        if (rc.getRoundNum() > 50) {
-            getGiveUpMinerRush();
-        }
 
         if (rc.getRoundNum() > 300 && rc.getLocation().isAdjacentTo(hqLoc) && nearbyTeamRobot(RobotType.LANDSCAPER)) {
             //blocking the turtle and there's probably no other soup locations discovered that's why it deposited
@@ -179,6 +176,11 @@ public class Miner extends Unit {
             }
         } else if (backupMiner) {
             System.out.println("Backup miner");
+            if (!checkGiveUpRush && !giveUpMinerRush) {
+                getGiveUpMinerRush(rc.getRoundNum() - 5);
+                checkGiveUpRush = true;
+            }
+
             if (rc.getLocation().isAdjacentTo(hqLoc)) {
                 Direction temp = rc.getLocation().directionTo(hqLoc);
                 Direction[] dirs = {temp.opposite().rotateLeft(), temp.opposite().rotateRight(), temp.opposite()};
@@ -267,6 +269,10 @@ public class Miner extends Unit {
             moveAroundHQ();
         } else {
             System.out.println("Not first miner or backup miner");
+            if (rc.getRoundNum() > 30 && !giveUpMinerRush) {
+                getGiveUpMinerRush(5);
+            }
+
             getSoupLocation();
             for (Direction dir : Util.directions) {
                 if (tryRefine(dir)) {
@@ -422,8 +428,8 @@ public class Miner extends Unit {
         System.out.println("GUMR");
     }
 
-    public void getGiveUpMinerRush() throws GameActionException {
-        for (int i = rc.getRoundNum() - 5; i < rc.getRoundNum(); i++) {
+    public void getGiveUpMinerRush(int rounds) throws GameActionException {
+        for (int i = rc.getRoundNum() - rounds; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
                 if (mess[0] == teamSecret && mess[1] == GIVE_UP_MINER_RUSH) {
