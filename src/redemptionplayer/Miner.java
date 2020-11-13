@@ -668,18 +668,19 @@ public class Miner extends Unit {
     }
 
     public void moveAroundHQ() throws GameActionException {
+        boolean moved = false;
         for (Direction dir : Util.directions) {
-            if (rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 10)) {
-                if (rc.getLocation().distanceSquaredTo(hqLoc) == 1
-                        && rc.getLocation().add(dir).distanceSquaredTo(hqLoc) == 2 && tryMove(dir)) {
-                    //was perpendicular to hq, and now moving to a spot diagonal to hq loc
-                    break;
-                } else if (rc.getLocation().isAdjacentTo(hqLoc) && !rc.getLocation().add(dir).isAdjacentTo(hqLoc)
-                        && tryMove(dir)) {
-                    //was at a spot diagonal to hq loc now moving to a spot not adjacent to hq loc
-                    break;
-                } else if (!rc.getLocation().add(dir).isAdjacentTo(hqLoc) && tryMove(dir)) {
-                    //wasn't adjacent to hq, and don't try to move adjacent to hq again.
+            if (rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 10)
+                    && !rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 1)
+                    && tryMove(dir)) {
+                moved = true;
+                break;
+            }
+        }
+
+        if (!moved) {
+            for (Direction dir : Util.directions) {
+                if (rc.canMove(dir) && tryMove(dir)) {
                     break;
                 }
             }
