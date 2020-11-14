@@ -271,7 +271,7 @@ public class Unit extends Robot {
     public boolean locationOccupiedWithSameTeamRobot(MapLocation mapLoc) throws GameActionException {
         if (rc.canSenseLocation(mapLoc) && rc.isLocationOccupied(mapLoc)) {
             RobotInfo robot = rc.senseRobotAtLocation(mapLoc);
-            if (robot.getTeam() == rc.getTeam() && robot.getType() != RobotType.DELIVERY_DRONE) {
+            if (robot.getTeam() == rc.getTeam() && robot.getType() != RobotType.LANDSCAPER && robot.getType() != RobotType.DELIVERY_DRONE) {
                 return true;
             }
         }

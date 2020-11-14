@@ -26,6 +26,7 @@ public class Miner extends Unit {
     static boolean broadCastedGiveUpMinerRush = false;
     static int fulfillmentCenterCount = 0;
     static boolean checkGiveUpRush = false;
+    static String moveAroundHQDir = "left";
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
@@ -175,10 +176,14 @@ public class Miner extends Unit {
                 }
             }
         } else if (backupMiner) {
-            System.out.println("Backup miner");
+            System.out.println("Backup miner " + (!checkGiveUpRush && !giveUpMinerRush));
             if (!checkGiveUpRush && !giveUpMinerRush) {
                 getGiveUpMinerRush(rc.getRoundNum() - 5);
                 checkGiveUpRush = true;
+            }
+
+            if (rc.getRoundNum() > 30 && !giveUpMinerRush) {
+                getGiveUpMinerRush(5);
             }
 
             if (rc.getLocation().isAdjacentTo(hqLoc)) {
@@ -238,32 +243,32 @@ public class Miner extends Unit {
                 if (landscaperCount < 4) {
                     return;
                 }
-                if (netGuns == 0) {
-                    MapLocation topRight = new MapLocation(hqLoc.x + 2, hqLoc.y + 2);
-                    MapLocation topLeft = new MapLocation(hqLoc.x - 2, hqLoc.y + 2);
-                    MapLocation bottomLeft = new MapLocation(hqLoc.x - 2, hqLoc.y - 2);
-                    MapLocation bottomRight = new MapLocation(hqLoc.x + 2, hqLoc.y - 2);
-                    MapLocation[] locs = {topLeft, topRight, bottomLeft, bottomRight};
-                    MapLocation closestPosition = null;
-                    int closestDistance = 1000;
-                    for (MapLocation loc : locs) {
-                        if (rc.getLocation().distanceSquaredTo(loc) < closestDistance) {
-                            closestDistance = rc.getLocation().distanceSquaredTo(loc);
-                            closestPosition = loc;
-                        }
-                    }
-                    if (rc.getLocation().isAdjacentTo(closestPosition)) {
-                        for (Direction dir : Util.directions) {
-                            if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.NET_GUN, dir)) {
-                                System.out.println("created a net gun next to HQ");
-                                netGuns++;
-                                return;
-                            }
-                        }
-                    } else {
-                        dfsWalk(closestPosition);
-                    }
-                }
+//                if (netGuns == 0) {
+//                    MapLocation topRight = new MapLocation(hqLoc.x + 2, hqLoc.y + 2);
+//                    MapLocation topLeft = new MapLocation(hqLoc.x - 2, hqLoc.y + 2);
+//                    MapLocation bottomLeft = new MapLocation(hqLoc.x - 2, hqLoc.y - 2);
+//                    MapLocation bottomRight = new MapLocation(hqLoc.x + 2, hqLoc.y - 2);
+//                    MapLocation[] locs = {topLeft, topRight, bottomLeft, bottomRight};
+//                    MapLocation closestPosition = null;
+//                    int closestDistance = 1000;
+//                    for (MapLocation loc : locs) {
+//                        if (rc.getLocation().distanceSquaredTo(loc) < closestDistance) {
+//                            closestDistance = rc.getLocation().distanceSquaredTo(loc);
+//                            closestPosition = loc;
+//                        }
+//                    }
+//                    if (rc.getLocation().isAdjacentTo(closestPosition)) {
+//                        for (Direction dir : Util.directions) {
+//                            if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.NET_GUN, dir)) {
+//                                System.out.println("created a net gun next to HQ");
+//                                netGuns++;
+//                                return;
+//                            }
+//                        }
+//                    } else {
+//                        dfsWalk(closestPosition);
+//                    }
+//                }
             }
 
             moveAroundHQ();
@@ -315,16 +320,7 @@ public class Miner extends Unit {
                     // If no soup is nearby, search for soup by moving randomly
                     System.out.println("No soup nearby");
                     //if soup at soup loc is all gone
-                    if (rc.getLocation().equals(soupLocation)) {
-                        soupLocation = null;
-                    }
-                    if (!soupLocations.isEmpty() && soupLocation == null) {
-                        soupLocation = soupLocations.remove();
-                    }
-                    if (soupLocation != null) {
-                        System.out.println("Walking to " + soupLocation);
-                        goTo(soupLocation);
-                    } else if (goTo(Util.randomDirection())) {
+                    if (goTo(Util.randomDirection())) {
                         System.out.println("I moved randomly!");
                     }
                 } else {
@@ -429,6 +425,7 @@ public class Miner extends Unit {
     }
 
     public void getGiveUpMinerRush(int rounds) throws GameActionException {
+        System.out.println(rc.getRoundNum() - rounds);
         for (int i = rc.getRoundNum() - rounds; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
@@ -669,31 +666,55 @@ public class Miner extends Unit {
 
     public void moveAroundHQ() throws GameActionException {
         boolean moved = false;
-        for (Direction dir : Util.directions) {
-            if (rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 10)
-                    && !rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 1)
+        Direction towardsHQ = rc.getLocation().directionTo(hqLoc);
+        ArrayList<Direction> dirs = new ArrayList<>();
+        System.out.println(moveAroundHQDir);
+        if (moveAroundHQDir.equals("right")) {
+            dirs.add(towardsHQ.rotateLeft());
+            dirs.add(towardsHQ.rotateLeft().rotateLeft());
+            dirs.add(towardsHQ.rotateLeft().rotateLeft().rotateLeft());
+            dirs.add(towardsHQ.rotateLeft().rotateLeft().rotateLeft().rotateLeft());
+        } else {
+            dirs.add(towardsHQ.rotateRight());
+            dirs.add(towardsHQ.rotateRight().rotateRight());
+            dirs.add(towardsHQ.rotateRight().rotateRight().rotateRight());
+            dirs.add(towardsHQ.rotateRight().rotateRight().rotateRight().rotateRight());
+        }
+
+        for (Direction dir : dirs) {
+            System.out.println(dir);
+            if (rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 16)
+                    && !rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 4)
                     && tryMove(dir)) {
-                moved = true;
+                moveAroundHQDir = moveAroundHQDir.equals("left") ? "right" : "left";
                 break;
             }
         }
-
-        if (!moved) {
-            for (Direction dir : Util.directions) {
-                if (rc.canMove(dir) && tryMove(dir)) {
-                    break;
-                }
-            }
-        }
+//
+//        if (!moved) {
+//            for (Direction dir : Util.directions) {
+//                if (rc.canMove(dir) && tryMove(dir)) {
+//                    break;
+//                }
+//            }
+//        }
     }
 
     @Override
     boolean tryBuild(RobotType type, Direction dir) throws GameActionException {
         System.out.println(rc.isReady() + " " + rc.canBuildRobot(type, dir));
-        if (rc.isReady() && rc.canBuildRobot(type, dir) && rc.getLocation().add(dir).distanceSquaredTo(hqLoc) != 1) {
+        if (rc.isReady() && rc.canBuildRobot(type, dir) && !rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 5)) {
             rc.buildRobot(type, dir);
             return true;
         }
         return false;
+    }
+
+    boolean tryMove(Direction dir) throws GameActionException {
+        // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
+        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir)) && !tileGoingToFlood(dir)) {
+            rc.move(dir);
+            return true;
+        } else return false;
     }
 }
