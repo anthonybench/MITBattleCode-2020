@@ -18,8 +18,6 @@ public class Miner extends Unit {
     static MapLocation soupLocation;
     static Set<MapLocation> seenSoupLocs;
     static boolean backupMiner = false;
-    static int netGuns = 0;
-    static MapLocation lastNewSoupsLocation;
     static MapLocation rushDesignSchoolLocation;
     static int buildPriority = 0;
     static boolean rushing;
@@ -27,6 +25,7 @@ public class Miner extends Unit {
     static int fulfillmentCenterCount = 0;
     static boolean checkGiveUpRush = false;
     static String moveAroundHQDir = "left";
+    static Direction prevDirection;
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
@@ -317,11 +316,24 @@ public class Miner extends Unit {
                 }
 
                 if (soupToMine.length == 0 || closestSoup == null) {
-                    // If no soup is nearby, search for soup by moving randomly
-                    System.out.println("No soup nearby");
-                    //if soup at soup loc is all gone
-                    if (goTo(Util.randomDirection())) {
-                        System.out.println("I moved randomly!");
+                    //move to last soup location
+                    if (soupLocation != null) {
+                        dfsWalk(soupLocation);
+                        //if no soup is nearby soup location, set it to null to trigger random movement again
+                        if (rc.getLocation().isWithinDistanceSquared(soupLocation, 8)) {
+                            soupLocation = null;
+                        }
+                    } else {
+                        // If no soup is nearby, search for soup by moving randomly
+                        System.out.println("No soup nearby");
+                        Direction randomDirection = Util.randomDirection();
+                        do {
+                            randomDirection = Util.randomDirection();
+                        } while (randomDirection == prevDirection);
+                        prevDirection = randomDirection;
+                        if (goTo(randomDirection)) {
+                            System.out.println("I moved randomly!");
+                        }
                     }
                 } else {
                     if (Math.abs(closestSoup.x - rc.getLocation().x) < 2 &&
@@ -332,6 +344,7 @@ public class Miner extends Unit {
                             if (tryMine(dir)) {
                                 System.out.println("I mined soup! " + rc.getSoupCarrying());
                                 clearMovement();
+                                soupLocation = rc.getLocation();
                                 break;
                             }
                         }
