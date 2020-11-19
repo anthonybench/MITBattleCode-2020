@@ -185,6 +185,10 @@ public class Miner extends Unit {
                 getGiveUpMinerRush(5);
             }
 
+            if (refineLocations.isEmpty()) {
+                getRefineryLocation();
+            }
+
             if (rc.getLocation().isAdjacentTo(hqLoc)) {
                 Direction temp = rc.getLocation().directionTo(hqLoc);
                 Direction[] dirs = {temp.opposite().rotateLeft(), temp.opposite().rotateRight(), temp.opposite()};
@@ -200,11 +204,20 @@ public class Miner extends Unit {
             if (checkHalt()) {
                 return;
             }
-            System.out.println("Build!");
-            //HQ defense - build design school next to hq
-            if (!nearbyTeamRobot(RobotType.LANDSCAPER) && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
+            System.out.println("Build! " + buildPriority);
+
+            if (!nearbyTeamRobot(RobotType.VAPORATOR)) {
                 for (Direction dir : Util.directions) {
-                    if (rc.getTeamSoup() > 150 + buildPriority && !hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir),
+                    if (!hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir),
+                            4) && tryBuild(RobotType.VAPORATOR, dir)) {
+                        System.out.println("created a vaporator next to HQ");
+                    }
+                }
+            }
+
+            if (rc.getTeamSoup() > 150 + buildPriority && !nearbyTeamRobot(RobotType.LANDSCAPER) && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
+                for (Direction dir : Util.directions) {
+                    if (!hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir),
                             4) && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                         System.out.println("created a design school next to HQ");
                         designSchoolCount++;
@@ -214,7 +227,7 @@ public class Miner extends Unit {
 
             if (designSchoolCount > 0) {
                 //Build fulfillment center next to hq
-                if (fulfillmentCenterCount == 0) {
+                if (rc.getTeamSoup() > 150 + buildPriority && fulfillmentCenterCount == 0) {
                     System.out.println("Try build fulfillment center");
                     for (Direction dir : Util.directions) {
                         System.out.println(rc.getLocation().add(dir) + " " + !hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir), 4));
@@ -593,14 +606,15 @@ public class Miner extends Unit {
             }
         }
 
+        System.out.println("REFINERY " + buildPriority);
         //if finds soup area and no refinery nearby, build refinery
-        if (rc.senseNearbySoup().length >= 4 && rc.getTeamSoup() > 204 + buildPriority
+        if (rc.getTeamSoup() > 204 + buildPriority
                 && !nearbyTeamRobot(RobotType.REFINERY)) {
             //check if have refine spots nearby
             boolean hasNearby = false;
             for (MapLocation loc : refineLocations) {
                 System.out.println(loc);
-                if (loc.distanceSquaredTo(rc.getLocation()) < 100) {
+                if (loc.distanceSquaredTo(rc.getLocation()) < 120) {
                     hasNearby = true;
                 }
             }
@@ -665,7 +679,8 @@ public class Miner extends Unit {
         int roundNum = rc.getRoundNum();
         System.out.println("RUSHING " + rushing);
         if (!rushing) {
-            buildPriority = 0;
+            //reserve soup for refinery if no refineries built.
+            buildPriority = refineLocations.isEmpty() && backupMiner ? 200 : 0;
             return;
         }
         if (roundNum < 185) {
