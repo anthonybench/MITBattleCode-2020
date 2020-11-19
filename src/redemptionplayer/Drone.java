@@ -10,8 +10,8 @@ public class Drone extends Unit {
     static MapLocation pickUpLocation;
     static boolean sameTeam = true;
     static MapLocation nearestWater;
-    static int moveToEnemyBaseTurn = 2000;
-    static int attackTurn = 2200;
+    static int moveToEnemyBaseTurn = 1000;
+    static int attackTurn = 1200;
 
     public Drone(RobotController rc) throws GameActionException {
         super(rc);
@@ -43,6 +43,7 @@ public class Drone extends Unit {
                         break;
                     }
                 }
+                dfsWalk(enemyHqLoc);
             } else {
                 if (rc.isCurrentlyHoldingUnit()) {
                     if (pickUpType == RobotType.LANDSCAPER) {
@@ -226,12 +227,14 @@ public class Drone extends Unit {
     }
 
     void dropInWater() throws GameActionException {
-        if (nearestWater != null) {
-            if (rc.getLocation().isAdjacentTo(nearestWater)
-                    && rc.canDropUnit(rc.getLocation().directionTo(nearestWater))) {
-                rc.dropUnit(rc.getLocation().directionTo(nearestWater));
+        for (Direction dir : Util.directions) {
+            if (rc.canDropUnit(dir)) {
+                rc.dropUnit(dir);
                 pickUpID = -1;
             }
+        }
+
+        if (nearestWater != null) {
             dfsWalk(nearestWater);
         } else {
             int sensorRadius = rc.getCurrentSensorRadiusSquared();

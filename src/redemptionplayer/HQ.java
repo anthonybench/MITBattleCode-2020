@@ -37,9 +37,14 @@ public class HQ extends Building {
             }
         }
 
-        int targetID = nearbyEnemyDrone();
-        if (targetID != -1 && rc.canShootUnit(targetID)) {
-            rc.shootUnit(targetID);
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r : robots) {
+            System.out.println("SENSE " + r.getType());
+            if (r.getType() == RobotType.DELIVERY_DRONE && r.team != rc.getTeam()
+                    && rc.canShootUnit(r.getID())) {
+                rc.shootUnit(r.getID());
+                break;
+            }
         }
     }
 
