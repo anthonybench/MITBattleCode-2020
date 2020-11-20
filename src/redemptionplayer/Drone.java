@@ -23,41 +23,11 @@ public class Drone extends Unit {
         //attack enemy HQ, kill their landscapers so we have higher wall.
         if (rc.getRoundNum() > attackTurn) {
             System.out.println("PU " + pickUpID + " " + enemyHqLoc);
-            if (pickUpID == -1) {
-                RobotInfo[] robotInfos = rc.senseNearbyRobots();
-                for (RobotInfo robot : robotInfos) {
-                    if (robot.getType() == RobotType.LANDSCAPER &&
-                            robot.getTeam() != rc.getTeam()) {
-                        pickUpID = robot.ID;
-                        pickUpLocation = robot.getLocation();
-                        pickUpType = RobotType.LANDSCAPER;
-                        sameTeam = false;
-                        break;
-                    }
-
-                    if (robot.getType() == RobotType.COW) {
-                        pickUpID = robot.ID;
-                        pickUpLocation = robot.getLocation();
-                        pickUpType = RobotType.LANDSCAPER;
-                        sameTeam = false;
-                        break;
-                    }
-                }
+            if (!rc.isCurrentlyHoldingUnit()) {
+                pickUpEnemyLandscaper();
                 dfsWalk(enemyHqLoc);
             } else {
-                if (rc.isCurrentlyHoldingUnit()) {
-                    if (pickUpType == RobotType.LANDSCAPER) {
-                        dropInWater();
-                    }
-                } else {
-                    if (rc.getLocation().isAdjacentTo(pickUpLocation) && !rc.canPickUpUnit(pickUpID)) {
-                        pickUpID = -1;
-                    } else if (rc.canPickUpUnit(pickUpID)) {
-                        rc.pickUpUnit(pickUpID);
-                    } else {
-                        dfsWalk(pickUpLocation);
-                    }
-                }
+                dropInWater();
             }
         } else if (rc.getRoundNum() > moveToEnemyBaseTurn) {
             clearMovement();
@@ -223,6 +193,24 @@ public class Drone extends Unit {
             } else {
                 dfsWalk(hqLoc);
             }
+        }
+    }
+
+    void pickUpEnemyLandscaper() throws GameActionException {
+        RobotInfo[] robotInfos = rc.senseNearbyRobots();
+        MapLocation landscaperLocation = null;
+        for (RobotInfo robot : robotInfos) {
+            if (robot.getType() == RobotType.LANDSCAPER &&
+                    robot.getTeam() != rc.getTeam()) {
+                if (rc.canPickUpUnit(robot.ID)) {
+                    rc.pickUpUnit(robot.ID);
+                } else {
+                    landscaperLocation = rc.getLocation();
+                }
+            }
+        }
+        if (!rc.isCurrentlyHoldingUnit() && landscaperLocation != null) {
+            goTo(landscaperLocation);
         }
     }
 
