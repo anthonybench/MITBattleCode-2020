@@ -26,7 +26,7 @@ public class Miner extends Unit {
     static boolean checkGiveUpRush = false;
     static String moveAroundHQDir = "left";
     static Direction prevDirection;
-
+    static MapLocation recentPosition;
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
         mapLocations = new HashMap<>();
@@ -37,7 +37,6 @@ public class Miner extends Unit {
 
     public void run() throws GameActionException {
         super.run();
-        System.out.println("MINER!!!!");
 
         if (rc.getRoundNum() > 300 && rc.getLocation().isAdjacentTo(hqLoc) && nearbyTeamRobot(RobotType.LANDSCAPER)) {
             //blocking the turtle and there's probably no other soup locations discovered that's why it deposited
@@ -73,11 +72,18 @@ public class Miner extends Unit {
         }
 
         if (firstMiner) {
-            System.out.println("First miner and Enemy hq is " + enemyHqLoc);
             if (rc.getRoundNum() > 185 && !startAttacking) {
                 giveUpMinerRush = true;
             }
 
+            //If 10 turns later still around last recent position, give up miner rush
+            if (rc.getRoundNum() > 20 && turnCount % 20 == 0) {
+                if (recentPosition != null && rc.getLocation().isWithinDistanceSquared(recentPosition, 20)) {
+                    giveUpMinerRush = true;
+                    System.out.println("Stuck");
+                }
+                recentPosition = rc.getLocation();
+            }
             if (enemyHqLoc != null && !giveUpMinerRush) {
                 System.out.println("rushing");
                 //if miner is the first miner and enemy HQ is found, keep broadcasting
@@ -364,7 +370,7 @@ public class Miner extends Unit {
                     } else {
                         System.out.println("Moving towards soup to mine " + closestSoup);
                         // Otherwise, travel towards the detected soup
-                        goTo(closestSoup);
+                        dfsWalk(closestSoup);
                     }
                 }
 
@@ -696,7 +702,14 @@ public class Miner extends Unit {
         boolean moved = false;
         Direction towardsHQ = rc.getLocation().directionTo(hqLoc);
         ArrayList<Direction> dirs = new ArrayList<>();
-        System.out.println(moveAroundHQDir);
+
+        //If see enemy drone, move towards HQ for protection.
+        if (nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
+            dfsWalk(hqLoc);
+        }
+
+        clearMovement();
+        //Set the general direction for the miner to move around HQ
         if (moveAroundHQDir.equals("right")) {
             dirs.add(towardsHQ.rotateLeft());
             dirs.add(towardsHQ.rotateLeft().rotateLeft());
@@ -709,8 +722,8 @@ public class Miner extends Unit {
             dirs.add(towardsHQ.rotateRight().rotateRight().rotateRight().rotateRight());
         }
 
+        //move around HQ following a general direction - ideally miner would be moving in circles with the HQ as the center
         for (Direction dir : dirs) {
-            System.out.println(dir);
             if (rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 16)
                     && !rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 4)
                     && tryMove(dir)) {
@@ -718,14 +731,13 @@ public class Miner extends Unit {
                 break;
             }
         }
-//
-//        if (!moved) {
-//            for (Direction dir : Util.directions) {
-//                if (rc.canMove(dir) && tryMove(dir)) {
-//                    break;
-//                }
-//            }
-//        }
+
+        if (rc.getCooldownTurns() < 1) {
+            //just move in a random direction - to prevent the bug happening in maps like hourgalss
+            for (Direction dir : dirs) {
+                tryMove(dir);
+            }
+        }
     }
 
     @Override
