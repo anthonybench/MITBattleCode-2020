@@ -222,9 +222,9 @@ public class Miner extends Unit {
             }
 
             if (rc.getTeamSoup() > 150 + buildPriority && !nearbyTeamRobot(RobotType.LANDSCAPER) && !nearbyTeamRobot(RobotType.DESIGN_SCHOOL)) {
+                System.out.println("Try build design");
                 for (Direction dir : Util.directions) {
-                    if (!hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir),
-                            4) && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                    if (tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                         System.out.println("created a design school next to HQ");
                         designSchoolCount++;
                     }
@@ -288,7 +288,7 @@ public class Miner extends Unit {
 //                    }
 //                }
             }
-
+            System.out.println("TESt");
             moveAroundHQ();
         } else {
             System.out.println("Not first miner or backup miner");
@@ -742,8 +742,7 @@ public class Miner extends Unit {
 
     @Override
     boolean tryBuild(RobotType type, Direction dir) throws GameActionException {
-        System.out.println(rc.isReady() + " " + rc.canBuildRobot(type, dir));
-        if (rc.isReady() && rc.canBuildRobot(type, dir) && !rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 5)) {
+        if (rc.isReady() && rc.canBuildRobot(type, dir) && !rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 4)) {
             rc.buildRobot(type, dir);
             return true;
         }
