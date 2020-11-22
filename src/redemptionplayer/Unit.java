@@ -238,16 +238,16 @@ public class Unit extends Robot {
         //Sets the first miner's targeted locations
         switch (enemyPotentialHQNumber) {
             case 1:
-                targetEnemyX = hqLoc.x;
-                targetEnemyY = potentialEnemyHQY;
+                targetEnemyX = potentialEnemyHQX;
+                targetEnemyY = hqLoc.y;
                 break;
             case 2:
                 targetEnemyX = potentialEnemyHQX;
                 targetEnemyY = potentialEnemyHQY;
                 break;
             case 3:
-                targetEnemyX = potentialEnemyHQX;
-                targetEnemyY = hqLoc.y;
+                targetEnemyX = hqLoc.x;
+                targetEnemyY = potentialEnemyHQY;
                 break;
             default:
                 break;
