@@ -135,7 +135,7 @@ public class Miner extends Unit {
                     }
                 } else {
                     //move towards enemy HQ to make sure your not divided by water
-                    discoverEnemyHQ(new MapLocation(targetEnemyX - 1, targetEnemyY));
+                    navigation(new MapLocation(targetEnemyX - 1, targetEnemyY));
                 }
             } else if (giveUpMinerRush) {
                 System.out.println("GUMR------------------!");
@@ -732,6 +732,7 @@ public class Miner extends Unit {
             }
         }
 
+
         if (rc.getCooldownTurns() < 1) {
             //just move in a random direction - to prevent the bug happening in maps like hourgalss
             for (Direction dir : dirs) {
@@ -747,13 +748,5 @@ public class Miner extends Unit {
             return true;
         }
         return false;
-    }
-
-    boolean tryMove(Direction dir) throws GameActionException {
-        // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
-        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir)) && !tileGoingToFlood(dir)) {
-            rc.move(dir);
-            return true;
-        } else return false;
     }
 }

@@ -2,8 +2,11 @@ package redemptionplayer;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Stack;
+
+import static java.lang.Math.abs;
 
 public class Unit extends Robot {
     static int potentialEnemyHQX = -1;
@@ -18,6 +21,8 @@ public class Unit extends Robot {
     static boolean headBackToPrevSplitLocation = false;
     static Pair prevSplitLocation;
     static boolean split = false;
+    static int stuckCount = 3;
+    static int hugDirection = 0; // 0 for left, 1 for right;
     Map<MapLocation, Integer> mapLocations;
 
     public class Pair {
@@ -56,7 +61,8 @@ public class Unit extends Robot {
      */
     boolean tryMove(Direction dir) throws GameActionException {
         // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
-        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir)) && !tileGoingToFlood(dir)) {
+        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir)) && !tileGoingToFlood(dir)
+        && abs(rc.senseElevation(rc.getLocation()) - rc.senseElevation(rc.getLocation().add(dir))) < 4) {
             rc.move(dir);
             return true;
         } else return false;
@@ -263,5 +269,53 @@ public class Unit extends Robot {
             }
         }
         return false;
+    }
+
+    public void navigation (MapLocation destination) throws GameActionException{
+        //Navigate towards the destination
+        Direction intentedDir = rc.getLocation().directionTo(destination);
+        if (!tryMove(intentedDir)) {
+            //if the unit couldn't move the intended direction, hug to the right, then to the left
+            ArrayList<Direction> dirs = new ArrayList<>();
+
+            if (hugDirection == 0) {
+                dirs.add(intentedDir.rotateLeft());
+                dirs.add(intentedDir.rotateLeft().rotateLeft());
+                dirs.add(intentedDir.rotateLeft().rotateLeft().rotateLeft());
+                dirs.add(intentedDir.rotateLeft().rotateLeft().rotateLeft().rotateLeft());
+            } else {
+                dirs.add(intentedDir.rotateRight());
+                dirs.add(intentedDir.rotateRight().rotateRight());
+                dirs.add(intentedDir.rotateRight().rotateRight().rotateRight());
+                dirs.add(intentedDir.rotateRight().rotateRight().rotateRight().rotateRight());
+            }
+
+            boolean couldMove = false;
+            for (Direction dir : dirs) {
+                if (tryMove(dir)) {
+                    //if could move, reset the hugDirection back to left;
+                    hugDirection = 0;
+                    couldMove = true;
+                }
+            }
+
+            if (!couldMove) {
+                //if couldn't move after hugging a certain direction
+                if (hugDirection == 0) {
+                    //if was hugging to the left, now hug to the right;
+                    hugDirection = 1;
+                } else {
+                    //if was hugging to the right, then it could mean the unit is stuck
+                    if (--stuckCount > 0) {
+                        //if stuck, decrement the counts and try moving the other hug direction
+                        hugDirection = hugDirection == 0 ? 1 : 0;
+                    } else {
+                        //we'll claim the unit to be stuck if couldn't move to the hug direction stuckCount times
+                        System.out.println("NAVIGATION - STUCK");
+                    }
+                }
+            }
+        }
+
     }
 }
