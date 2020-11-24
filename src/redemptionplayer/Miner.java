@@ -414,7 +414,7 @@ public class Miner extends Unit {
             for (Direction dir : Util.directions) {
                 if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))
                         || !rc.canMove(dir)) {
-                    tryMove(dir.rotateRight());
+                    tryMove(dir.rotateLeft());
                 } else {
                     tryMove(rc.getLocation().directionTo(new MapLocation(targetEnemyX, targetEnemyY)));
                 }
