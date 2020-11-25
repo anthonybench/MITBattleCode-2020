@@ -63,15 +63,6 @@ public class Miner extends Unit {
         System.out.println("Bytecode 1" + Clock.getBytecodeNum());
         System.out.println("Bytecode 2" + Clock.getBytecodeNum());
 
-        if (pauseForFlight) {
-            if (nearbyTeamRobot(RobotType.DELIVERY_DRONE)) {
-                if (!broadcastedCont && broadcastedHalt) {
-                    broadcastContinueProduction();
-                    broadcastedCont = true;
-                }
-            }
-            return;
-        }
 
         if (firstMiner) {
             if (rc.getRoundNum() > 185 && !startAttacking) {
