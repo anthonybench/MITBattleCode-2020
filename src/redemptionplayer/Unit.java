@@ -24,6 +24,7 @@ public class Unit extends Robot {
     static int stuckCount = 3;
     static int hugDirection = 0; // 0 for left, 1 for right;
     Map<MapLocation, Integer> mapLocations;
+    static MapLocation prevLocation;
 
     public class Pair {
         private MapLocation key;
@@ -274,7 +275,8 @@ public class Unit extends Robot {
     public void navigation (MapLocation destination) throws GameActionException{
         //Navigate towards the destination
         Direction intentedDir = rc.getLocation().directionTo(destination);
-        if (!tryMove(intentedDir)) {
+        System.out.println(rc.getLocation().directionTo(prevLocation) + " " + intentedDir);
+        if (rc.getLocation().directionTo(prevLocation) != intentedDir && !tryMove(intentedDir)) {
             //if the unit couldn't move the intended direction, hug to the right, then to the left
             ArrayList<Direction> dirs = new ArrayList<>();
 
@@ -316,6 +318,6 @@ public class Unit extends Robot {
                 }
             }
         }
-
+        prevLocation = rc.getLocation();
     }
 }
