@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class DesignSchool extends Building {
     static int landscaperCount = 0;
-    static int additionalCost = 3;
+    static int additionalCost = 0;
     public DesignSchool(RobotController rc) throws GameActionException {
         super(rc);
     }
@@ -40,10 +40,6 @@ public class DesignSchool extends Building {
     public void tryBuildLandscaper() throws GameActionException {
         for (Direction dir : Util.directions) {
             if ((rc.getTeamSoup() > 150 + additionalCost) && tryBuild(RobotType.LANDSCAPER, dir)) {
-                if (landscaperCount == 0) {
-                    additionalCost = 0;
-//                    broadcastFirstLandscaper();
-                }
                 landscaperCount++;
                 System.out.println(landscaperCount + " Made a landscaper");
             }

@@ -123,7 +123,10 @@ public class Miner extends Unit {
                             designSchoolCount++;
                             rushDesignSchoolLocation = rc.getLocation().add(rc.getLocation().directionTo(new MapLocation(enemyHqLoc.x - 1, enemyHqLoc.y)));
                         } else {
+                            System.out.println("TESTING " + rc.senseElevation(rc.getLocation()));
                             for (Direction dir : Util.directions) {
+                                System.out.println("ELEVATION " + rc.senseElevation(rc.getLocation().add(dir))
+                                + " " + rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc));
                                 if (rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) &&
                                         rc.getTeamSoup() > 154 && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                                     designSchoolCount++;
@@ -133,9 +136,12 @@ public class Miner extends Unit {
                             }
                         }
                     }
+                    if (designSchoolCount == 0) {
+                        dfsWalk(new MapLocation(targetEnemyX - 1, targetEnemyY));
+                    }
                 } else {
                     //move towards enemy HQ to make sure your not divided by water
-                    navigation(new MapLocation(targetEnemyX - 1, targetEnemyY));
+                    dfsWalk(new MapLocation(targetEnemyX - 1, targetEnemyY));
                 }
             } else if (giveUpMinerRush) {
                 System.out.println("GUMR------------------!");
@@ -414,7 +420,7 @@ public class Miner extends Unit {
             for (Direction dir : Util.directions) {
                 if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))
                         || !rc.canMove(dir)) {
-                    tryMove(dir.rotateLeft());
+                    tryMove(dir.rotateRight());
                 } else {
                     tryMove(rc.getLocation().directionTo(new MapLocation(targetEnemyX, targetEnemyY)));
                 }

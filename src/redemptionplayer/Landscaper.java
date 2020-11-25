@@ -198,11 +198,18 @@ public class Landscaper extends Unit {
                 }
 
                 if (stillCanMove && Math.random() < 0.2) {
-                    Direction ranDir = Util.randomDirection();
-                    do {
-                        ranDir = Util.randomDirection();
-                    } while (!(rc.getLocation().add(ranDir).isAdjacentTo(hqLoc)));
-                    goTo(ranDir);
+//                    Direction ranDir = Util.randomDirection();
+//                    do {
+//                        ranDir = Util.randomDirection();
+//                    } while (!(rc.getLocation().add(ranDir).isAdjacentTo(hqLoc)));
+//                    goTo(ranDir);
+                    Direction dir = rc.getLocation().directionTo(hqLoc);
+                    Direction[] dirs = {dir.rotateRight(), dir.rotateRight().rotateRight()};
+                    for (Direction _dir : dirs) {
+                        if (rc.getLocation().add(_dir).isAdjacentTo(hqLoc) && tryMove(_dir)) {
+                            break;
+                        }
+                    }
                 }
 
                 if (bestPlaceToBuildWall != null && rc.canDepositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall))) {
