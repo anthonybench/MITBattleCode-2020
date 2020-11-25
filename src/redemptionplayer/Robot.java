@@ -17,6 +17,7 @@ public class Robot {
     static final int REFINERY_LOCATION = 6;
     static final int SOUP_LOCATION = 7;
     static final int GIVE_UP_MINER_RUSH = 8;
+    static final int FIRST_LANDSCAPER = 9;
     static boolean haltProduction = false;
     static int haltTurn = 0;
     static int continueTurn = 0;

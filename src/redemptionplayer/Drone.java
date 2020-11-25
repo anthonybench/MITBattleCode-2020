@@ -10,8 +10,8 @@ public class Drone extends Unit {
     static MapLocation pickUpLocation;
     static boolean sameTeam = true;
     static MapLocation nearestWater;
-    static int moveToEnemyBaseTurn = 2000;
-    static int attackTurn = 2200;
+    static int moveToEnemyBaseTurn = 1000;
+    static int attackTurn = 1200;
 
     public Drone(RobotController rc) throws GameActionException {
         super(rc);
@@ -23,40 +23,11 @@ public class Drone extends Unit {
         //attack enemy HQ, kill their landscapers so we have higher wall.
         if (rc.getRoundNum() > attackTurn) {
             System.out.println("PU " + pickUpID + " " + enemyHqLoc);
-            if (pickUpID == -1) {
-                RobotInfo[] robotInfos = rc.senseNearbyRobots();
-                for (RobotInfo robot : robotInfos) {
-                    if (robot.getType() == RobotType.LANDSCAPER &&
-                            robot.getTeam() != rc.getTeam()) {
-                        pickUpID = robot.ID;
-                        pickUpLocation = robot.getLocation();
-                        pickUpType = RobotType.LANDSCAPER;
-                        sameTeam = false;
-                        break;
-                    }
-
-                    if (robot.getType() == RobotType.COW) {
-                        pickUpID = robot.ID;
-                        pickUpLocation = robot.getLocation();
-                        pickUpType = RobotType.LANDSCAPER;
-                        sameTeam = false;
-                        break;
-                    }
-                }
+            if (!rc.isCurrentlyHoldingUnit()) {
+                pickUpEnemyLandscaper();
+                dfsWalk(enemyHqLoc);
             } else {
-                if (rc.isCurrentlyHoldingUnit()) {
-                    if (pickUpType == RobotType.LANDSCAPER) {
-                        dropInWater();
-                    }
-                } else {
-                    if (rc.getLocation().isAdjacentTo(pickUpLocation) && !rc.canPickUpUnit(pickUpID)) {
-                        pickUpID = -1;
-                    } else if (rc.canPickUpUnit(pickUpID)) {
-                        rc.pickUpUnit(pickUpID);
-                    } else {
-                        dfsWalk(pickUpLocation);
-                    }
-                }
+                dropInWater();
             }
         } else if (rc.getRoundNum() > moveToEnemyBaseTurn) {
             clearMovement();
@@ -225,13 +196,33 @@ public class Drone extends Unit {
         }
     }
 
+    void pickUpEnemyLandscaper() throws GameActionException {
+        RobotInfo[] robotInfos = rc.senseNearbyRobots();
+        MapLocation landscaperLocation = null;
+        for (RobotInfo robot : robotInfos) {
+            if (robot.getType() == RobotType.LANDSCAPER &&
+                    robot.getTeam() != rc.getTeam()) {
+                if (rc.canPickUpUnit(robot.ID)) {
+                    rc.pickUpUnit(robot.ID);
+                } else {
+                    landscaperLocation = rc.getLocation();
+                }
+            }
+        }
+        if (!rc.isCurrentlyHoldingUnit() && landscaperLocation != null) {
+            goTo(landscaperLocation);
+        }
+    }
+
     void dropInWater() throws GameActionException {
-        if (nearestWater != null) {
-            if (rc.getLocation().isAdjacentTo(nearestWater)
-                    && rc.canDropUnit(rc.getLocation().directionTo(nearestWater))) {
-                rc.dropUnit(rc.getLocation().directionTo(nearestWater));
+        for (Direction dir : Util.directions) {
+            if (rc.canDropUnit(dir)) {
+                rc.dropUnit(dir);
                 pickUpID = -1;
             }
+        }
+
+        if (nearestWater != null) {
             dfsWalk(nearestWater);
         } else {
             int sensorRadius = rc.getCurrentSensorRadiusSquared();

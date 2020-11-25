@@ -8,11 +8,9 @@ import java.util.Map;
 public class Landscaper extends Unit {
     static boolean rushType = false;
     static ArrayList<MapLocation> outerCircle;
-    static MapLocation[] innerCircle;
-    static int turtlePosition = 0;
-    static boolean gotBlockchainMess = false;
-    static boolean stopWalking = false;
-
+    static boolean checkedBlockchainForFirst = false;
+    static boolean firstLandscaper = false;
+    static int tryMoveToEnemyHQTurns = 0;
     public Landscaper(RobotController rc) throws GameActionException {
         super(rc);
         outerCircle = new ArrayList<>();
@@ -24,6 +22,10 @@ public class Landscaper extends Unit {
             rushType = true;
         }
 
+//        if (!checkedBlockchainForFirst) {
+//            getFirstLandscaper();
+//            checkedBlockchainForFirst = true;
+//        }
         //Gets the enemy HQ coordinate, if gotten already sends landscrapers to enemy HQ
 //        if (!gotBlockchainMess && !rushType) {
 //            findEnemyHQ();
@@ -39,6 +41,8 @@ public class Landscaper extends Unit {
             } else {
                 goTo(Util.randomDirection());
             }
+        } else if (firstLandscaper) {
+
         } else {
             RobotInfo[] robotInfos = rc.senseNearbyRobots();
 
@@ -58,7 +62,7 @@ public class Landscaper extends Unit {
                 //If nearby enemy HQ, bury it
                 rc.depositDirt(rc.getLocation().directionTo(enemyHqLoc));
                 System.out.println("Buried Enemy HQ " + rc.getLocation().directionTo(enemyHqLoc));
-            } else if (rc.getLocation().distanceSquaredTo(enemyHqLoc) < 8) {
+            } else if (rc.getLocation().distanceSquaredTo(enemyHqLoc) < 8 && tryMoveToEnemyHQTurns >= 5) {
                 //don't deposit dirt to help enemy build wall.
                 for (Direction dir : Util.directions) {
                     if (!rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && rc.canDepositDirt(dir)) {
@@ -73,6 +77,9 @@ public class Landscaper extends Unit {
                 } else {
                     if (!rc.getLocation().isAdjacentTo(target)) {
                         for (Direction dir : Util.directions) {
+                            if (rc.getCooldownTurns() < 1) {
+                                tryMoveToEnemyHQTurns++;
+                            }
                             dfsWalk(target.add(dir));
                         }
                     }
@@ -191,7 +198,18 @@ public class Landscaper extends Unit {
                 }
 
                 if (stillCanMove && Math.random() < 0.2) {
-                    goTo(Util.randomDirection());
+//                    Direction ranDir = Util.randomDirection();
+//                    do {
+//                        ranDir = Util.randomDirection();
+//                    } while (!(rc.getLocation().add(ranDir).isAdjacentTo(hqLoc)));
+//                    goTo(ranDir);
+                    Direction dir = rc.getLocation().directionTo(hqLoc);
+                    Direction[] dirs = {dir.rotateRight(), dir.rotateRight().rotateRight()};
+                    for (Direction _dir : dirs) {
+                        if (rc.getLocation().add(_dir).isAdjacentTo(hqLoc) && tryMove(_dir)) {
+                            break;
+                        }
+                    }
                 }
 
                 if (bestPlaceToBuildWall != null && rc.canDepositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall))) {
@@ -213,6 +231,17 @@ public class Landscaper extends Unit {
 
     public boolean outerRushLandscaperCanDig(MapLocation mapLoc) throws GameActionException {
         return !locationOccupiedWithSameTeamRobot(mapLoc) || (rc.senseElevation(mapLoc) > 5);
+    }
+
+    public void getFirstLandscaper() throws GameActionException {
+        for (int i = rc.getRoundNum() - 1; i < rc.getRoundNum(); i++) {
+            for (Transaction tx : rc.getBlock(i)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == FIRST_LANDSCAPER) {
+                    firstLandscaper = true;
+                }
+            }
+        }
     }
 }
 

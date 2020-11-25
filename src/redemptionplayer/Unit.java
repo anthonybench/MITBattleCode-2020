@@ -2,8 +2,11 @@ package redemptionplayer;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Stack;
+
+import static java.lang.Math.abs;
 
 public class Unit extends Robot {
     static int potentialEnemyHQX = -1;
@@ -18,6 +21,8 @@ public class Unit extends Robot {
     static boolean headBackToPrevSplitLocation = false;
     static Pair prevSplitLocation;
     static boolean split = false;
+    static int stuckCount = 3;
+    static int hugDirection = 0; // 0 for left, 1 for right;
     Map<MapLocation, Integer> mapLocations;
 
     public class Pair {
@@ -56,7 +61,8 @@ public class Unit extends Robot {
      */
     boolean tryMove(Direction dir) throws GameActionException {
         // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
-        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir)) && !tileGoingToFlood(dir)) {
+        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir)) && !tileGoingToFlood(dir)
+        && abs(rc.senseElevation(rc.getLocation()) - rc.senseElevation(rc.getLocation().add(dir))) < 4) {
             rc.move(dir);
             return true;
         } else return false;
@@ -99,13 +105,8 @@ public class Unit extends Robot {
 
     void dfsWalk(MapLocation destination) throws GameActionException {
         Direction targetDirection = rc.getLocation().directionTo(destination);
-        System.out.println("============================================");
-        System.out.println("Bytecode 3 " + Clock.getBytecodeNum());
-        System.out.println("!!!Moving towards " + destination + " " + targetDirection + " " + discoverDir + " " + prevSplitLocations.size());
-        System.out.println("Prev split " + prevSplitLocation + " " + rc.getLocation());
 
         if (prevSplitLocation != null && rc.getLocation().equals(prevSplitLocation.getKey())) {
-            System.out.println("At previous split loc " + prevSplitLocation.getKey() + " " + discoverDir);
             if (discoverDir.equals("right")) {
                 discoverDir = "left";
                 headBackToPrevSplitLocation = false;
@@ -132,7 +133,6 @@ public class Unit extends Robot {
 //                if (prevLocation.equals(rc.getLocation()) && !prevLocations.empty()) {
 //                    prevLocation = prevLocations.pop();
 //                }
-                System.out.println("Backtracking to " + prevLocation);
                 if (tryMove(rc.getLocation().directionTo(prevLocation))) {
                     prevLocations.pop();
                 }
@@ -143,18 +143,14 @@ public class Unit extends Robot {
         //to make sure you don't walk back to previous location when discovering, that
         //sometimes causes unit to just move back and forth.
         boolean walkingPrevDirection = !prevLocations.empty() && targetDirection.equals(rc.getLocation().directionTo(prevLocations.peek()));
-        System.out.println("TEST!!! " + walkingPrevDirection + " " + tileGoingToFlood(targetDirection));
         if (!walkingPrevDirection && tryMove(targetDirection)) {
-            System.out.println("Walked in desired dir");
             prevLocations.push(temp);
             if (split) {
                 split = false;
                 discoverDir = "right";
             }
         } else {
-            System.out.println("Couldn't move towards target direction " + split);
             if (!split) {
-                System.out.println("SPLIT - push" + rc.getLocation());
                 prevSplitLocations.push(new Pair(rc.getLocation(), discoverDir));
                 prevSplitLocation = new Pair(rc.getLocation(), discoverDir);
                 split = true;
@@ -174,14 +170,11 @@ public class Unit extends Robot {
                     if (tryMove(dir)) {
                         moved = true;
                         prevLocations.push(temp);
-                        System.out.println("Pushed prev location " + temp);
                     }
                 }
                 if (!moved) {
-                    System.out.println("Couldn't move " + discoverDir + " " + prevSplitLocations.size());
                     if (!prevSplitLocations.empty()) {
                         prevSplitLocation = prevSplitLocations.peek();
-                        System.out.println("Prev split " + prevSplitLocation);
                         if (discoverDir.equals("left") && headBackToPrevSplitLocation) {
                             System.out.println("pop " + prevSplitLocations.size());
                             prevSplitLocations.pop();
@@ -251,16 +244,16 @@ public class Unit extends Robot {
         //Sets the first miner's targeted locations
         switch (enemyPotentialHQNumber) {
             case 1:
-                targetEnemyX = hqLoc.x;
-                targetEnemyY = potentialEnemyHQY;
+                targetEnemyX = potentialEnemyHQX;
+                targetEnemyY = hqLoc.y;
                 break;
             case 2:
                 targetEnemyX = potentialEnemyHQX;
                 targetEnemyY = potentialEnemyHQY;
                 break;
             case 3:
-                targetEnemyX = potentialEnemyHQX;
-                targetEnemyY = hqLoc.y;
+                targetEnemyX = hqLoc.x;
+                targetEnemyY = potentialEnemyHQY;
                 break;
             default:
                 break;
@@ -271,10 +264,58 @@ public class Unit extends Robot {
     public boolean locationOccupiedWithSameTeamRobot(MapLocation mapLoc) throws GameActionException {
         if (rc.canSenseLocation(mapLoc) && rc.isLocationOccupied(mapLoc)) {
             RobotInfo robot = rc.senseRobotAtLocation(mapLoc);
-            if (robot.getTeam() == rc.getTeam()) {
+            if (robot.getTeam() == rc.getTeam() && robot.getType() != RobotType.LANDSCAPER && robot.getType() != RobotType.DELIVERY_DRONE) {
                 return true;
             }
         }
         return false;
+    }
+
+    public void navigation (MapLocation destination) throws GameActionException{
+        //Navigate towards the destination
+        Direction intentedDir = rc.getLocation().directionTo(destination);
+        if (!tryMove(intentedDir)) {
+            //if the unit couldn't move the intended direction, hug to the right, then to the left
+            ArrayList<Direction> dirs = new ArrayList<>();
+
+            if (hugDirection == 0) {
+                dirs.add(intentedDir.rotateLeft());
+                dirs.add(intentedDir.rotateLeft().rotateLeft());
+                dirs.add(intentedDir.rotateLeft().rotateLeft().rotateLeft());
+                dirs.add(intentedDir.rotateLeft().rotateLeft().rotateLeft().rotateLeft());
+            } else {
+                dirs.add(intentedDir.rotateRight());
+                dirs.add(intentedDir.rotateRight().rotateRight());
+                dirs.add(intentedDir.rotateRight().rotateRight().rotateRight());
+                dirs.add(intentedDir.rotateRight().rotateRight().rotateRight().rotateRight());
+            }
+
+            boolean couldMove = false;
+            for (Direction dir : dirs) {
+                if (tryMove(dir)) {
+                    //if could move, reset the hugDirection back to left;
+                    hugDirection = 0;
+                    couldMove = true;
+                }
+            }
+
+            if (!couldMove) {
+                //if couldn't move after hugging a certain direction
+                if (hugDirection == 0) {
+                    //if was hugging to the left, now hug to the right;
+                    hugDirection = 1;
+                } else {
+                    //if was hugging to the right, then it could mean the unit is stuck
+                    if (--stuckCount > 0) {
+                        //if stuck, decrement the counts and try moving the other hug direction
+                        hugDirection = hugDirection == 0 ? 1 : 0;
+                    } else {
+                        //we'll claim the unit to be stuck if couldn't move to the hug direction stuckCount times
+                        System.out.println("NAVIGATION - STUCK");
+                    }
+                }
+            }
+        }
+
     }
 }

@@ -130,9 +130,14 @@ public strictfp class RobotPlayer {
             sendHqLoc(rc.getLocation());
         }
 
-        int targetID = nearbyEnemyDrone();
-        if (targetID != -1 && rc.canShootUnit(targetID)) {
-            rc.shootUnit(targetID);
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r : robots) {
+            System.out.println("SENSE " + r.getType());
+            if (r.getType() == RobotType.DELIVERY_DRONE && r.team != rc.getTeam()
+                    && rc.canShootUnit(r.getID())) {
+                rc.shootUnit(r.getID());
+                break;
+            }
         }
 
         if (mapWidth == 30 && mapHeight == 30) {
@@ -546,13 +551,15 @@ public strictfp class RobotPlayer {
         }
     }
 
-    public static int nearbyEnemyDrone() throws GameActionException {
-        RobotInfo[] robots = rc.senseNearbyRobots();
-        for (RobotInfo r : robots) {
-            if (r.getType() == RobotType.DELIVERY_DRONE && r.team != rc.getTeam()) {
-                return r.getID();
-            }
-        }
-        return -1;
-    }
+//    public static int nearbyEnemyDrone() throws GameActionException {
+//        RobotInfo[] robots = rc.senseNearbyRobots();
+//        for (RobotInfo r : robots) {
+//            System.out.println("SENSE " + r.getType());
+//            if (r.getType() == RobotType.DELIVERY_DRONE && r.team != rc.getTeam()
+//            && rc.getLocation().is) {
+//                return r.getID();
+//            }
+//        }
+//        return -1;
+//    }
 }
