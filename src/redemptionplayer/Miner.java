@@ -513,10 +513,10 @@ public class Miner extends Unit {
                     split = true;
                 }
                 Direction[] dirs = null;
-                if (discoverDir.equals("left")) {
+                if (discoverDir.equals("right")) {
                     dirs = new Direction[]{targetDirection.rotateRight(), targetDirection.rotateRight().rotateRight(),
                             targetDirection.rotateRight().rotateRight().rotateRight(), targetDirection.opposite()};
-                } else if (discoverDir.equals("right")) {
+                } else if (discoverDir.equals("left")) {
                     dirs = new Direction[]{targetDirection.rotateLeft(), targetDirection.rotateLeft().rotateLeft(),
                             targetDirection.rotateLeft().rotateLeft().rotateLeft(), targetDirection.opposite()};
                 }
@@ -681,43 +681,53 @@ public class Miner extends Unit {
     }
 
     public void moveAroundHQ() throws GameActionException {
-        boolean moved = false;
-        Direction towardsHQ = rc.getLocation().directionTo(hqLoc);
-        ArrayList<Direction> dirs = new ArrayList<>();
-
-        //If see enemy drone, move towards HQ for protection.
-        if (nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
-            dfsWalk(hqLoc);
-        }
-
-        clearMovement();
-        //Set the general direction for the miner to move around HQ
-        if (moveAroundHQDir.equals("right")) {
-            dirs.add(towardsHQ.rotateLeft());
-            dirs.add(towardsHQ.rotateLeft().rotateLeft());
-            dirs.add(towardsHQ.rotateLeft().rotateLeft().rotateLeft());
-            dirs.add(towardsHQ.rotateLeft().rotateLeft().rotateLeft().rotateLeft());
-        } else {
-            dirs.add(towardsHQ.rotateRight());
-            dirs.add(towardsHQ.rotateRight().rotateRight());
-            dirs.add(towardsHQ.rotateRight().rotateRight().rotateRight());
-            dirs.add(towardsHQ.rotateRight().rotateRight().rotateRight().rotateRight());
-        }
+//        boolean moved = false;
+//        Direction towardsHQ = rc.getLocation().directionTo(hqLoc);
+//        ArrayList<Direction> dirs = new ArrayList<>();
+//
+//        //If see enemy drone, move towards HQ for protection.
+//        if (nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
+//            dfsWalk(hqLoc);
+//        }
+//
+//        clearMovement();
+//        //Set the general direction for the miner to move around HQ
+//        if (moveAroundHQDir.equals("right")) {
+//            dirs.add(towardsHQ.rotateLeft());
+//            dirs.add(towardsHQ.rotateLeft().rotateLeft());
+//            dirs.add(towardsHQ.rotateLeft().rotateLeft().rotateLeft());
+//            dirs.add(towardsHQ.rotateLeft().rotateLeft().rotateLeft().rotateLeft());
+//        } else {
+//            dirs.add(towardsHQ.rotateRight());
+//            dirs.add(towardsHQ.rotateRight().rotateRight());
+//            dirs.add(towardsHQ.rotateRight().rotateRight().rotateRight());
+//            dirs.add(towardsHQ.rotateRight().rotateRight().rotateRight().rotateRight());
+//        }
 
         //move around HQ following a general direction - ideally miner would be moving in circles with the HQ as the center
-        for (Direction dir : dirs) {
+
+        List<Direction> list = Arrays.asList(Util.directions);
+        Collections.shuffle(list);
+
+        //move around HQ in random directions
+        for (Direction dir : list) {
             if (rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 16)
                     && !rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 4)
-                    && tryMove(dir)) {
-                moveAroundHQDir = moveAroundHQDir.equals("left") ? "right" : "left";
+                    && !rc.getLocation().add(dir).equals(prevLocation) && tryMove(dir)) {
+//                moveAroundHQDir = moveAroundHQDir.equals("left") ? "right" : "left";
                 break;
             }
         }
 
+        prevLocation = rc.getLocation();
+
+//        if (rc.getCooldownTurns() < 1) {
+//            goTo(hqLoc);
+//        }
 
         if (rc.getCooldownTurns() < 1) {
             //just move in a random direction - to prevent the bug happening in maps like hourgalss
-            for (Direction dir : dirs) {
+            for (Direction dir : Util.directions) {
                 tryMove(dir);
             }
         }

@@ -170,7 +170,9 @@ public class Drone extends Unit {
 
     @Override
     boolean tryMove(Direction dir) throws GameActionException {
-        // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
+        if (dir == null) {
+            return false;
+        }
         if (enemyHqLoc == null || rc.getRoundNum() > attackTurn) {
             if (rc.isReady() && rc.canMove(dir)) {
                 rc.move(dir);
@@ -187,7 +189,7 @@ public class Drone extends Unit {
 
     void moveRandomlyAroundHQ() throws GameActionException {
         for (Direction dir : Util.directions) {
-            if (hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir), 10)) {
+            if (hqLoc.isWithinDistanceSquared(rc.getLocation().add(dir), 20)) {
                 tryMove(dir);
                 clearMovement();
             } else {
