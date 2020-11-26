@@ -2,6 +2,8 @@ package redemptionplayer;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
+
 public class Drone extends Unit {
     static MapLocation minerLoc = null;
     static int firstMinerID = 0;
@@ -93,7 +95,8 @@ public class Drone extends Unit {
 //                }
                 }
                 if (pickUpID == -1) {
-                    moveRandomlyAroundHQ();
+                    moveRandomly();
+//                    moveRandomlyAroundHQ();
                 }
             } else {
                 if (rc.isCurrentlyHoldingUnit()) {
@@ -128,6 +131,7 @@ public class Drone extends Unit {
                 }
             }
         }
+        System.out.println("BC " + Clock.getBytecodesLeft());
     }
 
     public void getUberRequest() throws GameActionException {
@@ -174,7 +178,16 @@ public class Drone extends Unit {
             return false;
         }
         if (enemyHqLoc == null || rc.getRoundNum() > attackTurn) {
-            if (rc.isReady() && rc.canMove(dir)) {
+            //avoid netguns
+            RobotInfo[] robotInfos = rc.senseNearbyRobots();
+            ArrayList<MapLocation> netGuns = new ArrayList<>();
+            for (RobotInfo robot : robotInfos) {
+                if (robot.getType() == RobotType.NET_GUN) {
+                    netGuns.add(robot.getLocation());
+                }
+            }
+
+            if (rc.isReady() && rc.canMove(dir) && !netGuns.contains(rc.getLocation().add(dir))) {
                 rc.move(dir);
                 return true;
             } else return false;
@@ -240,6 +253,18 @@ public class Drone extends Unit {
             goTo(Util.randomDirection());
 
             System.out.println("AFTER ALL THAT " + Clock.getBytecodesLeft());
+        }
+    }
+
+    void moveRandomly () throws GameActionException{
+        if (randomDirection == null) {
+            randomDirection = Util.randomDirection();
+        }
+        if (randomDirectionCount-- > 0 && goTo(randomDirection)) {
+            System.out.println("I moved randomly!");
+        } else {
+            randomDirectionCount = 10;
+            randomDirection = randomDirection.rotateLeft();
         }
     }
 }

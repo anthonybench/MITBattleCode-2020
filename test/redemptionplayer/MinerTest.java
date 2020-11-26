@@ -4,7 +4,6 @@ import battlecode.common.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.scalactic.Or;
 
 import java.util.*;
 
@@ -96,7 +95,7 @@ public class MinerTest {
         Miner.fulfillmentCenterCount = 0;
         Miner.checkGiveUpRush = false;
         Miner.moveAroundHQDir = "left";
-        Miner.prevDirection = null;
+        Miner.randomDirection = null;
         Miner.recentPosition = null;
         Miner.potentialEnemyHQX = -1;
         Miner.potentialEnemyHQY = -1;
@@ -150,7 +149,7 @@ public class MinerTest {
         Miner.fulfillmentCenterCount = 0;
         Miner.checkGiveUpRush = false;
         Miner.moveAroundHQDir = "left";
-        Miner.prevDirection = null;
+        Miner.randomDirection = null;
         Miner.recentPosition = null;
         Miner.potentialEnemyHQX = -1;
         Miner.potentialEnemyHQY = -1;

@@ -25,6 +25,8 @@ public class Unit extends Robot {
     static int hugDirection = 0; // 0 for left, 1 for right;
     Map<MapLocation, Integer> mapLocations;
     static MapLocation prevLocation;
+    static int randomDirectionCount = 10;
+    static Direction randomDirection;
 
     public class Pair {
         private MapLocation key;

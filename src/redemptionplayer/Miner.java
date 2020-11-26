@@ -1,7 +1,6 @@
 package redemptionplayer;
 
 import battlecode.common.*;
-import org.omg.Messaging.SYNC_WITH_TRANSPORT;
 
 import java.util.*;
 
@@ -26,11 +25,10 @@ public class Miner extends Unit {
     static int fulfillmentCenterCount = 0;
     static boolean checkGiveUpRush = false;
     static String moveAroundHQDir = "left";
-    static Direction prevDirection;
     static MapLocation recentPosition;
     static String discoverDir = "left"; // prioritizes discovering to the right;
     static boolean usedToBeFirstMiner = false;
-    static int randomDirectionCount = 10;
+
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
         mapLocations = new HashMap<>();
@@ -358,16 +356,16 @@ public class Miner extends Unit {
 //                            randomDirection = Util.randomDirection();
 //                        } while (randomDirection == prevDirection);
 //                        prevDirection = randomDirection;
-                        System.out.println(prevDirection + " " + randomDirectionCount);
+                        System.out.println(randomDirection + " " + randomDirectionCount);
 
-                        if (prevDirection == null) {
-                            prevDirection = Util.randomDirection();
+                        if (randomDirection == null) {
+                            randomDirection = Util.randomDirection();
                         }
-                        if (randomDirectionCount-- > 0 && goTo(prevDirection)) {
+                        if (randomDirectionCount-- > 0 && goTo(randomDirection)) {
                                 System.out.println("I moved randomly!");
                         } else {
                             randomDirectionCount = 10;
-                            prevDirection = prevDirection.rotateLeft();
+                            randomDirection = randomDirection.rotateLeft();
                         }
                     }
                 } else {
