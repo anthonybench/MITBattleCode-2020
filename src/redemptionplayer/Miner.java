@@ -28,6 +28,7 @@ public class Miner extends Unit {
     static String moveAroundHQDir = "left";
     static Direction prevDirection;
     static MapLocation recentPosition;
+    static String discoverDir = "left"; // prioritizes discovering to the right;
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
@@ -116,10 +117,7 @@ public class Miner extends Unit {
                             designSchoolCount++;
                             rushDesignSchoolLocation = rc.getLocation().add(rc.getLocation().directionTo(new MapLocation(enemyHqLoc.x - 1, enemyHqLoc.y)));
                         } else {
-                            System.out.println("TESTING " + rc.senseElevation(rc.getLocation()));
                             for (Direction dir : Util.directions) {
-                                System.out.println("ELEVATION " + rc.senseElevation(rc.getLocation().add(dir))
-                                + " " + rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc));
                                 if (rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) &&
                                         rc.getTeamSoup() > 154 && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
                                     designSchoolCount++;
@@ -176,7 +174,7 @@ public class Miner extends Unit {
                     minerGoToEnemyHQ();
                 } else {
                     System.out.println("Moving to " + targetEnemyX + " " + targetEnemyY);
-                    navigation(new MapLocation(targetEnemyX, targetEnemyY));
+                    discoverEnemyHQ(new MapLocation(targetEnemyX, targetEnemyY));
                 }
             }
         } else if (backupMiner) {
@@ -472,26 +470,22 @@ public class Miner extends Unit {
     void discoverEnemyHQ(MapLocation enemyHQ) throws GameActionException {
         Direction targetDirection = rc.getLocation().directionTo(enemyHQ);
         System.out.println("============================================");
-        System.out.println("Bytecode 3" + Clock.getBytecodeNum() + " " + split);
-        System.out.println("!!!Moving towards " + targetDirection + " " + discoverDir + " " + prevSplitLocations.size());
-        System.out.println("Prev split " + prevSplitLocation + " " + rc.getLocation());
         if (rc.getCooldownTurns() < 1) {
             if (rc.getCooldownTurns() < 1 && prevSplitLocation != null && rc.getLocation().equals(prevSplitLocation.getKey())) {
                 System.out.println("At previous split loc " + prevSplitLocation.getKey() + " " + discoverDir);
-                if (discoverDir.equals("right")) {
-                    System.out.println("Switched to left");
-                    discoverDir = "left";
+                if (discoverDir.equals("left")) {
+                    System.out.println("Switched to right");
+                    discoverDir = "right";
                     headBackToPrevSplitLocation = false;
-                } else if (discoverDir.equals("left")) {
+                } else if (discoverDir.equals("right")) {
                     headBackToPrevSplitLocation = true;
-                    System.out.println("Left " + prevSplitLocations.size());
                     if (!prevSplitLocations.empty()) {
                         prevSplitLocation = prevSplitLocations.pop();
-                        discoverDir = "right";
+                        discoverDir = "left";
                     }
                     if (prevSplitLocations.empty()) {
                         //broadcast
-                        discoverDir = "left"; //to get back into this condition.
+                        discoverDir = "right"; //to get back into this condition.
                         System.out.println("Stuck, switching to drones");
                         giveUpMinerRush = true;
                         return;
@@ -503,14 +497,13 @@ public class Miner extends Unit {
 
             //to make sure you don't walk back to previous location when discovering, that
             //sometimes causes unit to just move back and forth.
-            System.out.println("TeSt " + rc.getLocation().directionTo(prevLocation) + " " + prevLocation);
             boolean walkingPrevDirection = targetDirection == rc.getLocation().directionTo(prevLocation);
             prevLocation = rc.getLocation();
             if (!walkingPrevDirection && tryMove(targetDirection)) {
                 System.out.println("Moved in target Direction " + targetDirection);
                 if (split) {
                     split = false;
-                    discoverDir = "right";
+                    discoverDir = "left";
                 }
             } else if (rc.getCooldownTurns() < 1) {
                 System.out.println("Couldn't move towards target direction " + split + " " + discoverDir);
@@ -520,10 +513,10 @@ public class Miner extends Unit {
                     split = true;
                 }
                 Direction[] dirs = null;
-                if (discoverDir.equals("right")) {
+                if (discoverDir.equals("left")) {
                     dirs = new Direction[]{targetDirection.rotateRight(), targetDirection.rotateRight().rotateRight(),
                             targetDirection.rotateRight().rotateRight().rotateRight(), targetDirection.opposite()};
-                } else if (discoverDir.equals("left")) {
+                } else if (discoverDir.equals("right")) {
                     dirs = new Direction[]{targetDirection.rotateLeft(), targetDirection.rotateLeft().rotateLeft(),
                             targetDirection.rotateLeft().rotateLeft().rotateLeft(), targetDirection.opposite()};
                 }
@@ -540,7 +533,7 @@ public class Miner extends Unit {
                         System.out.println("Couldn't move " + discoverDir + " " + prevSplitLocations.size());
                         if (!prevSplitLocations.empty()) {
                             prevSplitLocation = prevSplitLocations.peek();
-                            if (discoverDir.equals("left") && headBackToPrevSplitLocation) {
+                            if (discoverDir.equals("right") && headBackToPrevSplitLocation) {
                                 System.out.println("pop " + prevSplitLocations.size());
                                 prevSplitLocations.pop();
 //                            clearMovement();
