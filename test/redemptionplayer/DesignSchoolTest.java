@@ -24,6 +24,7 @@ public class DesignSchoolTest {
 		when(rc.getTeamSoup()).thenReturn(200);
 		when(rc.canBuildRobot(any(RobotType.class), any(Direction.class))).thenReturn(true);
 		when(rc.getLocation()).thenReturn(new MapLocation(1,1));
+		when(rc.getRoundNum()).thenReturn(10);
 		DesignSchool ds = new DesignSchool(rc);
 		//Act
 		ds.run();

@@ -42,7 +42,6 @@ public class Robot {
      * @throws GameActionException
      */
     boolean tryBuild(RobotType type, Direction dir) throws GameActionException {
-        System.out.println(rc.isReady() + " " + rc.canBuildRobot(type, dir));
         if (rc.isReady() && rc.canBuildRobot(type, dir)) {
             rc.buildRobot(type, dir);
             return true;
@@ -120,6 +119,9 @@ public class Robot {
     }
 
     public void getHaltProductionFromBlockchain() throws GameActionException {
+        if (rc.getRoundNum() < 20) {
+            return;
+        }
         for (int i = rc.getRoundNum() - 3; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
@@ -134,6 +136,9 @@ public class Robot {
     }
 
     public void getContinueProductionFromBlockchain() throws GameActionException {
+        if (rc.getRoundNum() < 20) {
+            return;
+        }
         for (int i = rc.getRoundNum() - 3; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();

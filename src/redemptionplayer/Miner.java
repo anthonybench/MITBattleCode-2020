@@ -311,7 +311,7 @@ public class Miner extends Unit {
                 }
             }
 
-            if (rc.getRoundNum() > 10 && adjacentSoup && !usedToBeFirstMiner) {
+            if (rc.getRoundNum() > 10 && adjacentSoup) {
                 getRefineryLocation();
                 buildRefineryNearSoupArea();
             }
@@ -592,8 +592,8 @@ public class Miner extends Unit {
 
     public void buildRefineryNearSoupArea() throws GameActionException {
         System.out.println("Build refinery " + buildPriority);
-        getHaltProductionFromBlockchain();
-        getContinueProductionFromBlockchain();
+//        getHaltProductionFromBlockchain();
+//        getContinueProductionFromBlockchain();
 
         if (checkHalt()) {
             return;
@@ -611,10 +611,12 @@ public class Miner extends Unit {
 //            }
 //        }
 
+        if (nearbyTeamRobot(RobotType.REFINERY)) {
+            return;
+        }
         System.out.println("REFINERY " + buildPriority);
         //if finds soup area and no refinery nearby, build refinery
-        if (rc.getTeamSoup() > 204
-                && !nearbyTeamRobot(RobotType.REFINERY)) {
+        if (rc.getTeamSoup() > 204) {
             //check if have refine spots nearby
             boolean hasNearby = false;
             for (MapLocation loc : refineLocations) {
@@ -629,9 +631,18 @@ public class Miner extends Unit {
                         MapLocation refineryLoc = rc.getLocation().add(dir);
                         broadcastNewRefinery(refineryLoc.x, refineryLoc.y);
                         refineLocations.add(refineryLoc);
+                        if (!broadcastedCont && broadcastedHalt) {
+                            broadcastContinueProduction();
+                            broadcastedCont = true;
+                        }
                         break;
                     }
                 }
+            }
+        } else if (rc.getTeamSoup() > 3){
+            if (!broadcastedHalt) {
+                broadcastHaltProduction();
+                broadcastedHalt = true;
             }
         }
     }

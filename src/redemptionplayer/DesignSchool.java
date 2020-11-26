@@ -11,6 +11,11 @@ public class DesignSchool extends Building {
 
     public void run() throws GameActionException {
         //halt building landscapers, to wait for miner to build net guns.
+        getHaltProductionFromBlockchain();
+        getContinueProductionFromBlockchain();
+        if (checkHalt()) {
+            return;
+        }
         if (!nearbyTeamRobot(RobotType.NET_GUN) && nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
             return;
         } else if (nearbyEnemyRobot(RobotType.HQ)) {
