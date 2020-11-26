@@ -294,6 +294,8 @@ public class Miner extends Unit {
             }
 
             getSoupLocation();
+            getRefineryLocation();
+
             for (Direction dir : Util.directions) {
                 if (tryRefine(dir)) {
                     System.out.println("I refined soup! " + rc.getTeamSoup());
@@ -616,7 +618,7 @@ public class Miner extends Unit {
         }
         System.out.println("REFINERY " + buildPriority);
         //if finds soup area and no refinery nearby, build refinery
-        if (rc.getTeamSoup() > 204) {
+        if (rc.getTeamSoup() > 206) {
             //check if have refine spots nearby
             boolean hasNearby = false;
             for (MapLocation loc : refineLocations) {
