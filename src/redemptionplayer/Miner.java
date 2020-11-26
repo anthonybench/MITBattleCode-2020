@@ -29,7 +29,8 @@ public class Miner extends Unit {
     static Direction prevDirection;
     static MapLocation recentPosition;
     static String discoverDir = "left"; // prioritizes discovering to the right;
-
+    static boolean usedToBeFirstMiner = false;
+    static int randomDirectionCount = 10;
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
         mapLocations = new HashMap<>();
@@ -58,6 +59,7 @@ public class Miner extends Unit {
             System.out.println("IM FIRST MINER");
             //Sets the first spawned miner to the first miner (that will be discovring enemy HQ)
             firstMiner = true;
+            usedToBeFirstMiner = true;
 //            refineLocations.add(hqLoc);
         }
 
@@ -301,7 +303,17 @@ public class Miner extends Unit {
                     return;
                 }
             }
-            if (rc.getRoundNum() > 10) {
+
+            MapLocation[] soupToMine = rc.senseNearbySoup();
+            //Build refinery if adjacent to soup
+            boolean adjacentSoup = false;
+            for (MapLocation soup : soupToMine) {
+                if (soup.isAdjacentTo(rc.getLocation())) {
+                    adjacentSoup = true;
+                }
+            }
+
+            if (rc.getRoundNum() > 10 && adjacentSoup && !usedToBeFirstMiner) {
                 getRefineryLocation();
                 buildRefineryNearSoupArea();
             }
@@ -313,7 +325,6 @@ public class Miner extends Unit {
                 System.out.println("Before trying to find soup");
                 // Try to find soup
                 MapLocation closestSoup = null;
-                MapLocation[] soupToMine = rc.senseNearbySoup();
                 int shortestDistance = 100;
                 //mine the closest soup to avoid bug that occurs on map like "spiral"
                 for (MapLocation soupLoc : soupToMine) {
@@ -342,13 +353,21 @@ public class Miner extends Unit {
                     } else {
                         // If no soup is nearby, search for soup by moving randomly
                         System.out.println("No soup nearby");
-                        Direction randomDirection = Util.randomDirection();
-                        do {
-                            randomDirection = Util.randomDirection();
-                        } while (randomDirection == prevDirection);
-                        prevDirection = randomDirection;
-                        if (goTo(randomDirection)) {
-                            System.out.println("I moved randomly!");
+//                        Direction randomDirection = Util.randomDirection();
+//                        do {
+//                            randomDirection = Util.randomDirection();
+//                        } while (randomDirection == prevDirection);
+//                        prevDirection = randomDirection;
+                        System.out.println(prevDirection + " " + randomDirectionCount);
+
+                        if (prevDirection == null) {
+                            prevDirection = Util.randomDirection();
+                        }
+                        if (randomDirectionCount-- > 0 && goTo(prevDirection)) {
+                                System.out.println("I moved randomly!");
+                        } else {
+                            randomDirectionCount = 10;
+                            prevDirection = prevDirection.rotateLeft();
                         }
                     }
                 } else {
@@ -583,20 +602,20 @@ public class Miner extends Unit {
         }
 
         //has landscapers building walls but still no refinery, then build refinery
-        if (rc.canSenseLocation(hqLoc) && nearbyTeamRobot(RobotType.LANDSCAPER) && refineLocations.isEmpty() && !nearbyTeamRobot(RobotType.REFINERY)) {
-            for (Direction dir : Util.directions) {
-                if (!rc.getLocation().add(dir).isAdjacentTo(hqLoc) && tryBuild(RobotType.REFINERY, dir)) {
-                    MapLocation refineryLoc = rc.getLocation().add(dir);
-                    broadcastNewRefinery(refineryLoc.x, refineryLoc.y);
-                    refineLocations.add(refineryLoc);
-                    break;
-                }
-            }
-        }
+//        if (rc.canSenseLocation(hqLoc) && nearbyTeamRobot(RobotType.LANDSCAPER) && refineLocations.isEmpty() && !nearbyTeamRobot(RobotType.REFINERY)) {
+//            for (Direction dir : Util.directions) {
+//                if (!rc.getLocation().add(dir).isAdjacentTo(hqLoc) && tryBuild(RobotType.REFINERY, dir)) {
+//                    MapLocation refineryLoc = rc.getLocation().add(dir);
+//                    broadcastNewRefinery(refineryLoc.x, refineryLoc.y);
+//                    refineLocations.add(refineryLoc);
+//                    break;
+//                }
+//            }
+//        }
 
         System.out.println("REFINERY " + buildPriority);
         //if finds soup area and no refinery nearby, build refinery
-        if (rc.getTeamSoup() > 204 + buildPriority
+        if (rc.getTeamSoup() > 204
                 && !nearbyTeamRobot(RobotType.REFINERY)) {
             //check if have refine spots nearby
             boolean hasNearby = false;
@@ -707,6 +726,7 @@ public class Miner extends Unit {
         //move around HQ following a general direction - ideally miner would be moving in circles with the HQ as the center
 
         List<Direction> list = Arrays.asList(Util.directions);
+
         Collections.shuffle(list);
 
         //move around HQ in random directions
