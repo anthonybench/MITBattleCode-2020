@@ -487,83 +487,72 @@ public class Miner extends Unit {
     }
 
     void discoverEnemyHQ(MapLocation enemyHQ) throws GameActionException {
+        //hugDirection 0 for left, 1 for right;
         Direction targetDirection = rc.getLocation().directionTo(enemyHQ);
-        System.out.println("============================================");
-        if (rc.getCooldownTurns() < 1) {
-            if (rc.getCooldownTurns() < 1 && prevSplitLocation != null && rc.getLocation().equals(prevSplitLocation.getKey())) {
-                System.out.println("At previous split loc " + prevSplitLocation.getKey() + " " + discoverDir);
-                if (discoverDir.equals("left")) {
-                    System.out.println("Switched to right");
-                    discoverDir = "right";
-                    headBackToPrevSplitLocation = false;
-                } else if (discoverDir.equals("right")) {
-                    headBackToPrevSplitLocation = true;
-                    if (!prevSplitLocations.empty()) {
-                        prevSplitLocation = prevSplitLocations.pop();
-                        discoverDir = "left";
-                    }
-                    if (prevSplitLocations.empty()) {
-                        //broadcast
-                        discoverDir = "right"; //to get back into this condition.
-                        System.out.println("Stuck, switching to drones");
-                        giveUpMinerRush = true;
-                        return;
-                    }
+        System.out.println(prevDirection + " " + targetDirection + " ==============DEH======= " + hugDirection + " " + rc.getCooldownTurns());
+        //return if miner is not suppose to be able to move
+        if (rc.getCooldownTurns() >= 1) {
+            return;
+        }
+        System.out.println((targetDirection != prevDirection) + " " + rc.canMove(targetDirection));
+        System.out.println(rc.canMove(targetDirection.rotateRight()));
+        if (targetDirection != prevDirection && rc.canMove(targetDirection) && tryMove(targetDirection)) {
+            //moved in target direction
+            System.out.println("Moved as expected");
+            //reset hug logic
+            if (hugDirection == 1) {
+                hugDirection = 0;
+                prevDirection = null;
+            }
+        } else {
+            System.out.println("Couldn't move towards target");
+            //hug direction logic
+            ArrayList<Direction> dirs = new ArrayList<>();
+
+            //check if couldn't move because it's a unit, if is, try move around it.
+            if (rc.senseRobotAtLocation(rc.getLocation().add(targetDirection)) != null) {
+                if (tryMove(targetDirection.rotateLeft()) || tryMove(targetDirection.rotateRight())) {
+                    return;
                 }
-            } else if (prevSplitLocation != null && rc.getLocation() != prevSplitLocation.getKey() && headBackToPrevSplitLocation) {
-                goTo(prevSplitLocation.getKey());
+            }
+            if (hugDirection == 0) {
+                dirs.add(targetDirection.rotateLeft());
+                dirs.add(targetDirection.rotateLeft().rotateLeft());
+                dirs.add(targetDirection.rotateLeft().rotateLeft().rotateLeft());
+                dirs.add(targetDirection.rotateLeft().rotateLeft().rotateLeft().rotateLeft());
+            } else {
+                dirs.add(targetDirection.rotateRight());
+                dirs.add(targetDirection.rotateRight().rotateRight());
+                dirs.add(targetDirection.rotateRight().rotateRight().rotateRight());
+                dirs.add(targetDirection.rotateRight().rotateRight().rotateRight().rotateRight());
             }
 
-            //to make sure you don't walk back to previous location when discovering, that
-            //sometimes causes unit to just move back and forth.
-            boolean walkingPrevDirection = targetDirection == rc.getLocation().directionTo(prevLocation);
-            prevLocation = rc.getLocation();
-            if (!walkingPrevDirection && tryMove(targetDirection)) {
-                System.out.println("Moved in target Direction " + targetDirection);
-                if (split) {
-                    split = false;
-                    discoverDir = "left";
-                }
-            } else if (rc.getCooldownTurns() < 1) {
-                System.out.println("Couldn't move towards target direction " + split + " " + discoverDir);
-                if (!split) {
-                    System.out.println("SPLIT - push" + rc.getLocation());
-                    prevSplitLocations.push(new Pair(rc.getLocation(), discoverDir));
-                    split = true;
-                }
-                Direction[] dirs = null;
-                if (discoverDir.equals("right")) {
-                    dirs = new Direction[]{targetDirection.rotateRight(), targetDirection.rotateRight().rotateRight(),
-                            targetDirection.rotateRight().rotateRight().rotateRight(), targetDirection.opposite()};
-                } else if (discoverDir.equals("left")) {
-                    dirs = new Direction[]{targetDirection.rotateLeft(), targetDirection.rotateLeft().rotateLeft(),
-                            targetDirection.rotateLeft().rotateLeft().rotateLeft(), targetDirection.opposite()};
-                }
-                //make sure miner couldn't move when actually trying to move
-                if (rc.getCooldownTurns() < 1) {
-                    boolean moved = false;
-                    for (Direction dir : dirs) {
-                        System.out.println(dir);
-                        if (tryMove(dir)) {
-                            moved = true;
-                        }
-                    }
-                    if (!moved) {
-                        System.out.println("Couldn't move " + discoverDir + " " + prevSplitLocations.size());
-                        if (!prevSplitLocations.empty()) {
-                            prevSplitLocation = prevSplitLocations.peek();
-                            if (discoverDir.equals("right") && headBackToPrevSplitLocation) {
-                                System.out.println("pop " + prevSplitLocations.size());
-                                prevSplitLocations.pop();
-//                            clearMovement();
-                            }
-                        }
-                        headBackToPrevSplitLocation = true;
-                    }
+            //try move following the hug directions
+            boolean moved = false;
+            for (Direction dir : dirs) {
+                System.out.println(dir);
+                if (tryMove(dir)) {
+                    moved = true;
+                    prevDirection = dir.opposite();
+                    break;
                 }
             }
+            //if moved, just return
+            if (moved) {
+                return;
+            }
+            //if couldn't move towards the hug direction
+            if (hugDirection == 0) {
+                //now try move right
+                System.out.println("Switch DIr");
+                hugDirection = 1;
+                prevDirection = null;
+            } else {
+                //we'll claim to be stuck, and then give up miner rush
+                System.out.println("-----------------STUCK------------------------------");
+                giveUpMinerRush = true;
+            }
         }
-        System.out.println("Bytecode 4" + Clock.getBytecodeNum());
         System.out.println("============================================");
     }
 
