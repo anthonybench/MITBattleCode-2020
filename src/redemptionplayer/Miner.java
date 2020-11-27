@@ -12,7 +12,6 @@ public class Miner extends Unit {
     static int currentElevation = 0;
     static boolean startAttacking = false;
     static boolean pauseForFlight = false;
-    static boolean giveUpMinerRush = false;
     static ArrayList<MapLocation> refineLocations;
     static Queue<MapLocation> soupLocations;
     static MapLocation soupLocation;
@@ -392,7 +391,7 @@ public class Miner extends Unit {
 
             }
         }
-        System.out.println("Bytecode end" + Clock.getBytecodeNum());
+        System.out.println("Bytecode end" + Clock.getBytecodeNum() + " " + Clock.getBytecodesLeft());
     }
 
     /**
@@ -500,10 +499,10 @@ public class Miner extends Unit {
             //moved in target direction
             System.out.println("Moved as expected");
             //reset hug logic
-            if (hugDirection == 1) {
-                hugDirection = 0;
-                prevDirection = null;
-            }
+//            if (hugDirection == 1) {
+//                hugDirection = 0;
+//                prevDirection = null;
+//            }
         } else {
             System.out.println("Couldn't move towards target");
             //hug direction logic
@@ -521,6 +520,7 @@ public class Miner extends Unit {
                 dirs.add(targetDirection.rotateLeft().rotateLeft().rotateLeft());
                 dirs.add(targetDirection.rotateLeft().rotateLeft().rotateLeft().rotateLeft());
             } else {
+                System.out.println("TEST");
                 dirs.add(targetDirection.rotateRight());
                 dirs.add(targetDirection.rotateRight().rotateRight());
                 dirs.add(targetDirection.rotateRight().rotateRight().rotateRight());
@@ -548,9 +548,13 @@ public class Miner extends Unit {
                 hugDirection = 1;
                 prevDirection = null;
             } else {
-                //we'll claim to be stuck, and then give up miner rush
-                System.out.println("-----------------STUCK------------------------------");
-                giveUpMinerRush = true;
+//                //we'll claim to be stuck, and then give up miner rush
+//                System.out.println("-----------------STUCK------------------------------");
+//                giveUpMinerRush = true;
+                //now try move right
+                System.out.println("Switch DIr");
+                hugDirection = 0;
+                prevDirection = null;
             }
         }
         System.out.println("============================================");

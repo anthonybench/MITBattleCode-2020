@@ -28,6 +28,7 @@ public class Unit extends Robot {
     static int randomDirectionCount = 10;
     static Direction randomDirection;
     static Direction prevDirection;
+    static boolean giveUpMinerRush = false;
 
     public class Pair {
         private MapLocation key;
@@ -246,6 +247,7 @@ public class Unit extends Robot {
     void enemyBaseFindingLogic() {
         System.out.println("Target HQ " + enemyPotentialHQNumber);
         //Sets the first miner's targeted locations
+
         switch (enemyPotentialHQNumber) {
             case 1:
                 targetEnemyX = potentialEnemyHQX;
@@ -261,6 +263,13 @@ public class Unit extends Robot {
                 break;
             default:
                 break;
+        }
+        NavHelper s = new NavHelper();
+        MapLocation temp = s.abc(hqLoc, rc.getMapWidth(), rc.getMapHeight());
+        targetEnemyX = temp.x;
+        targetEnemyY = temp.y;
+        if (temp == null) {
+            giveUpMinerRush = true;
         }
         System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
     }

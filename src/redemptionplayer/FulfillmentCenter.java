@@ -15,6 +15,9 @@ public class FulfillmentCenter extends Building {
         System.out.println(haltProduction + "--------------");
         getHaltProductionFromBlockchain();
         getContinueProductionFromBlockchain();
+        if (nearbyEnemyRobot(RobotType.NET_GUN)) {
+            return;
+        }
         //fulfillment center near our HQ can build more than one drone
         if (checkHalt()) {
             return;
