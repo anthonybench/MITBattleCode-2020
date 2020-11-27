@@ -29,6 +29,7 @@ public class Unit extends Robot {
     static Direction randomDirection;
     static Direction prevDirection;
     static boolean giveUpMinerRush = false;
+    static int giveUpTurn =  200;
 
     public class Pair {
         private MapLocation key;
@@ -228,22 +229,6 @@ public class Unit extends Robot {
         split = false;
     }
 
-    void findEnemyHQ() throws GameActionException {
-        if (enemyHqLoc == null) {
-            // search surroundings for HQ
-            RobotInfo[] robots = rc.senseNearbyRobots();
-            for (RobotInfo robot : robots) {
-                if (robot.type == RobotType.HQ && robot.team != rc.getTeam()) {
-                    enemyHqLoc = robot.location;
-                }
-            }
-            if (enemyHqLoc == null) {
-                // if still null, search the blockchain
-                getRealEnemyHQFromBlockchain();
-            }
-        }
-    }
-
     void enemyBaseFindingLogic() {
         System.out.println("Target HQ " + enemyPotentialHQNumber);
         //Sets the first miner's targeted locations
@@ -266,10 +251,11 @@ public class Unit extends Robot {
         }
         NavHelper s = new NavHelper();
         MapLocation temp = s.abc(hqLoc, rc.getMapWidth(), rc.getMapHeight());
-        targetEnemyX = temp.x;
-        targetEnemyY = temp.y;
         if (temp == null) {
-            giveUpMinerRush = true;
+            giveUpTurn = 90;
+        } else {
+            targetEnemyX = temp.x;
+            targetEnemyY = temp.y;
         }
         System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
     }

@@ -8,9 +8,9 @@ import java.util.Map;
 public class Landscaper extends Unit {
     static boolean rushType = false;
     static ArrayList<MapLocation> outerCircle;
-    static boolean checkedBlockchainForFirst = false;
     static boolean firstLandscaper = false;
     static int tryMoveToEnemyHQTurns = 0;
+
     public Landscaper(RobotController rc) throws GameActionException {
         super(rc);
         outerCircle = new ArrayList<>();
@@ -41,8 +41,6 @@ public class Landscaper extends Unit {
             } else {
                 goTo(Util.randomDirection());
             }
-        } else if (firstLandscaper) {
-
         } else {
             RobotInfo[] robotInfos = rc.senseNearbyRobots();
 
@@ -99,11 +97,14 @@ public class Landscaper extends Unit {
         if (enemyHQ && enemyHqLoc != null) {
             //try dig the enemy wall first
             for (Direction dir : Util.directions) {
-                if (rc.canDigDirt(dir) && !rc.getLocation().add(dir).equals(enemyHqLoc)
+                if (turnCount >= 30 && rc.canDigDirt(dir) && !rc.getLocation().add(dir).equals(enemyHqLoc)
                         && rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && outerRushLandscaperCanDig(rc.getLocation().add(dir))) {
                     rc.digDirt(dir);
                     System.out.println("Dug " + dir);
                     return true;
+                } else if (turnCount < 30 && rc.canDigDirt(dir) && !rc.getLocation().add(dir).equals(enemyHqLoc)
+                        && !rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && outerRushLandscaperCanDig(rc.getLocation().add(dir))) {
+                    rc.digDirt(dir);
                 }
             }
 
@@ -190,6 +191,7 @@ public class Landscaper extends Unit {
 
                 boolean stillCanMove = false;
                 for (Direction dir : Util.directions) {
+                    System.out.println(dir + " " + rc.canMove(dir) + " " + rc.getLocation().add(dir));
                     if (rc.canMove(dir) && rc.getLocation().add(dir).isAdjacentTo(hqLoc)) {
                         stillCanMove = true;
                         System.out.println("Can Move");
@@ -204,7 +206,7 @@ public class Landscaper extends Unit {
 //                    } while (!(rc.getLocation().add(ranDir).isAdjacentTo(hqLoc)));
 //                    goTo(ranDir);
                     Direction dir = rc.getLocation().directionTo(hqLoc);
-                    Direction[] dirs = {dir.rotateRight(), dir.rotateRight().rotateRight()};
+                    Direction[] dirs = {dir.rotateRight(), dir.rotateRight().rotateRight(), dir.rotateLeft(), dir.rotateLeft().rotateLeft()};
                     for (Direction _dir : dirs) {
                         if (rc.getLocation().add(_dir).isAdjacentTo(hqLoc) && tryMove(_dir)) {
                             break;
@@ -230,6 +232,7 @@ public class Landscaper extends Unit {
     }
 
     public boolean outerRushLandscaperCanDig(MapLocation mapLoc) throws GameActionException {
+        //prevent flooding same team landscapers
         return !locationOccupiedWithSameTeamRobot(mapLoc) || (rc.senseElevation(mapLoc) > 5);
     }
 

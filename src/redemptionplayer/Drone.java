@@ -24,7 +24,7 @@ public class Drone extends Unit {
 
         //attack enemy HQ, kill their landscapers so we have higher wall.
         if (rc.getRoundNum() > attackTurn) {
-            System.out.println("PU " + pickUpID + " " + enemyHqLoc);
+
             if (!rc.isCurrentlyHoldingUnit()) {
                 pickUpEnemyLandscaper();
                 dfsWalk(enemyHqLoc);
@@ -40,21 +40,16 @@ public class Drone extends Unit {
 
             //Checks if the enemyHQ is within the current robots sensor radius
             if (rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), rc.getCurrentSensorRadiusSquared())) {
-                System.out.println("Sensor " + rc.getCurrentSensorRadiusSquared());
                 if (nearbyEnemyRobot(RobotType.HQ)) {
-                    System.out.println("Found real enemy HQ coordinates");
-                    System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
                     broadcastRealEnemyHQCoordinates();
                     enemyHqLoc = new MapLocation(targetEnemyX, targetEnemyY);
                 } else {
-                    System.out.println("Sensor 111" + rc.getCurrentSensorRadiusSquared());
                     //if potential enemy HQ location is within sensor radius but enemy HQ is not found,
                     //switch to move to next potential location
                     enemyPotentialHQNumber++;
                 }
             }
 
-            System.out.println("targeting coordinates " + enemyPotentialHQNumber + " " + targetEnemyX + " " + targetEnemyY);
 
             //if enemy HQ is null, perform enemy base finding logic
             if (enemyHqLoc == null) {
@@ -131,7 +126,6 @@ public class Drone extends Unit {
                 }
             }
         }
-        System.out.println("BC " + Clock.getBytecodesLeft());
     }
 
     public void getUberRequest() throws GameActionException {
@@ -139,7 +133,6 @@ public class Drone extends Unit {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
                 if (mess[0] == teamSecret && mess[1] == UBER_REQUEST) {
-                    System.out.println("Retrieved uber instructions!");
                     minerLoc = new MapLocation(mess[4], mess[5]);
                     enemyPotentialHQNumber = mess[3];
                     firstMinerID = mess[2];
@@ -157,7 +150,6 @@ public class Drone extends Unit {
         message[4] = enemyPotentialHQNumber;
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
-        System.out.println("Picked Up First Miner");
     }
 
     public void droneMoveToEnemyHQ() throws GameActionException {
@@ -166,7 +158,6 @@ public class Drone extends Unit {
         Direction[] dirs = {dirToEnemyHQ, dirToEnemyHQ.rotateRight(), dirToEnemyHQ.rotateRight().rotateRight()};
         for (Direction dir : dirs) {
             if (rc.canMove(dir)) {
-                System.out.println("Moving towards enemy HQ " + dir);
                 rc.move(dir);
             }
         }
@@ -252,7 +243,6 @@ public class Drone extends Unit {
             }
             goTo(Util.randomDirection());
 
-            System.out.println("AFTER ALL THAT " + Clock.getBytecodesLeft());
         }
     }
 
@@ -260,9 +250,7 @@ public class Drone extends Unit {
         if (randomDirection == null) {
             randomDirection = Util.randomDirection();
         }
-        if (randomDirectionCount-- > 0 && goTo(randomDirection)) {
-            System.out.println("I moved randomly!");
-        } else {
+        if (!(randomDirectionCount-- > 0 && tryMove(randomDirection))) {
             randomDirectionCount = 10;
             randomDirection = randomDirection.rotateLeft();
         }

@@ -5,9 +5,11 @@ import battlecode.common.*;
 public class HQ extends Building {
     int numMiners = 0;
     static boolean builtMinerAfter100 = false;
-
+    MapLocation temp;
     public HQ (RobotController rc) throws GameActionException{
         super(rc);
+        NavHelper s = new NavHelper();
+        temp = s.abc(rc.getLocation(), rc.getMapWidth(), rc.getMapHeight());
     }
 
     public void run() throws GameActionException {
@@ -18,7 +20,14 @@ public class HQ extends Building {
             sendHqLoc(rc.getLocation());
         }
 
-        if (numMiners < 5) {
+        if (temp != null && numMiners < 4) {
+            for (Direction dir : Util.directions) {
+                if (tryBuild(RobotType.MINER, dir)) {
+                    numMiners++;
+                    break;
+                }
+            }
+        } else if (temp == null && numMiners < 5) {
             for (Direction dir : Util.directions) {
                 if (tryBuild(RobotType.MINER, dir)) {
                     numMiners++;
@@ -27,7 +36,7 @@ public class HQ extends Building {
             }
         }
 
-        if (!builtMinerAfter100 && rc.getRoundNum() >= backupRound) {
+        if (temp == null && !builtMinerAfter100 && rc.getRoundNum() >= backupRound) {
             for (Direction dir : Util.directions) {
                 if (tryBuild(RobotType.MINER, dir)) {
                     numMiners++;

@@ -19,6 +19,7 @@ public class DesignSchoolTest {
 		RobotInfo enemyHQ = new RobotInfo(10001, Team.NEUTRAL, RobotType.HQ, 0, false, 0, 0,0, null);
 		RobotInfo [] infoArr = new RobotInfo[1];
 		infoArr[0] = enemyHQ;
+		DesignSchool.enemyHqLoc = new MapLocation(1, 1);
 		when(rc.isReady()).thenReturn(true);
 		when(rc.senseNearbyRobots()).thenReturn(infoArr);
 		when(rc.getTeamSoup()).thenReturn(200);

@@ -171,4 +171,20 @@ public class Robot {
             }
         }
     }
+
+    void findEnemyHQ() throws GameActionException {
+        if (enemyHqLoc == null) {
+            // search surroundings for HQ
+            RobotInfo[] robots = rc.senseNearbyRobots();
+            for (RobotInfo robot : robots) {
+                if (robot.type == RobotType.HQ && robot.team != rc.getTeam()) {
+                    enemyHqLoc = robot.location;
+                }
+            }
+            if (enemyHqLoc == null) {
+                // if still null, search the blockchain
+                getRealEnemyHQFromBlockchain();
+            }
+        }
+    }
 }
