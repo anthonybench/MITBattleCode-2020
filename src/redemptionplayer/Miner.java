@@ -90,6 +90,13 @@ public class Miner extends Unit {
 //                    if (!rc.getLocation().equals(waitingPosition)) {
 //                        dfsWalk(waitingPosition);
 //                    }
+                    if (rc.getLocation().isAdjacentTo(enemyHqLoc)) {
+                        for (Direction dir : Util.directions) {
+                            if (rc.canMove(dir) && !rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && tryMove(dir)) {
+                                return;
+                            }
+                        }
+                    }
                 } else if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 8)) {
                     //create design school next to enemy HQ
                     startAttacking = true;

@@ -43,24 +43,37 @@ public class Landscaper extends Unit {
                 goTo(Util.randomDirection());
             }
         } else {
-            if (designSchoolLoc == null) {
-                RobotInfo[] robots = rc.senseNearbyRobots();
-                for (RobotInfo robot : robots) {
-                    if (robot.type == RobotType.DESIGN_SCHOOL && robot.team == rc.getTeam()) {
-                        designSchoolLoc = robot.location;
-                    }
-                }
-            } else {
-                MapLocation targetLocation = enemyHqLoc.add(designSchoolLoc.directionTo(enemyHqLoc));
-                for (Direction dir : Util.directions) {
-                    if ((prevDirection == null || dir != prevDirection.opposite() && rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc))
-                            && rc.getLocation().add(dir).isWithinDistanceSquared(targetLocation, 1) && rc.canMove(dir)
-                    && tryMove(dir)) {
-                        prevDirection = dir;
-                        return;
-                    }
-                }
-            }
+//            if (designSchoolLoc == null) {
+//                RobotInfo[] robots = rc.senseNearbyRobots();
+//                for (RobotInfo robot : robots) {
+//                    if (robot.type == RobotType.DESIGN_SCHOOL && robot.team == rc.getTeam()) {
+//                        designSchoolLoc = robot.location;
+//                    }
+//                }
+//            } else {
+//                MapLocation targetLocation = enemyHqLoc.add(designSchoolLoc.directionTo(enemyHqLoc));
+//                MapLocation secondTarget = enemyHqLoc.add(enemyHqLoc.directionTo(targetLocation).rotateLeft());
+//                MapLocation thirdTarget = enemyHqLoc.add(enemyHqLoc.directionTo(targetLocation).rotateRight());
+//                MapLocation fourthTarget = enemyHqLoc.add(enemyHqLoc.directionTo(targetLocation).rotateLeft().rotateLeft());
+//                MapLocation fifthTarget = enemyHqLoc.add(enemyHqLoc.directionTo(targetLocation).rotateRight().rotateRight());
+//
+////                MapLocation mapLocations[] = {targetLocation, secondTarget, thirdTarget, fourthTarget, fifthTarget};
+////                for (MapLocation loc : mapLocations)
+////                if (rc.canSenseLocation(loc) && rc.senseRobotAtLocation(loc) == null
+////                && rc.canMove(rc.getLocation().directionTo(loc)) && tryMove(rc.getLocation().directionTo(loc))) {
+////                    return;
+////                }
+//                if (rc.canSenseLocation(targetLocation) && rc.senseRobotAtLocation(targetLocation) == null
+//                && rc.canMove(rc.getLocation().directionTo(targetLocation)) && tryMove(rc.getLocation().directionTo(targetLocation))) {
+//                    return;
+//                } else if (rc.getLocation().equals(fourthTarget) && rc.canSenseLocation(secondTarget) && rc.senseRobotAtLocation(secondTarget) == null
+//                && rc.canMove(rc.getLocation().directionTo(secondTarget)) && tryMove(rc.getLocation().directionTo(secondTarget))) {
+//                    return;
+//                } else if (rc.getLocation().equals(fifthTarget) && rc.canSenseLocation(thirdTarget) && rc.senseRobotAtLocation(thirdTarget) == null
+//                        && rc.canMove(rc.getLocation().directionTo(thirdTarget)) && tryMove(rc.getLocation().directionTo(thirdTarget))) {
+//                    return;
+//                }
+//            }
             MapLocation target = enemyHqLoc;
 //            for (RobotInfo robot : robotInfos) {
 //                if (robot.getType() == RobotType.DESIGN_SCHOOL && robot.getTeam() != rc.getTeam()) {
