@@ -12,7 +12,7 @@ public class Miner extends Unit {
     static int currentElevation = 0;
     static boolean startAttacking = false;
     static boolean pauseForFlight = false;
-    static ArrayList<MapLocation> refineLocations;
+    static Set<MapLocation> refineLocations;
     static Queue<MapLocation> soupLocations;
     static MapLocation soupLocation;
     static Set<MapLocation> seenSoupLocs;
@@ -31,7 +31,7 @@ public class Miner extends Unit {
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
         mapLocations = new HashMap<>();
-        refineLocations = new ArrayList<>();
+        refineLocations = new TreeSet<>();
         soupLocations = new LinkedList<>();
         seenSoupLocs = new HashSet<>();
     }
@@ -45,6 +45,9 @@ public class Miner extends Unit {
             rc.disintegrate();
         }
 
+        if (turnCount == 1) {
+            refineLocations.add(hqLoc);
+        }
         rushing = rc.getRoundNum() < 250 && !giveUpMinerRush;
         setBuildPriority();
 
@@ -56,7 +59,6 @@ public class Miner extends Unit {
             //Sets the first spawned miner to the first miner (that will be discovring enemy HQ)
             firstMiner = true;
             usedToBeFirstMiner = true;
-//            refineLocations.add(hqLoc);
         }
 
 
@@ -274,6 +276,20 @@ public class Miner extends Unit {
                 getGiveUpMinerRush(5);
             }
 
+            if (refineLocations.contains(hqLoc)) {
+                int depositSpots = 0;
+                MapLocation hqAdjacents[] = {hqLoc.translate(0, 1), hqLoc.translate(0, -1),
+                hqLoc.translate(1, 1), hqLoc.translate(-1, -1), hqLoc.translate(-1, 1),
+                hqLoc.translate(1, -1), hqLoc.translate(1, 0), hqLoc.translate(-1 ,0)};
+                for (MapLocation loc : hqAdjacents) {
+                    if (rc.canSenseLocation(loc) && rc.senseElevation(loc) < 5) {
+                        depositSpots++;
+                    }
+                }
+                if (depositSpots < 3) {
+                    refineLocations.remove(hqLoc);
+                }
+            }
             if (rc.getRoundNum() > 10) {
                 getSoupLocation();
                 getRefineryLocation();
@@ -550,6 +566,7 @@ public class Miner extends Unit {
         MapLocation closestRefineLoc = hqLoc;
         int closestRefineDistance = 1000;
         for (MapLocation refineLoc : refineLocations) {
+            System.out.println(refineLoc);
             if (rc.getLocation().distanceSquaredTo(refineLoc) < closestRefineDistance) {
                 closestRefineLoc = refineLoc;
             }

@@ -12,7 +12,6 @@ public class FulfillmentCenter extends Building {
 
     public void run() throws GameActionException {
         findHQ();
-        System.out.println(haltProduction + "--------------");
         getHaltProductionFromBlockchain();
         getContinueProductionFromBlockchain();
         if (nearbyEnemyRobot(RobotType.NET_GUN)) {

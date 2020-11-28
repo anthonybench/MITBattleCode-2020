@@ -53,7 +53,7 @@ public class MinerTest {
         RobotController rc = Mockito.mock(RobotController.class);
         Miner.hqLoc = new MapLocation(1, 1);
         Miner.rushing = false;
-        Miner.refineLocations = new ArrayList<>();
+        Miner.refineLocations = new TreeSet<>();
         Miner.backupMiner = false;
         Miner miner = new Miner(rc);
         when(rc.getRoundNum()).thenReturn(100);
@@ -66,7 +66,7 @@ public class MinerTest {
         RobotController rc = Mockito.mock(RobotController.class);
         Miner.hqLoc = new MapLocation(1, 1);
         Miner.rushing = false;
-        Miner.refineLocations = new ArrayList<>();
+        Miner.refineLocations = new TreeSet<>();
         Miner.backupMiner = false;
         Miner miner = new Miner(rc);
         when(rc.getRoundNum()).thenReturn(100);

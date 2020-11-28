@@ -51,14 +51,11 @@ public class DesignSchool extends Building {
         if (checkHalt()) {
             return;
         }
-        System.out.println(enemyHqLoc);
 
         if (!nearbyTeamRobot(RobotType.NET_GUN) && nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
             return;
         } else if (nearbyEnemyRobot(RobotType.HQ)) {
-            System.out.println(enemyHqLoc);
             if (rc.getRoundNum() < 250 && landscaperCount <= 5) {
-                System.out.println(landscaperCount + " 1");
                 tryBuildLandscaper(true);
             }
         } else if (landscaperCount < hqAdjacentSpots) {
@@ -76,18 +73,15 @@ public class DesignSchool extends Building {
             }
         }
 
-        System.out.println("BC " + Clock.getBytecodeNum());
     }
 
     public void tryBuildLandscaper(boolean rush) throws GameActionException {
         if (rush) {
-            System.out.println(enemyHqLoc);
             Direction targetDir = rc.getLocation().directionTo(enemyHqLoc);
             Direction[] dirs = {targetDir, targetDir.rotateLeft(), targetDir.rotateRight(), targetDir.rotateLeft().rotateLeft(),
                     targetDir.rotateRight().rotateRight()};
             int prevCount = landscaperCount;
             for (Direction dir : dirs) {
-                System.out.println(dir);
                 if ((rc.getTeamSoup() > 150 + additionalCost) && tryBuild(RobotType.LANDSCAPER, dir)) {
                     landscaperCount++;
                     System.out.println(landscaperCount + " Made a landscaper");

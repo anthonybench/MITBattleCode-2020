@@ -66,7 +66,6 @@ public class Unit extends Robot {
      * @throws GameActionException
      */
     boolean tryMove(Direction dir) throws GameActionException {
-        // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
         if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir)) && !tileGoingToFlood(dir)
         && abs(rc.senseElevation(rc.getLocation()) - rc.senseElevation(rc.getLocation().add(dir))) < 4) {
             rc.move(dir);
@@ -93,7 +92,6 @@ public class Unit extends Robot {
 
     // tries to move in the general direction of dir
     boolean goTo(Direction dir) throws GameActionException {
-        System.out.println("Goto");
         Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(),
                 dir.rotateLeft().rotateLeft().rotateLeft(), dir.rotateRight().rotateRight().rotateRight(), dir.rotateLeft().rotateLeft().rotateLeft().rotateLeft()};
         for (Direction d : toTry) {
@@ -118,7 +116,6 @@ public class Unit extends Robot {
                 headBackToPrevSplitLocation = false;
             } else if (discoverDir.equals("left")) {
                 headBackToPrevSplitLocation = true;
-                System.out.println("Left " + prevSplitLocations.size());
                 if (!prevSplitLocations.empty()) {
                     prevSplitLocation = prevSplitLocations.pop();
                     discoverDir = "right";
@@ -182,7 +179,6 @@ public class Unit extends Robot {
                     if (!prevSplitLocations.empty()) {
                         prevSplitLocation = prevSplitLocations.peek();
                         if (discoverDir.equals("left") && headBackToPrevSplitLocation) {
-                            System.out.println("pop " + prevSplitLocations.size());
                             prevSplitLocations.pop();
                         }
                     }
@@ -191,8 +187,6 @@ public class Unit extends Robot {
                 }
             }
         }
-        System.out.println("Bytecode 4 " + Clock.getBytecodeNum());
-        System.out.println("============================================");
     }
 
     boolean tileGoingToFlood(Direction currentDir) throws GameActionException {
@@ -202,7 +196,6 @@ public class Unit extends Robot {
         for (Direction dir : Util.directions) {
             if (rc.canSenseLocation(nextMapLoc.add(dir)) && rc.senseFlooding(nextMapLoc.add(dir))
                     && rc.senseElevation(nextMapLoc.add(dir)) >= currentDirElevation) {
-                System.out.println("Has flooding adjacent");
                 return true;
             }
         }
@@ -217,7 +210,7 @@ public class Unit extends Robot {
         message[3] = targetEnemyY; // possible y coord of enemy HQ
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
-        System.out.println("Broadcasting real enemy HQ coordinates " + targetEnemyX + " " + targetEnemyY);
+        System.out.println(" real enemy HQ coordinates " + targetEnemyX + " " + targetEnemyY);
     }
 
     public void clearMovement() {
@@ -230,7 +223,6 @@ public class Unit extends Robot {
     }
 
     void enemyBaseFindingLogic() {
-        System.out.println("Target HQ " + enemyPotentialHQNumber);
         //Sets the first miner's targeted locations
 
         switch (enemyPotentialHQNumber) {
@@ -257,7 +249,6 @@ public class Unit extends Robot {
             targetEnemyX = temp.x;
             targetEnemyY = temp.y;
         }
-        System.out.println("targeting coordinates " + targetEnemyX + " " + targetEnemyY);
     }
 
     public boolean locationOccupiedWithSameTeamRobot(MapLocation mapLoc) throws GameActionException {
@@ -273,7 +264,6 @@ public class Unit extends Robot {
     public void navigation (MapLocation destination) throws GameActionException{
         //Navigate towards the destination
         Direction intentedDir = rc.getLocation().directionTo(destination);
-        System.out.println(rc.getLocation().directionTo(prevLocation) + " " + intentedDir);
         if (rc.getLocation().directionTo(prevLocation) != intentedDir && !tryMove(intentedDir)) {
             //if the unit couldn't move the intended direction, hug to the right, then to the left
             ArrayList<Direction> dirs = new ArrayList<>();

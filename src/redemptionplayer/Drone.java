@@ -14,9 +14,10 @@ public class Drone extends Unit {
     static MapLocation nearestWater;
     static int moveToEnemyBaseTurn = 1000;
     static int attackTurn = 1200;
-
+    static ArrayList<MapLocation> netGuns;
     public Drone(RobotController rc) throws GameActionException {
         super(rc);
+        netGuns = new ArrayList<>();
     }
 
     public void run() throws GameActionException {
@@ -40,7 +41,7 @@ public class Drone extends Unit {
 
             //Checks if the enemyHQ is within the current robots sensor radius
             if (rc.getLocation().isWithinDistanceSquared(new MapLocation(targetEnemyX, targetEnemyY), rc.getCurrentSensorRadiusSquared())) {
-                if (nearbyEnemyRobot(RobotType.HQ)) {
+                if (nearbyEnemyRobot(RobotType.HQ) && enemyHqLoc == null) {
                     broadcastRealEnemyHQCoordinates();
                     enemyHqLoc = new MapLocation(targetEnemyX, targetEnemyY);
                 } else {
@@ -170,15 +171,26 @@ public class Drone extends Unit {
         }
         if (enemyHqLoc == null || rc.getRoundNum() > attackTurn) {
             //avoid netguns
+            boolean hasNetGun = false;
+
             RobotInfo[] robotInfos = rc.senseNearbyRobots();
-            ArrayList<MapLocation> netGuns = new ArrayList<>();
             for (RobotInfo robot : robotInfos) {
                 if (robot.getType() == RobotType.NET_GUN) {
                     netGuns.add(robot.getLocation());
                 }
+                if (robot.getType() == RobotType.HQ && robot.getTeam() != rc.getTeam()) {
+                    netGuns.add(robot.getLocation());
+                }
+            }
+            if (enemyHqLoc == null) {
+                for (MapLocation loc : netGuns) {
+                    if (rc.getLocation().add(dir).isWithinDistanceSquared(loc, 26)) {
+                        hasNetGun = true;
+                    }
+                }
             }
 
-            if (rc.isReady() && rc.canMove(dir) && !netGuns.contains(rc.getLocation().add(dir))) {
+            if (rc.isReady() && rc.canMove(dir) && !hasNetGun) {
                 rc.move(dir);
                 return true;
             } else return false;

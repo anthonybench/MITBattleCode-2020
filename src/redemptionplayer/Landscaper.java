@@ -33,7 +33,6 @@ public class Landscaper extends Unit {
 //            gotBlockchainMess = true;
 //        }
         findEnemyHQ();
-        System.out.println("RUSH " + rushType + " " + enemyHqLoc);
 
         if (!rushType) {
             // otherwise try to get to the hq
@@ -81,7 +80,6 @@ public class Landscaper extends Unit {
 //                    break;
 //                }
 //            }
-
             if (rc.getDirtCarrying() == 0) {
                 tryDig(true);
                 System.out.println("Try dig");
@@ -194,8 +192,13 @@ public class Landscaper extends Unit {
         MapLocation bottomLeft = hqLoc.add(Util.directions[5]);
         MapLocation bottomRight = hqLoc.add(Util.directions[3]);
 
-        if (!rc.getLocation().isWithinDistanceSquared(hqLoc, 4)) {
-            dfsWalk(hqLoc);
+
+        if (rc.getLocation().isAdjacentTo(hqLoc) && rc.getRoundNum() < 200) {
+            return;
+        }
+
+        if (!rc.getLocation().isWithinDistanceSquared(hqLoc, 2)) {
+            navigation(hqLoc);
         } else {
             MapLocation bestPlaceToBuildWall = null;
 
@@ -228,7 +231,6 @@ public class Landscaper extends Unit {
 
                 boolean stillCanMove = false;
                 for (Direction dir : Util.directions) {
-                    System.out.println(dir + " " + rc.canMove(dir) + " " + rc.getLocation().add(dir));
                     if (rc.canMove(dir) && rc.getLocation().add(dir).isAdjacentTo(hqLoc)) {
                         stillCanMove = true;
                         System.out.println("Can Move");
