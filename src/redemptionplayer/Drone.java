@@ -54,9 +54,9 @@ public class Drone extends Unit {
             //if enemy HQ is null, perform enemy base finding logic
             if (enemyHqLoc == null) {
                 enemyBaseFindingLogic();
-                dfsWalk(new MapLocation(targetEnemyX, targetEnemyY));
+                navigation(new MapLocation(targetEnemyX, targetEnemyY));
             } else {
-                dfsWalk(enemyHqLoc);
+                goTo(enemyHqLoc);
             }
         } else {
 
@@ -254,5 +254,25 @@ public class Drone extends Unit {
             randomDirectionCount = 10;
             randomDirection = randomDirection.rotateLeft();
         }
+    }
+
+    @Override
+    public boolean goTo(MapLocation loc) throws GameActionException {
+        Direction dir = rc.getLocation().directionTo(loc);
+        if (rc.canMove(dir)) {
+            tryMove(dir);
+        } else if (rc.canMove(dir.rotateLeft())) {
+            tryMove(dir.rotateLeft());
+        }
+        else if (rc.canMove(dir.rotateRight())) {
+            tryMove(dir.rotateRight());
+        } else if (rc.canMove(dir.rotateLeft().rotateLeft())) {
+            tryMove(dir.rotateLeft().rotateLeft());
+        } else if (rc.canMove(dir.rotateRight().rotateRight())) {
+            tryMove(dir.rotateRight().rotateRight());
+        } else {
+            return false;
+        }
+        return true;
     }
 }

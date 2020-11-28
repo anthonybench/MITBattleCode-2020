@@ -166,6 +166,9 @@ public class Miner extends Unit {
                 }
             }
         } else if (backupMiner) {
+            if (designSchoolCount > 0 && fulfillmentCenterCount > 0) {
+                rc.disintegrate();
+            }
             if (!checkGiveUpRush && !giveUpMinerRush) {
                 getGiveUpMinerRush(rc.getRoundNum() - 5);
                 checkGiveUpRush = true;

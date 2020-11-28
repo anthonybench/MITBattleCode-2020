@@ -252,7 +252,7 @@ public class Unit extends Robot {
         NavHelper s = new NavHelper();
         MapLocation temp = s.abc(hqLoc, rc.getMapWidth(), rc.getMapHeight());
         if (temp == null) {
-            giveUpTurn = 90;
+            giveUpTurn = 50;
         } else {
             targetEnemyX = temp.x;
             targetEnemyY = temp.y;

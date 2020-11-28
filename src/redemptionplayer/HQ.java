@@ -49,7 +49,7 @@ public class HQ extends Building {
             }
         }
 
-        if (rc.getRoundNum() > 185 && !builtMinerAfter100 && rc.getRoundNum() >= backupRound) {
+        if ((rc.getRoundNum() > 185 || temp == null) && !builtMinerAfter100 && rc.getRoundNum() >= backupRound) {
             for (Direction dir : Util.directions) {
                 if (tryBuild(RobotType.MINER, dir)) {
                     numMiners++;
