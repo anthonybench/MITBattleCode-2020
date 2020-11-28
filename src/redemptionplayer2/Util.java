@@ -1,4 +1,4 @@
-package redemptionplayer;
+package redemptionplayer2;
 import battlecode.common.*;
 
 //Common utilities that don't interact with the game and is used in multiple places.

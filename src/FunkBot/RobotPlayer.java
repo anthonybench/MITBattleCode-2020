@@ -147,12 +147,12 @@ public strictfp class RobotPlayer {
 
         broadcastEnemyHQCoordinates();
 
-        if (numMiners < 10) {
-            for (Direction dir : directions)
-                if (tryBuild(RobotType.MINER, dir)) {
-                    numMiners++;
-                }
-        }
+//        if (numMiners < 10) {
+//            for (Direction dir : directions)
+//                if (tryBuild(RobotType.MINER, dir)) {
+//                    numMiners++;
+//                }
+//        }
     }
 
     static void runMiner() throws GameActionException {

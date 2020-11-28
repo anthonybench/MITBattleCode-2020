@@ -27,7 +27,6 @@ public class Miner extends Unit {
     static MapLocation recentPosition;
     static String discoverDir = "left"; // prioritizes discovering to the right;
     static boolean usedToBeFirstMiner = false;
-    static MapLocation bestRushDesignSchoolLoc = null;
 
     public Miner(RobotController rc) throws GameActionException {
         super(rc);
@@ -67,16 +66,6 @@ public class Miner extends Unit {
             }
 
             if (enemyHqLoc != null && !giveUpMinerRush) {
-                if (bestRushDesignSchoolLoc == null) {
-                    MapLocation option1 = new MapLocation(targetEnemyX - 1, targetEnemyY);
-                    MapLocation option2 = new MapLocation(targetEnemyX + 1, targetEnemyY);
-                    if (rc.getLocation().distanceSquaredTo(option1) < rc.getLocation().distanceSquaredTo(option2)) {
-                        bestRushDesignSchoolLoc = option1;
-                    } else {
-                        bestRushDesignSchoolLoc = option2;
-                    }
-                    System.out.println("Best " + bestRushDesignSchoolLoc);
-                }
                 //if miner is the first miner and enemy HQ is found, keep broadcasting
                 //enemy HQ to new units and (build design schools nearby enemy HQ) -> this behavior should be optimized
                 if (rushDesignSchoolLocation != null) {
@@ -97,39 +86,39 @@ public class Miner extends Unit {
                             }
                         }
                     }
-                    MapLocation waitingPosition = enemyHqLoc.add(enemyHqLoc.directionTo(rushDesignSchoolLocation).opposite());
-                    if (!rc.getLocation().equals(waitingPosition)) {
-                        dfsWalk(waitingPosition);
-                    }
-                } else if (rc.getLocation().isAdjacentTo(bestRushDesignSchoolLoc)) {
+//                    MapLocation waitingPosition = enemyHqLoc.add(enemyHqLoc.directionTo(rushDesignSchoolLocation).opposite());
+//                    if (!rc.getLocation().equals(waitingPosition)) {
+//                        dfsWalk(waitingPosition);
+//                    }
+                } else if (rc.getLocation().isWithinDistanceSquared(enemyHqLoc, 8)) {
                     //create design school next to enemy HQ
                     startAttacking = true;
                     //build net gun if there's enemy delievery drones nearby
                     if (designSchoolCount < 1) {
-                        if (rc.getTeamSoup() > 154 &&
-                                tryBuild(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(bestRushDesignSchoolLoc))) {
-                            designSchoolCount++;
-                            rushDesignSchoolLocation = rc.getLocation().add(rc.getLocation().directionTo(bestRushDesignSchoolLoc));
-                        } else {
-                            for (Direction dir : Util.directions) {
-                                if (rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) &&
-                                        rc.getTeamSoup() > 154 && tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
-                                    designSchoolCount++;
-                                    rushDesignSchoolLocation = rc.getLocation().add(dir);
-                                    break;
-                                }
+                        for (Direction dir : Util.directions) {
+                            if (rc.getLocation().add(dir).isWithinDistanceSquared(enemyHqLoc, 1) &&
+                                    tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                                designSchoolCount++;
+                                rushDesignSchoolLocation = rc.getLocation().add(dir);
+                                return;
                             }
                         }
-                        if (designSchoolCount == 0) {
-                            return;
+
+                        for (Direction dir : Util.directions) {
+                            if (rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) &&
+                                    tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                                designSchoolCount++;
+                                rushDesignSchoolLocation = rc.getLocation().add(dir);
+                                break;
+                            }
                         }
                     }
                     if (designSchoolCount == 0) {
-                        dfsWalk(bestRushDesignSchoolLoc);
+                        navigation(enemyHqLoc);
                     }
                 } else {
                     //move towards enemy HQ to make sure your not divided by water
-                    dfsWalk(bestRushDesignSchoolLoc);
+                    navigation(enemyHqLoc);
                 }
             } else if (giveUpMinerRush) {
                 if (!broadCastedGiveUpMinerRush) {

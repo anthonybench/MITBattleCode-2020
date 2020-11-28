@@ -1,11 +1,11 @@
-package redemptionplayer;
+package redemptionplayer2;
 
 import battlecode.common.*;
 
 public class Robot {
     RobotController rc;
     int turnCount = 0;
-    int teamSecret = 384392;
+    int teamSecret = 994392;
     static MapLocation hqLoc;
     static MapLocation enemyHqLoc;
     static final int HQ_LOC = 0;

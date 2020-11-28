@@ -1,4 +1,4 @@
-package redemptionplayer;
+package redemptionplayer2;
 
 import battlecode.common.*;
 
@@ -20,6 +20,18 @@ public class HQ extends Building {
             sendHqLoc(rc.getLocation());
         }
 
+        if (temp != null && numMiners == 0) {
+            if (tryBuild(RobotType.MINER, rc.getLocation().directionTo(temp))){
+                numMiners++;
+                return;
+            }
+            for (Direction dir : Util.directions) {
+                if (tryBuild(RobotType.MINER, dir)) {
+                    numMiners++;
+                    break;
+                }
+            }
+        }
         if (temp != null && numMiners < 4) {
             for (Direction dir : Util.directions) {
                 if (tryBuild(RobotType.MINER, dir)) {

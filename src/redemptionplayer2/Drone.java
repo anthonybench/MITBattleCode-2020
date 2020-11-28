@@ -1,4 +1,4 @@
-package redemptionplayer;
+package redemptionplayer2;
 
 import battlecode.common.*;
 
@@ -74,21 +74,21 @@ public class Drone extends Unit {
                     }
                 }
 
-                for (RobotInfo robot : robotInfos) {
-                    if (robot.getType() == RobotType.LANDSCAPER && !robot.getLocation().isAdjacentTo(hqLoc) &&
-                            robot.getTeam() == rc.getTeam()) {
-                        pickUpID = robot.ID;
-                        pickUpLocation = robot.getLocation();
-                        pickUpType = RobotType.LANDSCAPER;
-                        break;
-                    }
-//                else if (robot.getType() == RobotType.MINER && (!robot.getLocation().isAdjacentTo(hqLoc))) {
-//                    dabating on adding this or just have miners suicide
-//                    pickUpID = robot.ID;
-//                    pickUpLocation = robot.getLocation();
-//                    pickUpType = RobotType.MINER;
+//                for (RobotInfo robot : robotInfos) {
+//                    if (robot.getType() == RobotType.LANDSCAPER && !robot.getLocation().isAdjacentTo(hqLoc) &&
+//                            robot.getTeam() == rc.getTeam()) {
+//                        pickUpID = robot.ID;
+//                        pickUpLocation = robot.getLocation();
+//                        pickUpType = RobotType.LANDSCAPER;
+//                        break;
+//                    }
+////                else if (robot.getType() == RobotType.MINER && (!robot.getLocation().isAdjacentTo(hqLoc))) {
+////                    dabating on adding this or just have miners suicide
+////                    pickUpID = robot.ID;
+////                    pickUpLocation = robot.getLocation();
+////                    pickUpType = RobotType.MINER;
+////                }
 //                }
-                }
                 if (pickUpID == -1) {
                     moveRandomly();
 //                    moveRandomlyAroundHQ();

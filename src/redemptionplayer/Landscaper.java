@@ -10,6 +10,7 @@ public class Landscaper extends Unit {
     static ArrayList<MapLocation> outerCircle;
     static boolean firstLandscaper = false;
     static int tryMoveToEnemyHQTurns = 0;
+    static MapLocation designSchoolLoc = null;
 
     public Landscaper(RobotController rc) throws GameActionException {
         super(rc);
@@ -42,8 +43,24 @@ public class Landscaper extends Unit {
                 goTo(Util.randomDirection());
             }
         } else {
-            RobotInfo[] robotInfos = rc.senseNearbyRobots();
-
+            if (designSchoolLoc == null) {
+                RobotInfo[] robots = rc.senseNearbyRobots();
+                for (RobotInfo robot : robots) {
+                    if (robot.type == RobotType.DESIGN_SCHOOL && robot.team == rc.getTeam()) {
+                        designSchoolLoc = robot.location;
+                    }
+                }
+            } else {
+                MapLocation targetLocation = enemyHqLoc.add(designSchoolLoc.directionTo(enemyHqLoc));
+                for (Direction dir : Util.directions) {
+                    if ((prevDirection == null || dir != prevDirection.opposite() && rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc))
+                            && rc.getLocation().add(dir).isWithinDistanceSquared(targetLocation, 1) && rc.canMove(dir)
+                    && tryMove(dir)) {
+                        prevDirection = dir;
+                        return;
+                    }
+                }
+            }
             MapLocation target = enemyHqLoc;
 //            for (RobotInfo robot : robotInfos) {
 //                if (robot.getType() == RobotType.DESIGN_SCHOOL && robot.getTeam() != rc.getTeam()) {
@@ -95,16 +112,23 @@ public class Landscaper extends Unit {
 
     boolean tryDig(boolean enemyHQ) throws GameActionException {
         if (enemyHQ && enemyHqLoc != null) {
+            if (turnCount < 40) {
+                for (Direction dir : Util.directions) {
+                    if (rc.canDigDirt(dir) && !rc.getLocation().add(dir).equals(enemyHqLoc)
+                            && !rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && outerRushLandscaperCanDig(rc.getLocation().add(dir))) {
+                        rc.digDirt(dir);
+                        System.out.println("Dug " + dir);
+                        return true;
+                    }
+                }
+            }
             //try dig the enemy wall first
             for (Direction dir : Util.directions) {
-                if (turnCount >= 30 && rc.canDigDirt(dir) && !rc.getLocation().add(dir).equals(enemyHqLoc)
+                if (rc.canDigDirt(dir) && !rc.getLocation().add(dir).equals(enemyHqLoc)
                         && rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && outerRushLandscaperCanDig(rc.getLocation().add(dir))) {
                     rc.digDirt(dir);
                     System.out.println("Dug " + dir);
                     return true;
-                } else if (turnCount < 30 && rc.canDigDirt(dir) && !rc.getLocation().add(dir).equals(enemyHqLoc)
-                        && !rc.getLocation().add(dir).isAdjacentTo(enemyHqLoc) && outerRushLandscaperCanDig(rc.getLocation().add(dir))) {
-                    rc.digDirt(dir);
                 }
             }
 

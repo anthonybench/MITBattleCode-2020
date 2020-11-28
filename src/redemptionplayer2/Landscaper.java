@@ -1,4 +1,4 @@
-package redemptionplayer;
+package redemptionplayer2;
 
 import battlecode.common.*;
 
@@ -37,7 +37,8 @@ public class Landscaper extends Unit {
         if (!rushType) {
             // otherwise try to get to the hq
             if (hqLoc != null) {
-                turtle();
+//                turtle();
+                turtle2();
             } else {
                 goTo(Util.randomDirection());
             }
@@ -254,55 +255,73 @@ public class Landscaper extends Unit {
 
     public void turtle2() throws GameActionException {
         MapLocation currentLoc = rc.getLocation();
-        if (!onOuterWall(currentLoc, hqLoc)) {
-            boolean canMove = true;
-            for (int i = 1; i < 4; i++) {
-                if (rc.senseElevation(new MapLocation(currentLoc.x + i, currentLoc.y))
-                        - rc.senseElevation(new MapLocation(currentLoc.x + i - 1, currentLoc.y)) > 3) {
-                    canMove = false;
-                }
-            }
-            if (canMove) {
-                tryMove(Util.directions[6]);
-                return;
-            }
 
-            canMove = true;
-            for (int i = 1; i < 4; i++) {
-                if (rc.senseElevation(new MapLocation(currentLoc.x - i, currentLoc.y))
-                        - rc.senseElevation(new MapLocation(currentLoc.x - i + 1, currentLoc.y)) > 3) {
-                    canMove = false;
-                }
+        if (currentLoc.distanceSquaredTo(hqLoc) <= 10) {
+            if (randomDirection == null) {
+                randomDirection = Util.randomDirection();
             }
-            if (canMove) {
-                tryMove(Util.directions[2]);
-                return;
+            if (!(randomDirectionCount-- > 0 && tryMove(randomDirection))) {
+                randomDirectionCount = 5;
+                randomDirection = randomDirection.rotateLeft();
             }
-
-            canMove = true;
-            for (int i = 1; i < 4; i++) {
-                if (rc.senseElevation(new MapLocation(currentLoc.x, currentLoc.y - i))
-                        - rc.senseElevation(new MapLocation(currentLoc.x, currentLoc.y - i + 1)) > 3) {
-                    canMove = false;
-                }
-            }
-            if (canMove) {
-                tryMove(Util.directions[4]);
-                return;
-            }
-
-            canMove = true;
-            for (int i = 1; i < 4; i++) {
-                if (rc.senseElevation(new MapLocation(currentLoc.x, currentLoc.y + i))
-                        - rc.senseElevation(new MapLocation(currentLoc.x, currentLoc.y + i - 1)) > 3) {
-                    canMove = false;
-                }
-            }
-            if (canMove) {
-                tryMove(Util.directions[0]);
-                return;
-            }
+        } else {
+            randomDirection = currentLoc.directionTo(hqLoc);
+            tryMove(randomDirection);
         }
+//        if (!onOuterWall(currentLoc, hqLoc)) {
+//            System.out.println("Not on outer wall");
+//            boolean canMove = true;
+//            for (int i = 1; i < 4; i++) {
+//                if ((rc.senseElevation(new MapLocation(currentLoc.x + i, currentLoc.y))
+//                        - rc.senseElevation(new MapLocation(currentLoc.x + i - 1, currentLoc.y)) > 3
+//                ) || (rc.senseRobotAtLocation(new MapLocation(currentLoc.x + i, currentLoc.y)) != null)) {
+//                    canMove = false;
+//                }
+//            }
+//            if (canMove) {
+//                tryMove(Util.directions[6]);
+//                System.out.println("Try moved west");
+//                return;
+//            }
+//
+//            canMove = true;
+//            for (int i = 1; i < 4; i++) {
+//                if (rc.senseElevation(new MapLocation(currentLoc.x - i, currentLoc.y))
+//                        - rc.senseElevation(new MapLocation(currentLoc.x - i + 1, currentLoc.y)) > 3) {
+//                    canMove = false;
+//                }
+//            }
+//            if (canMove) {
+//                tryMove(Util.directions[2]);
+//                System.out.println("Try moved east");
+//
+//                return;
+//            }
+//
+//            canMove = true;
+//            for (int i = 1; i < 4; i++) {
+//                if (rc.senseElevation(new MapLocation(currentLoc.x, currentLoc.y - i))
+//                        - rc.senseElevation(new MapLocation(currentLoc.x, currentLoc.y - i + 1)) > 3) {
+//                    canMove = false;
+//                }
+//            }
+//            if (canMove) {
+//                tryMove(Util.directions[4]);
+//                return;
+//            }
+//
+//            canMove = true;
+//            for (int i = 1; i < 4; i++) {
+//                if (rc.senseElevation(new MapLocation(currentLoc.x, currentLoc.y + i))
+//                        - rc.senseElevation(new MapLocation(currentLoc.x, currentLoc.y + i - 1)) > 3) {
+//                    canMove = false;
+//                }
+//            }
+//            if (canMove) {
+//                tryMove(Util.directions[0]);
+//                return;
+//            }
+//        }
     }
 }
 

@@ -1,4 +1,4 @@
-package redemptionplayer;
+package redemptionplayer2;
 
 import battlecode.common.*;
 
@@ -67,7 +67,7 @@ public class Miner extends Unit {
             }
 
             if (enemyHqLoc != null && !giveUpMinerRush) {
-                if (bestRushDesignSchoolLoc == null) {
+                if (rushDesignSchoolLocation == null) {
                     MapLocation option1 = new MapLocation(targetEnemyX - 1, targetEnemyY);
                     MapLocation option2 = new MapLocation(targetEnemyX + 1, targetEnemyY);
                     if (rc.getLocation().distanceSquaredTo(option1) < rc.getLocation().distanceSquaredTo(option2)) {
@@ -181,15 +181,15 @@ public class Miner extends Unit {
                 getRefineryLocation();
             }
 
-            if (rc.getLocation().isAdjacentTo(hqLoc)) {
-                Direction temp = rc.getLocation().directionTo(hqLoc);
-                Direction[] dirs = {temp.opposite().rotateLeft(), temp.opposite().rotateRight(), temp.opposite()};
-                for (Direction dir : dirs) {
-                    if (tryMove(dir)) {
-                        break;
-                    }
-                }
-            }
+//            if (rc.getLocation().isAdjacentTo(hqLoc)) {
+//                Direction temp = rc.getLocation().directionTo(hqLoc);
+//                Direction[] dirs = {temp.opposite().rotateLeft(), temp.opposite().rotateRight(), temp.opposite()};
+//                for (Direction dir : dirs) {
+//                    if (tryMove(dir)) {
+//                        break;
+//                    }
+//                }
+//            }
             getHaltProductionFromBlockchain();
             getContinueProductionFromBlockchain();
 
@@ -725,7 +725,7 @@ public class Miner extends Unit {
 
     @Override
     boolean tryBuild(RobotType type, Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canBuildRobot(type, dir) && !rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 4)) {
+        if (rc.isReady() && rc.canBuildRobot(type, dir)) {
             rc.buildRobot(type, dir);
             return true;
         }
