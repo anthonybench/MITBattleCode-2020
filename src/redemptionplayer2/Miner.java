@@ -86,13 +86,11 @@ public class Miner extends Unit {
                                 if (!broadcastedCont && broadcastedHalt) {
                                     broadcastContinueProduction();
                                     broadcastedCont = true;
-                                    broadcastedHalt = false;
                                 }
                             } else {
                                 if (!broadcastedHalt) {
                                     broadcastHaltProduction();
                                     broadcastedHalt = true;
-                                    broadcastedCont = false;
                                 }
                             }
                         }
@@ -305,9 +303,6 @@ public class Miner extends Unit {
             if (rc.getSoupCarrying() >= whenToStopMiningSoup) {
                 depositSoupAtNearestRefineLocation();
             } else {
-                getHaltProductionFromBlockchain();
-                getContinueProductionFromBlockchain();
-
                 // Try to find soup
                 MapLocation closestSoup = null;
                 int shortestDistance = 100;
@@ -559,6 +554,25 @@ public class Miner extends Unit {
     }
 
     public void buildRefineryNearSoupArea() throws GameActionException {
+//        getHaltProductionFromBlockchain();
+//        getContinueProductionFromBlockchain();
+
+        if (checkHalt()) {
+            return;
+        }
+
+        //has landscapers building walls but still no refinery, then build refinery
+//        if (rc.canSenseLocation(hqLoc) && nearbyTeamRobot(RobotType.LANDSCAPER) && refineLocations.isEmpty() && !nearbyTeamRobot(RobotType.REFINERY)) {
+//            for (Direction dir : Util.directions) {
+//                if (!rc.getLocation().add(dir).isAdjacentTo(hqLoc) && tryBuild(RobotType.REFINERY, dir)) {
+//                    MapLocation refineryLoc = rc.getLocation().add(dir);
+//                    broadcastNewRefinery(refineryLoc.x, refineryLoc.y);
+//                    refineLocations.add(refineryLoc);
+//                    break;
+//                }
+//            }
+//        }
+
         if (nearbyTeamRobot(RobotType.REFINERY) || rc.getRoundNum() < giveUpTurn) {
             return;
         }
@@ -572,19 +586,15 @@ public class Miner extends Unit {
                     hasNearby = true;
                 }
             }
-
             if (!hasNearby && hqLoc.distanceSquaredTo(rc.getLocation()) > 9) {
                 for (Direction dir : Util.directions) {
                     if (!rc.getLocation().add(dir).isAdjacentTo(hqLoc) && tryBuild(RobotType.REFINERY, dir)) {
                         MapLocation refineryLoc = rc.getLocation().add(dir);
                         broadcastNewRefinery(refineryLoc.x, refineryLoc.y);
                         refineLocations.add(refineryLoc);
-                        System.out.println(haltProduction + " " + broadcastedCont);
-                        if (!broadcastedCont && haltProduction) {
-                            System.out.println("TEST---------------------------------------");
+                        if (!broadcastedCont && broadcastedHalt) {
                             broadcastContinueProduction();
                             broadcastedCont = true;
-                            broadcastedHalt = false;
                         }
                         break;
                     }
@@ -594,7 +604,6 @@ public class Miner extends Unit {
             if (!broadcastedHalt) {
                 broadcastHaltProduction();
                 broadcastedHalt = true;
-                broadcastedCont = false;
             }
         }
     }
