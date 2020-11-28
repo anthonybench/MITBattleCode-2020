@@ -5,6 +5,7 @@ import battlecode.common.*;
 public class DesignSchool extends Building {
     static int landscaperCount = 0;
     static int additionalCost = 0;
+    static int hqAdjacentSpots = 0;
 
     public DesignSchool(RobotController rc) throws GameActionException {
         super(rc);
@@ -12,8 +13,37 @@ public class DesignSchool extends Building {
 
     public void run() throws GameActionException {
         //halt building landscapers, to wait for miner to build net guns.
+        findHQ();
         getHaltProductionFromBlockchain();
         getContinueProductionFromBlockchain();
+
+        //check how much adjacent spots to determine how much miners needed.
+        if (hqLoc != null && hqAdjacentSpots == 0) {
+            if (rc.onTheMap(new MapLocation(hqLoc.x - 1, hqLoc.y))) {
+                hqAdjacentSpots++;
+            }
+            if (rc.onTheMap(new MapLocation(hqLoc.x + 1, hqLoc.y))) {
+                hqAdjacentSpots++;
+            }
+            if (rc.onTheMap(new MapLocation(hqLoc.x, hqLoc.y - 1))) {
+                hqAdjacentSpots++;
+            }
+            if (rc.onTheMap(new MapLocation(hqLoc.x, hqLoc.y + 1))) {
+                hqAdjacentSpots++;
+            }
+            if (rc.onTheMap(new MapLocation(hqLoc.x - 1, hqLoc.y - 1))) {
+                hqAdjacentSpots++;
+            }
+            if (rc.onTheMap(new MapLocation(hqLoc.x - 1, hqLoc.y + 1))) {
+                hqAdjacentSpots++;
+            }
+            if (rc.onTheMap(new MapLocation(hqLoc.x + 1, hqLoc.y - 1))) {
+                hqAdjacentSpots++;
+            }
+            if (rc.onTheMap(new MapLocation(hqLoc.x + 1, hqLoc.y + 1))) {
+                hqAdjacentSpots++;
+            }
+        }
 
         if (enemyHqLoc == null) {
             findEnemyHQ();
@@ -31,7 +61,7 @@ public class DesignSchool extends Building {
                 System.out.println(landscaperCount + " 1");
                 tryBuildLandscaper(true);
             }
-        } else if (landscaperCount <= 3) {
+        } else if (landscaperCount < hqAdjacentSpots) {
 //            getHaltProductionFromBlockchain();
 //            getContinueProductionFromBlockchain();
 //
@@ -41,7 +71,7 @@ public class DesignSchool extends Building {
 //            System.out.println(landscaperCount + " 2");
             tryBuildLandscaper(false);
         } else {
-            if (nearbyTeamRobot(RobotType.DELIVERY_DRONE) && landscaperCount <= 7) {
+            if (nearbyTeamRobot(RobotType.DELIVERY_DRONE) && landscaperCount < hqAdjacentSpots) {
                 tryBuildLandscaper(false);
             }
         }
