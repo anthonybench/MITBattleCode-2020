@@ -72,22 +72,6 @@ public class Unit extends Robot {
     }
 
 
-    boolean tryMove() throws GameActionException {
-        for (Direction dir : Util.directions)
-            if (tryMove(dir))
-                return true;
-        return false;
-        // MapLocation loc = rc.getLocation();
-        // if (loc.x < 10 && loc.x < loc.y)
-        //     return tryMove(Direction.EAST);
-        // else if (loc.x < 10)
-        //     return tryMove(Direction.SOUTH);
-        // else if (loc.x > loc.y)
-        //     return tryMove(Direction.WEST);
-        // else
-        //     return tryMove(Direction.NORTH);
-    }
-
     // tries to move in the general direction of dir
     boolean goTo(Direction dir) throws GameActionException {
         System.out.println("Goto");
@@ -274,52 +258,5 @@ public class Unit extends Robot {
         return false;
     }
 
-    public void navigation (MapLocation destination) throws GameActionException{
-        //Navigate towards the destination
-        Direction intentedDir = rc.getLocation().directionTo(destination);
-        System.out.println(rc.getLocation().directionTo(prevLocation) + " " + intentedDir);
-        if (rc.getLocation().directionTo(prevLocation) != intentedDir && !tryMove(intentedDir)) {
-            //if the unit couldn't move the intended direction, hug to the right, then to the left
-            ArrayList<Direction> dirs = new ArrayList<>();
 
-            if (hugDirection == 0) {
-                dirs.add(intentedDir.rotateLeft());
-                dirs.add(intentedDir.rotateLeft().rotateLeft());
-                dirs.add(intentedDir.rotateLeft().rotateLeft().rotateLeft());
-                dirs.add(intentedDir.rotateLeft().rotateLeft().rotateLeft().rotateLeft());
-            } else {
-                dirs.add(intentedDir.rotateRight());
-                dirs.add(intentedDir.rotateRight().rotateRight());
-                dirs.add(intentedDir.rotateRight().rotateRight().rotateRight());
-                dirs.add(intentedDir.rotateRight().rotateRight().rotateRight().rotateRight());
-            }
-
-            boolean couldMove = false;
-            for (Direction dir : dirs) {
-                if (tryMove(dir)) {
-                    //if could move, reset the hugDirection back to left;
-                    hugDirection = 0;
-                    couldMove = true;
-                }
-            }
-
-            if (!couldMove) {
-                //if couldn't move after hugging a certain direction
-                if (hugDirection == 0) {
-                    //if was hugging to the left, now hug to the right;
-                    hugDirection = 1;
-                } else {
-                    //if was hugging to the right, then it could mean the unit is stuck
-                    if (--stuckCount > 0) {
-                        //if stuck, decrement the counts and try moving the other hug direction
-                        hugDirection = hugDirection == 0 ? 1 : 0;
-                    } else {
-                        //we'll claim the unit to be stuck if couldn't move to the hug direction stuckCount times
-                        System.out.println("NAVIGATION - STUCK");
-                    }
-                }
-            }
-        }
-        prevLocation = rc.getLocation();
-    }
 }

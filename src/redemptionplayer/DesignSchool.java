@@ -51,11 +51,4 @@ public class DesignSchool extends Building {
         }
     }
 
-    public void broadcastFirstLandscaper() throws GameActionException {
-        int[] message = new int[7];
-        message[0] = teamSecret;
-        message[1] = FIRST_LANDSCAPER;
-        if (rc.canSubmitTransaction(message, 2))
-            rc.submitTransaction(message, 2);
-    }
 }

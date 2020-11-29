@@ -29,7 +29,7 @@ public class DesignSchoolTest {
 		//Act
 		ds.run();
 		//Assert
-//		verify(rc).buildRobot(RobotType.LANDSCAPER, Direction.NORTH);
+		verify(rc).buildRobot(RobotType.LANDSCAPER, Direction.NORTH);
 	}
 
 }

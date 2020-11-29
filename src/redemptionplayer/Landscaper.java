@@ -232,16 +232,6 @@ public class Landscaper extends Unit {
         return !locationOccupiedWithSameTeamRobot(mapLoc) || (rc.senseElevation(mapLoc) > 5);
     }
 
-    public void getFirstLandscaper() throws GameActionException {
-        for (int i = rc.getRoundNum() - 1; i < rc.getRoundNum(); i++) {
-            for (Transaction tx : rc.getBlock(i)) {
-                int[] mess = tx.getMessage();
-                if (mess[0] == teamSecret && mess[1] == FIRST_LANDSCAPER) {
-                    firstLandscaper = true;
-                }
-            }
-        }
-    }
 }
 
 //            if (turnCount == 1) {
