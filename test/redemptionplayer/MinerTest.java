@@ -170,4 +170,72 @@ public class MinerTest {
         when(rc.isReady()).thenReturn(false);
         miner.tryMine(dir);
     }
+
+    @Test
+    public void testBuildRefineryNearSoupArea() throws GameActionException {
+        RobotController rc = Mockito.mock(RobotController.class);
+        Miner miner = new Miner(rc);
+        Direction dir = Util.directions[0];
+        when(rc.isReady()).thenReturn(true);
+        when(rc.canMineSoup(dir)).thenReturn(true);
+        miner.tryMine(dir);
+        Miner.refineLocations = new ArrayList<>();
+        Miner.refineLocations.add(new MapLocation(2, 2));
+        when(rc.getLocation()).thenReturn(new MapLocation(10, 10));
+        when(rc.getTeamSoup()).thenReturn(210);
+        when(rc.senseNearbyRobots()).thenReturn(new RobotInfo[0]);
+        when(rc.isReady()).thenReturn(false);
+        miner.buildRefineryNearSoupArea();
+
+        when(rc.getLocation()).thenReturn(new MapLocation(30, 30));
+        when(miner.tryBuild(RobotType.REFINERY, Util.directions[3])).thenReturn(true);
+        when(miner.tryBuild(RobotType.REFINERY, Util.directions[0])).thenReturn(true);
+        Miner.broadcastedCont = false;
+        Miner.broadcastedHalt = true;
+        miner.buildRefineryNearSoupArea();
+
+        when(rc.getTeamSoup()).thenReturn(4);
+        Miner.broadcastedHalt = false;
+        miner.buildRefineryNearSoupArea();
+    }
+
+    @Test
+    public void testRunMiner() throws GameActionException {
+        RobotController rc = Mockito.mock(RobotController.class);
+
+        Miner miner = new Miner(rc);
+        Miner.backupMiner = false;
+        Miner.firstMiner = false;
+        Miner.giveUpMinerRush = false;
+        when(rc.getRoundNum()).thenReturn(100);
+        when(rc.getLocation()).thenReturn(new MapLocation(1, 1));
+        when(rc.getBlock(any(int.class))).thenReturn(new Transaction[0]);
+        when(rc.senseNearbyRobots()).thenReturn(new RobotInfo[0]);
+        miner.run();
+
+        Miner.backupMiner = false;
+        Miner.firstMiner = false;
+        Miner.giveUpMinerRush = false;
+        Miner.turnCount = 100;
+        when(rc.getRoundNum()).thenReturn(70);
+        when(rc.getLocation()).thenReturn(new MapLocation(1, 1));
+        when(rc.getBlock(any(int.class))).thenReturn(new Transaction[0]);
+        when(rc.senseNearbyRobots()).thenReturn(new RobotInfo[0]);
+        MapLocation[] mapLocs = new MapLocation[1];
+        mapLocs[0] = new MapLocation(1, 1);
+        when(rc.senseNearbySoup()).thenReturn(mapLocs);
+        miner.run();
+
+        Miner.backupMiner = false;
+        Miner.firstMiner = false;
+        Miner.giveUpMinerRush = false;
+        Miner.turnCount = 100;
+        Miner.soupLocation = null;
+        when(rc.getRoundNum()).thenReturn(70);
+        when(rc.getLocation()).thenReturn(new MapLocation(1, 1));
+        when(rc.getBlock(any(int.class))).thenReturn(new Transaction[0]);
+        when(rc.senseNearbyRobots()).thenReturn(new RobotInfo[0]);
+        when(rc.senseNearbySoup()).thenReturn(new MapLocation[0]);
+        miner.run();
+    }
 }
