@@ -1,7 +1,7 @@
 dist/*
 build/*
 src/lectureplayer
-
+src/redemptionplayer/NavHelper.java
 /matches
 /deploy/lib
 /deploy/bin
