@@ -8,7 +8,6 @@ import java.util.Map;
 public class Landscaper extends Unit {
     static boolean rushType = false;
     static ArrayList<MapLocation> outerCircle;
-    static boolean checkedBlockchainForFirst = false;
     static boolean firstLandscaper = false;
     static int tryMoveToEnemyHQTurns = 0;
     public Landscaper(RobotController rc) throws GameActionException {
