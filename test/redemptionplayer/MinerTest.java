@@ -163,9 +163,19 @@ public class MinerTest {
         miner.run();
     }
 
-//    @Test void testRunBackUpMiner() throws GameActionException {
-//
-//    }
+    @Test
+    public void testRunBackUpMiner() throws GameActionException {
+        RobotController rc = Mockito.mock(RobotController.class);
+        Miner.firstMiner = false;
+        Miner.backupMiner = false;
+        Miner.turnCount = 0;
+        Miner miner = new Miner(rc);
+        when(rc.getRoundNum()).thenReturn(120);
+        when(rc.getLocation()).thenReturn(new MapLocation(1, 1));
+        when(rc.getBlock(any(int.class))).thenReturn(new Transaction[0]);
+        when(rc.senseNearbyRobots()).thenReturn(new RobotInfo[0]);
+        miner.run();
+    }
 
     @Test
     public void testRunNormalMiner() throws GameActionException {
