@@ -57,6 +57,7 @@ public class MinerTest {
         Miner.broadcastedHalt = false;
         Miner.broadcastedCont = false;
     }
+
     @Test
     public void tryBuildTest() throws GameActionException {
         RobotController rc = Mockito.mock(RobotController.class);
@@ -140,5 +141,33 @@ public class MinerTest {
         when(rc.getBlock(any(int.class))).thenReturn(new Transaction[0]);
         when(rc.senseNearbyRobots()).thenReturn(new RobotInfo[0]);
         miner.run();
+    }
+
+    @Test
+    public void testRunNormalMiner() throws GameActionException {
+        Miner.firstMiner = false;
+        Miner.backupMiner = false;
+        RobotController rc = Mockito.mock(RobotController.class);
+        Miner miner = new Miner(rc);
+
+        when(rc.getBlock(any(int.class))).thenReturn(new Transaction[0]);
+        when(rc.getRoundNum()).thenReturn(40);
+        when(rc.senseNearbySoup()).thenReturn(new MapLocation[0]);
+        when(rc.getLocation()).thenReturn(new MapLocation(10, 10));
+
+        miner.run();
+    }
+
+    @Test
+    public void testTryMine() throws GameActionException {
+        RobotController rc = Mockito.mock(RobotController.class);
+        Miner miner = new Miner(rc);
+        Direction dir = Util.directions[0];
+        when(rc.isReady()).thenReturn(true);
+        when(rc.canMineSoup(dir)).thenReturn(true);
+        miner.tryMine(dir);
+
+        when(rc.isReady()).thenReturn(false);
+        miner.tryMine(dir);
     }
 }

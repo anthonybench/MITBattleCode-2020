@@ -334,6 +334,7 @@ public class Miner extends Unit {
                         closestSoup = soupLoc;
                     }
                 }
+
                 if (checkIfSoupLocIsNew()) {
                     broadcastSoupNewSoupLoc(rc.getLocation().x, rc.getLocation().y);
                 }
@@ -657,7 +658,6 @@ public class Miner extends Unit {
         message[3] = y; // possible y coord of enemy HQ
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
-        System.out.println("Built New refinery");
     }
 
     public void broadcastSoupNewSoupLoc(int x, int y) throws GameActionException {
@@ -668,7 +668,6 @@ public class Miner extends Unit {
         message[3] = y; // possible y coord of enemy HQ
         if (rc.canSubmitTransaction(message, 2))
             rc.submitTransaction(message, 2);
-        System.out.println("New Soup");
     }
 
     boolean checkIfSoupLocIsNew() {
