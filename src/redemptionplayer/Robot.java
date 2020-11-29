@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Robot {
     RobotController rc;
-    int turnCount = 0;
+    static int turnCount = 0;
     int teamSecret = 384392;
     static MapLocation hqLoc;
     static MapLocation enemyHqLoc;
