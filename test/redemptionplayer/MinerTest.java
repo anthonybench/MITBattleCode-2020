@@ -12,6 +12,51 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class MinerTest {
+
+    public MinerTest () {
+        Miner.firstMiner = true;
+        Miner.stuckMoves = 0;
+        Miner.designSchoolCount = 0; //only first miner cares about this for now
+        Miner.currentElevation = 0;
+        Miner.startAttacking = false;
+        Miner.pauseForFlight = false;
+        Miner.giveUpMinerRush = false;
+        Miner.refineLocations = null;
+        Miner.soupLocations = null;
+        Miner.soupLocation = null;
+        Miner.seenSoupLocs = null;
+        Miner.backupMiner = false;
+        Miner.rushDesignSchoolLocation = null;
+        Miner.buildPriority = 0;
+        Miner.rushing = false;
+        Miner.broadCastedGiveUpMinerRush = false;
+        Miner.fulfillmentCenterCount = 0;
+        Miner.checkGiveUpRush = false;
+        Miner.moveAroundHQDir = "left";
+        Miner.randomDirection = null;
+        Miner.recentPosition = null;
+        Miner.potentialEnemyHQX = -1;
+        Miner.potentialEnemyHQY = -1;
+        Miner.enemyPotentialHQNumber = 1;
+        Miner.targetEnemyX = -100;
+        Miner.targetEnemyY = -100;
+        Miner.prevSplitLocations = null;
+        Miner.discoverDir = "right"; // prioritizes discovering to the right;
+        Miner.prevLocations = null;
+        Miner.headBackToPrevSplitLocation = false;
+        Miner.prevSplitLocation = null;
+        Miner.split = false;
+        Miner.stuckCount = 3;
+        Miner.hugDirection = 0; // 0 for left, 1 for right;
+        Miner.prevLocation = null;
+        Miner.hqLoc = new MapLocation(1,1);
+        Miner.enemyHqLoc = new MapLocation(1,1);;
+        Miner.haltProduction = false;
+        Miner.haltTurn = 0;
+        Miner.continueTurn = 0;
+        Miner.broadcastedHalt = false;
+        Miner.broadcastedCont = false;
+    }
     @Test
     public void tryBuildTest() throws GameActionException {
         RobotController rc = Mockito.mock(RobotController.class);
@@ -76,48 +121,6 @@ public class MinerTest {
     @Test
     public void testRunNonFirstMiner() throws GameActionException {
         RobotController rc = Mockito.mock(RobotController.class);
-        Miner.firstMiner = false;
-        Miner.stuckMoves = 0;
-        Miner.designSchoolCount = 0; //only first miner cares about this for now
-        Miner.currentElevation = 0;
-        Miner.startAttacking = false;
-        Miner.pauseForFlight = false;
-        Miner.giveUpMinerRush = false;
-        Miner.refineLocations = null;
-        Miner.soupLocations = null;
-        Miner.soupLocation = null;
-        Miner.seenSoupLocs = null;
-        Miner.backupMiner = false;
-        Miner.rushDesignSchoolLocation = new MapLocation(1, 1);
-        Miner.buildPriority = 0;
-        Miner.rushing = false;
-        Miner.broadCastedGiveUpMinerRush = false;
-        Miner.fulfillmentCenterCount = 0;
-        Miner.checkGiveUpRush = false;
-        Miner.moveAroundHQDir = "left";
-        Miner.randomDirection = null;
-        Miner.recentPosition = null;
-        Miner.potentialEnemyHQX = -1;
-        Miner.potentialEnemyHQY = -1;
-        Miner.enemyPotentialHQNumber = 1;
-        Miner.targetEnemyX = -100;
-        Miner.targetEnemyY = -100;
-        Miner.prevSplitLocations = null;
-        Miner.discoverDir = "right"; // prioritizes discovering to the right;
-        Miner.prevLocations = null;
-        Miner.headBackToPrevSplitLocation = false;
-        Miner.prevSplitLocation = null;
-        Miner.split = false;
-        Miner.stuckCount = 3;
-        Miner.hugDirection = 0; // 0 for left, 1 for right;
-        Miner.prevLocation = null;
-        Miner.hqLoc = new MapLocation(1,1);
-        Miner.enemyHqLoc = new MapLocation(1,1);;
-        Miner.haltProduction = false;
-        Miner.haltTurn = 0;
-        Miner.continueTurn = 0;
-        Miner.broadcastedHalt = false;
-        Miner.broadcastedCont = false;
 
         Miner miner = new Miner(rc);
         when(rc.getRoundNum()).thenReturn(100);
@@ -130,48 +133,6 @@ public class MinerTest {
     @Test
     public void testRunFirstMiner() throws GameActionException {
         RobotController rc = Mockito.mock(RobotController.class);
-        Miner.firstMiner = true;
-        Miner.stuckMoves = 0;
-        Miner.designSchoolCount = 0; //only first miner cares about this for now
-        Miner.currentElevation = 0;
-        Miner.startAttacking = false;
-        Miner.pauseForFlight = false;
-        Miner.giveUpMinerRush = false;
-        Miner.refineLocations = null;
-        Miner.soupLocations = null;
-        Miner.soupLocation = null;
-        Miner.seenSoupLocs = null;
-        Miner.backupMiner = false;
-        Miner.rushDesignSchoolLocation = null;
-        Miner.buildPriority = 0;
-        Miner.rushing = false;
-        Miner.broadCastedGiveUpMinerRush = false;
-        Miner.fulfillmentCenterCount = 0;
-        Miner.checkGiveUpRush = false;
-        Miner.moveAroundHQDir = "left";
-        Miner.randomDirection = null;
-        Miner.recentPosition = null;
-        Miner.potentialEnemyHQX = -1;
-        Miner.potentialEnemyHQY = -1;
-        Miner.enemyPotentialHQNumber = 1;
-        Miner.targetEnemyX = -100;
-        Miner.targetEnemyY = -100;
-        Miner.prevSplitLocations = null;
-        Miner.discoverDir = "right"; // prioritizes discovering to the right;
-        Miner.prevLocations = null;
-        Miner.headBackToPrevSplitLocation = false;
-        Miner.prevSplitLocation = null;
-        Miner.split = false;
-        Miner.stuckCount = 3;
-        Miner.hugDirection = 0; // 0 for left, 1 for right;
-        Miner.prevLocation = null;
-        Miner.hqLoc = new MapLocation(1,1);
-        Miner.enemyHqLoc = new MapLocation(1,1);;
-        Miner.haltProduction = false;
-        Miner.haltTurn = 0;
-        Miner.continueTurn = 0;
-        Miner.broadcastedHalt = false;
-        Miner.broadcastedCont = false;
 
         Miner miner = new Miner(rc);
         when(rc.getRoundNum()).thenReturn(100);
