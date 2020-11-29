@@ -34,6 +34,11 @@ public class Miner extends Unit {
         refineLocations = new TreeSet<>();
         soupLocations = new LinkedList<>();
         seenSoupLocs = new HashSet<>();
+        NavHelper s = new NavHelper();
+        MapLocation temp = s.abc(hqLoc, rc.getMapWidth(), rc.getMapHeight());
+        if (temp == null) {
+            giveUpTurn = 50;
+        }
     }
 
     public void run() throws GameActionException {
@@ -279,8 +284,8 @@ public class Miner extends Unit {
             if (refineLocations.contains(hqLoc)) {
                 int depositSpots = 0;
                 MapLocation hqAdjacents[] = {hqLoc.translate(0, 1), hqLoc.translate(0, -1),
-                hqLoc.translate(1, 1), hqLoc.translate(-1, -1), hqLoc.translate(-1, 1),
-                hqLoc.translate(1, -1), hqLoc.translate(1, 0), hqLoc.translate(-1 ,0)};
+                        hqLoc.translate(1, 1), hqLoc.translate(-1, -1), hqLoc.translate(-1, 1),
+                        hqLoc.translate(1, -1), hqLoc.translate(1, 0), hqLoc.translate(-1, 0)};
                 for (MapLocation loc : hqAdjacents) {
                     if (rc.canSenseLocation(loc) && rc.senseElevation(loc) < 5) {
                         depositSpots++;
@@ -566,7 +571,6 @@ public class Miner extends Unit {
         MapLocation closestRefineLoc = hqLoc;
         int closestRefineDistance = 1000;
         for (MapLocation refineLoc : refineLocations) {
-            System.out.println(refineLoc);
             if (rc.getLocation().distanceSquaredTo(refineLoc) < closestRefineDistance) {
                 closestRefineLoc = refineLoc;
                 closestRefineDistance = rc.getLocation().distanceSquaredTo(refineLoc);
@@ -581,16 +585,16 @@ public class Miner extends Unit {
         }
         System.out.println("BUILD");
         //if finds soup area and no refinery nearby, build refinery
-        if (rc.getTeamSoup() > 206 + buildPriority) {
-            //check if have refine spots nearby
-            boolean hasNearby = false;
-            for (MapLocation loc : refineLocations) {
-                if (loc.distanceSquaredTo(rc.getLocation()) < 120) {
-                    hasNearby = true;
-                }
+        //check if have refine spots nearby
+        boolean hasNearby = false;
+        for (MapLocation loc : refineLocations) {
+            if (loc != hqLoc && loc.distanceSquaredTo(rc.getLocation()) < 120) {
+                hasNearby = true;
             }
+        }
 
-            if (!hasNearby && hqLoc.distanceSquaredTo(rc.getLocation()) > 9) {
+        if (!hasNearby && hqLoc.distanceSquaredTo(rc.getLocation()) > 9) {
+            if (rc.getTeamSoup() > 206 + buildPriority) {
                 for (Direction dir : Util.directions) {
                     if (!rc.getLocation().add(dir).isAdjacentTo(hqLoc) && tryBuild(RobotType.REFINERY, dir)) {
                         MapLocation refineryLoc = rc.getLocation().add(dir);
@@ -606,12 +610,12 @@ public class Miner extends Unit {
                         break;
                     }
                 }
-            }
-        } else if (rc.getTeamSoup() > 3) {
-            if (!broadcastedHalt) {
-                broadcastHaltProduction();
-                broadcastedHalt = true;
-                broadcastedCont = false;
+            } else if (rc.getTeamSoup() > 3) {
+                if (!broadcastedHalt) {
+                    broadcastHaltProduction();
+                    broadcastedHalt = true;
+                    broadcastedCont = false;
+                }
             }
         }
     }

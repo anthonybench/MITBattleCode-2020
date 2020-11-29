@@ -24,16 +24,16 @@ public class FulfillmentCenter extends Building {
         if (droneCount < 2) {
             for (Direction dir : Util.directions) {
                 if (!madeDrone && tryBuild(RobotType.DELIVERY_DRONE, dir)) {
-                    System.out.println("Made a Drone!");
                     droneCount++;
+                    System.out.println("Made a Drone! " + droneCount);
                     break;
                 }
             }
         } else if (rc.getTeamSoup() > 152) {
             for (Direction dir : Util.directions) {
                 if (!madeDrone && tryBuild(RobotType.DELIVERY_DRONE, dir)) {
-                    System.out.println("Made a Drone!");
                     droneCount++;
+                    System.out.println("Made a Drone! " + droneCount);
                     break;
                 }
             }
