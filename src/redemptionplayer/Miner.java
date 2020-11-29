@@ -258,32 +258,6 @@ public class Miner extends Unit {
                 if (landscaperCount < 4) {
                     return;
                 }
-//                if (netGuns == 0) {
-//                    MapLocation topRight = new MapLocation(hqLoc.x + 2, hqLoc.y + 2);
-//                    MapLocation topLeft = new MapLocation(hqLoc.x - 2, hqLoc.y + 2);
-//                    MapLocation bottomLeft = new MapLocation(hqLoc.x - 2, hqLoc.y - 2);
-//                    MapLocation bottomRight = new MapLocation(hqLoc.x + 2, hqLoc.y - 2);
-//                    MapLocation[] locs = {topLeft, topRight, bottomLeft, bottomRight};
-//                    MapLocation closestPosition = null;
-//                    int closestDistance = 1000;
-//                    for (MapLocation loc : locs) {
-//                        if (rc.getLocation().distanceSquaredTo(loc) < closestDistance) {
-//                            closestDistance = rc.getLocation().distanceSquaredTo(loc);
-//                            closestPosition = loc;
-//                        }
-//                    }
-//                    if (rc.getLocation().isAdjacentTo(closestPosition)) {
-//                        for (Direction dir : Util.directions) {
-//                            if (!hqLoc.isAdjacentTo(rc.getLocation().add(dir)) && tryBuild(RobotType.NET_GUN, dir)) {
-//                                System.out.println("created a net gun next to HQ");
-//                                netGuns++;
-//                                return;
-//                            }
-//                        }
-//                    } else {
-//                        dfsWalk(closestPosition);
-//                    }
-//                }
             }
             System.out.println("TESt");
             moveAroundHQ();
@@ -294,6 +268,8 @@ public class Miner extends Unit {
             }
 
             getSoupLocation();
+            getRefineryLocation();
+
             for (Direction dir : Util.directions) {
                 if (tryRefine(dir)) {
                     System.out.println("I refined soup! " + rc.getTeamSoup());
@@ -332,6 +308,7 @@ public class Miner extends Unit {
                         closestSoup = soupLoc;
                     }
                 }
+
                 if (checkIfSoupLocIsNew()) {
                     broadcastSoupNewSoupLoc(rc.getLocation().x, rc.getLocation().y);
                 }
@@ -351,11 +328,6 @@ public class Miner extends Unit {
                     } else {
                         // If no soup is nearby, search for soup by moving randomly
                         System.out.println("No soup nearby");
-//                        Direction randomDirection = Util.randomDirection();
-//                        do {
-//                            randomDirection = Util.randomDirection();
-//                        } while (randomDirection == prevDirection);
-//                        prevDirection = randomDirection;
                         System.out.println(randomDirection + " " + randomDirectionCount);
 
                         if (randomDirection == null) {
@@ -592,31 +564,17 @@ public class Miner extends Unit {
 
     public void buildRefineryNearSoupArea() throws GameActionException {
         System.out.println("Build refinery " + buildPriority);
-//        getHaltProductionFromBlockchain();
-//        getContinueProductionFromBlockchain();
 
         if (checkHalt()) {
             return;
         }
-
-        //has landscapers building walls but still no refinery, then build refinery
-//        if (rc.canSenseLocation(hqLoc) && nearbyTeamRobot(RobotType.LANDSCAPER) && refineLocations.isEmpty() && !nearbyTeamRobot(RobotType.REFINERY)) {
-//            for (Direction dir : Util.directions) {
-//                if (!rc.getLocation().add(dir).isAdjacentTo(hqLoc) && tryBuild(RobotType.REFINERY, dir)) {
-//                    MapLocation refineryLoc = rc.getLocation().add(dir);
-//                    broadcastNewRefinery(refineryLoc.x, refineryLoc.y);
-//                    refineLocations.add(refineryLoc);
-//                    break;
-//                }
-//            }
-//        }
 
         if (nearbyTeamRobot(RobotType.REFINERY)) {
             return;
         }
         System.out.println("REFINERY " + buildPriority);
         //if finds soup area and no refinery nearby, build refinery
-        if (rc.getTeamSoup() > 204) {
+        if (rc.getTeamSoup() > 206) {
             //check if have refine spots nearby
             boolean hasNearby = false;
             for (MapLocation loc : refineLocations) {
@@ -655,7 +613,6 @@ public class Miner extends Unit {
         message[3] = y; // possible y coord of enemy HQ
         if (rc.canSubmitTransaction(message, 3))
             rc.submitTransaction(message, 3);
-        System.out.println("Built New refinery");
     }
 
     public void broadcastSoupNewSoupLoc(int x, int y) throws GameActionException {
@@ -666,7 +623,6 @@ public class Miner extends Unit {
         message[3] = y; // possible y coord of enemy HQ
         if (rc.canSubmitTransaction(message, 2))
             rc.submitTransaction(message, 2);
-        System.out.println("New Soup");
     }
 
     boolean checkIfSoupLocIsNew() {
@@ -709,30 +665,6 @@ public class Miner extends Unit {
     }
 
     public void moveAroundHQ() throws GameActionException {
-//        boolean moved = false;
-//        Direction towardsHQ = rc.getLocation().directionTo(hqLoc);
-//        ArrayList<Direction> dirs = new ArrayList<>();
-//
-//        //If see enemy drone, move towards HQ for protection.
-//        if (nearbyEnemyRobot(RobotType.DELIVERY_DRONE)) {
-//            dfsWalk(hqLoc);
-//        }
-//
-//        clearMovement();
-//        //Set the general direction for the miner to move around HQ
-//        if (moveAroundHQDir.equals("right")) {
-//            dirs.add(towardsHQ.rotateLeft());
-//            dirs.add(towardsHQ.rotateLeft().rotateLeft());
-//            dirs.add(towardsHQ.rotateLeft().rotateLeft().rotateLeft());
-//            dirs.add(towardsHQ.rotateLeft().rotateLeft().rotateLeft().rotateLeft());
-//        } else {
-//            dirs.add(towardsHQ.rotateRight());
-//            dirs.add(towardsHQ.rotateRight().rotateRight());
-//            dirs.add(towardsHQ.rotateRight().rotateRight().rotateRight());
-//            dirs.add(towardsHQ.rotateRight().rotateRight().rotateRight().rotateRight());
-//        }
-
-        //move around HQ following a general direction - ideally miner would be moving in circles with the HQ as the center
 
         List<Direction> list = Arrays.asList(Util.directions);
 
@@ -743,16 +675,11 @@ public class Miner extends Unit {
             if (rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 16)
                     && !rc.getLocation().add(dir).isWithinDistanceSquared(hqLoc, 4)
                     && !rc.getLocation().add(dir).equals(prevLocation) && tryMove(dir)) {
-//                moveAroundHQDir = moveAroundHQDir.equals("left") ? "right" : "left";
                 break;
             }
         }
 
         prevLocation = rc.getLocation();
-
-//        if (rc.getCooldownTurns() < 1) {
-//            goTo(hqLoc);
-//        }
 
         if (rc.getCooldownTurns() < 1) {
             //just move in a random direction - to prevent the bug happening in maps like hourgalss

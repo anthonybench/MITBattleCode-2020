@@ -25,13 +25,13 @@ public class DesignSchool extends Building {
                 tryBuildLandscaper();
             }
         } else if (landscaperCount <= 3) {
-            getHaltProductionFromBlockchain();
-            getContinueProductionFromBlockchain();
-
-            if (checkHalt()) {
-                return;
-            }
-            System.out.println(landscaperCount + " 2");
+//            getHaltProductionFromBlockchain();
+//            getContinueProductionFromBlockchain();
+//
+//            if (checkHalt()) {
+//                return;
+//            }
+//            System.out.println(landscaperCount + " 2");
             tryBuildLandscaper();
         } else {
             if (nearbyTeamRobot(RobotType.DELIVERY_DRONE) && landscaperCount <= 7) {
