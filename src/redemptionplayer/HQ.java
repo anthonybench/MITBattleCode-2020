@@ -32,7 +32,7 @@ public class HQ extends Building {
             }
         }
 
-        if (temp != null && numMiners < 4) {
+        if (temp != null && numMiners < 5) {
             for (Direction dir : Util.directions) {
                 if (tryBuild(RobotType.MINER, dir)) {
                     numMiners++;

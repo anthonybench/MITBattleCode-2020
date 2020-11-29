@@ -3,6 +3,8 @@ package redemptionplayer;
 import battlecode.common.*;
 
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class Drone extends Unit {
     static MapLocation minerLoc = null;
@@ -14,15 +16,29 @@ public class Drone extends Unit {
     static MapLocation nearestWater;
     static int moveToEnemyBaseTurn = 1000;
     static int attackTurn = 1200;
-    static ArrayList<MapLocation> netGuns;
+    static Set<MapLocation> netGuns;
+    static boolean enemyUnit = false;
+    static boolean justBorn = true;
+    static int randomDirectionCount = 2;
     public Drone(RobotController rc) throws GameActionException {
         super(rc);
-        netGuns = new ArrayList<>();
+        netGuns = new TreeSet<>();
     }
 
     public void run() throws GameActionException {
         super.run();
-
+        if (enemyHqLoc == null) {
+            getRealEnemyHQFromBlockchain(5);
+        }
+//        if (justBorn) {
+//            justBorn = false;
+//            if (rc.getRoundNum() > 100) {
+//                getRealEnemyHQFromBlockchain(rc.getRoundNum() - 100);
+//                if (enemyHqLoc != null) {
+//                    netGuns.add(enemyHqLoc);
+//                }
+//            }
+//        }
         //attack enemy HQ, kill their landscapers so we have higher wall.
         if (rc.getRoundNum() > attackTurn) {
 
@@ -60,7 +76,16 @@ public class Drone extends Unit {
                 goTo(enemyHqLoc);
             }
         } else {
+//            getRealEnemyHQFromBlockchain(5);
+//            if (enemyHqLoc != null) {
+//                netGuns.add(enemyHqLoc);
+//            }
 
+//            pickUpAnyEnemyUnit();
+//            if (enemyUnit) {
+//                dropInWater();
+//            }
+            System.out.println("BC " + Clock.getBytecodesLeft());
             RobotInfo[] robotInfos = rc.senseNearbyRobots();
             //Has unit to pick up
             if (pickUpID == -1) {
@@ -81,6 +106,7 @@ public class Drone extends Unit {
                         pickUpID = robot.ID;
                         pickUpLocation = robot.getLocation();
                         pickUpType = RobotType.LANDSCAPER;
+                        sameTeam = true;
                         break;
                     }
 //                else if (robot.getType() == RobotType.MINER && (!robot.getLocation().isAdjacentTo(hqLoc))) {
@@ -180,16 +206,25 @@ public class Drone extends Unit {
                 }
                 if (robot.getType() == RobotType.HQ && robot.getTeam() != rc.getTeam()) {
                     netGuns.add(robot.getLocation());
+                    if (enemyHqLoc == null) {
+                        enemyHqLoc = robot.getLocation();
+                        targetEnemyX = robot.getLocation().x;
+                        targetEnemyY = robot.getLocation().y;
+                        broadcastRealEnemyHQCoordinates();
+                    }
                 }
             }
+            System.out.println(enemyHqLoc);
             if (enemyHqLoc == null) {
                 for (MapLocation loc : netGuns) {
+                    System.out.println(loc + " " + rc.getLocation().add(dir).isWithinDistanceSquared(loc, 26));
                     if (rc.getLocation().add(dir).isWithinDistanceSquared(loc, 26)) {
                         hasNetGun = true;
                     }
                 }
             }
 
+            System.out.println("HAS " + hasNetGun);
             if (rc.isReady() && rc.canMove(dir) && !hasNetGun) {
                 rc.move(dir);
                 return true;
@@ -237,6 +272,7 @@ public class Drone extends Unit {
             if (rc.canDropUnit(dir)) {
                 rc.dropUnit(dir);
                 pickUpID = -1;
+                enemyUnit = false;
             }
         }
 
@@ -244,8 +280,8 @@ public class Drone extends Unit {
             dfsWalk(nearestWater);
         } else {
             int sensorRadius = rc.getCurrentSensorRadiusSquared();
-            for (int i = -sensorRadius; i < sensorRadius; i++) {
-                for (int j = -sensorRadius; j < sensorRadius; j++) {
+            for (int i = 0; i < sensorRadius; i++) {
+                for (int j = 0; j < sensorRadius; j++) {
                     MapLocation mapLoc = new MapLocation(rc.getLocation().x + i, rc.getLocation().y + j);
                     if (rc.canSenseLocation(mapLoc) && rc.senseFlooding(mapLoc)) {
                         nearestWater = mapLoc;
@@ -258,12 +294,20 @@ public class Drone extends Unit {
         }
     }
 
-    void moveRandomly () throws GameActionException{
-        if (randomDirection == null) {
-            randomDirection = Util.randomDirection();
+    void moveRandomly() throws GameActionException {
+        if (rc.getCooldownTurns() > 0.5) {
+            return;
         }
+        System.out.println(rc.getCooldownTurns() + " " + randomDirection);
+        if (randomDirection == null) {
+            randomDirection = rc.getLocation().directionTo(hqLoc);
+            if (rc.canMove(randomDirection)) {
+                rc.move(randomDirection);
+            }
+        }
+        System.out.println(randomDirection + " " + rc.canMove(randomDirection));
         if (!(randomDirectionCount-- > 0 && tryMove(randomDirection))) {
-            randomDirectionCount = 10;
+            randomDirectionCount = 1;
             randomDirection = randomDirection.rotateLeft();
         }
     }
@@ -275,8 +319,7 @@ public class Drone extends Unit {
             tryMove(dir);
         } else if (rc.canMove(dir.rotateLeft())) {
             tryMove(dir.rotateLeft());
-        }
-        else if (rc.canMove(dir.rotateRight())) {
+        } else if (rc.canMove(dir.rotateRight())) {
             tryMove(dir.rotateRight());
         } else if (rc.canMove(dir.rotateLeft().rotateLeft())) {
             tryMove(dir.rotateLeft().rotateLeft());
@@ -286,5 +329,38 @@ public class Drone extends Unit {
             return false;
         }
         return true;
+    }
+
+    public void pickUpAnyEnemyUnit() throws GameActionException {
+        RobotInfo[] robotInfos = rc.senseNearbyRobots();
+        MapLocation enemyLoc = null;
+        for (RobotInfo robot : robotInfos) {
+            if (robot.getType() == RobotType.LANDSCAPER &&
+                    robot.getTeam() != rc.getTeam()) {
+                if (rc.canPickUpUnit(robot.ID)) {
+                    rc.pickUpUnit(robot.ID);
+                    enemyUnit = true;
+                } else {
+                    enemyLoc = rc.getLocation();
+                }
+            }
+        }
+        if (!rc.isCurrentlyHoldingUnit() && enemyLoc != null) {
+            goTo(enemyLoc);
+        }
+    }
+
+    public void getRealEnemyHQFromBlockchain(int rounds) throws GameActionException {
+        for (int i = rc.getRoundNum() - rounds; i < rc.getRoundNum(); i++) {
+            for (Transaction tx : rc.getBlock(i)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == ENEMY_HQ_LOC) {
+                    System.out.println("got the real enemy HQ coord!");
+                    enemyHqLoc = new MapLocation(mess[2], mess[3]);
+                    netGuns.add(enemyHqLoc);
+                    return;
+                }
+            }
+        }
     }
 }

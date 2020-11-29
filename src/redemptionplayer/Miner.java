@@ -569,6 +569,7 @@ public class Miner extends Unit {
             System.out.println(refineLoc);
             if (rc.getLocation().distanceSquaredTo(refineLoc) < closestRefineDistance) {
                 closestRefineLoc = refineLoc;
+                closestRefineDistance = rc.getLocation().distanceSquaredTo(refineLoc);
             }
         }
         dfsWalk(closestRefineLoc);
@@ -578,7 +579,7 @@ public class Miner extends Unit {
         if (nearbyTeamRobot(RobotType.REFINERY) || rc.getRoundNum() < giveUpTurn) {
             return;
         }
-
+        System.out.println("BUILD");
         //if finds soup area and no refinery nearby, build refinery
         if (rc.getTeamSoup() > 206 + buildPriority) {
             //check if have refine spots nearby
@@ -596,7 +597,7 @@ public class Miner extends Unit {
                         broadcastNewRefinery(refineryLoc.x, refineryLoc.y);
                         refineLocations.add(refineryLoc);
                         System.out.println(haltProduction + " " + broadcastedCont);
-                        if (!broadcastedCont && haltProduction) {
+                        if (haltProduction || broadcastedHalt) {
                             System.out.println("TEST---------------------------------------");
                             broadcastContinueProduction();
                             broadcastedCont = true;
