@@ -170,10 +170,17 @@ public class MinerTest {
         Miner.backupMiner = false;
         Miner.turnCount = 0;
         Miner miner = new Miner(rc);
-        when(rc.getRoundNum()).thenReturn(120);
+        when(rc.getRoundNum()).thenReturn(300);
         when(rc.getLocation()).thenReturn(new MapLocation(1, 1));
         when(rc.getBlock(any(int.class))).thenReturn(new Transaction[0]);
         when(rc.senseNearbyRobots()).thenReturn(new RobotInfo[0]);
+        when(rc.getTeamSoup()).thenReturn(160);
+        when(rc.senseNearbyRobots()).thenReturn(new RobotInfo[0]);
+        when(miner.tryBuild(RobotType.DESIGN_SCHOOL, Util.directions[0])).thenReturn(true);
+        when(rc.isReady()).thenReturn(true);
+        when(rc.getLocation()).thenReturn(new MapLocation(1, 1));
+        Miner.hqLoc = new MapLocation(7,7);
+        when(rc.canBuildRobot(RobotType.DESIGN_SCHOOL, Util.directions[0])).thenReturn(true);
         miner.run();
     }
 
