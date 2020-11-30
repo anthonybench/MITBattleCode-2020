@@ -66,8 +66,7 @@ public class Unit extends Robot {
      * @throws GameActionException
      */
     boolean tryMove(Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir)) && !tileGoingToFlood(dir)
-        && abs(rc.senseElevation(rc.getLocation()) - rc.senseElevation(rc.getLocation().add(dir))) < 4) {
+        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir))) {
             rc.move(dir);
             return true;
         } else return false;
@@ -264,9 +263,21 @@ public class Unit extends Robot {
     public void navigation (MapLocation destination) throws GameActionException{
         //Navigate towards the destination
         Direction intentedDir = rc.getLocation().directionTo(destination);
-        if (rc.getLocation().directionTo(prevLocation) != intentedDir && !tryMove(intentedDir)) {
+        System.out.println(intentedDir + " " + prevDirection);
+
+        if (rc.getCooldownTurns() >= 1) {
+            return;
+        }
+        MapLocation curLoc = rc.getLocation();
+        if (prevLocation != null || (prevDirection) == intentedDir || !tryMove(intentedDir)) {
             //if the unit couldn't move the intended direction, hug to the right, then to the left
             ArrayList<Direction> dirs = new ArrayList<>();
+            System.out.println("Couldn't move " + hugDirection);
+            if (rc.senseRobotAtLocation(rc.getLocation().add(intentedDir)) != null) {
+                if (tryMove(intentedDir.rotateLeft()) || tryMove(intentedDir.rotateRight())) {
+                    return;
+                }
+            }
 
             if (hugDirection == 0) {
                 dirs.add(intentedDir.rotateLeft());
@@ -306,6 +317,6 @@ public class Unit extends Robot {
                 }
             }
         }
-        prevLocation = rc.getLocation();
+        prevDirection = rc.getLocation().directionTo(curLoc);
     }
 }

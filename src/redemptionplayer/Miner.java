@@ -69,6 +69,7 @@ public class Miner extends Unit {
 
         if (firstMiner) {
             if (rc.getRoundNum() > giveUpTurn && !startAttacking) {
+                System.out.println("TEst " + giveUpTurn);
                 giveUpMinerRush = true;
             }
 
@@ -169,7 +170,7 @@ public class Miner extends Unit {
                 if (rc.getRoundNum() < 16) {
                     minerGoToEnemyHQ();
                 } else {
-                    discoverEnemyHQ(new MapLocation(targetEnemyX, targetEnemyY));
+                    navigation(new MapLocation(targetEnemyX, targetEnemyY));
                 }
             }
         } else if (backupMiner) {
@@ -493,6 +494,8 @@ public class Miner extends Unit {
         //hugDirection 0 for left, 1 for right;
         Direction targetDirection = rc.getLocation().directionTo(enemyHQ);
         //return if miner is not suppose to be able to move
+        System.out.println(targetDirection + " " + prevDirection);
+//        System.out.println(hugDirection);
         if (rc.getCooldownTurns() >= 1) {
             return;
         }
@@ -503,6 +506,7 @@ public class Miner extends Unit {
 //                hugDirection = 0;
 //                prevDirection = null;
 //            }
+            prevDirection = targetDirection.opposite();
         } else {
             //hug direction logic
             ArrayList<Direction> dirs = new ArrayList<>();
@@ -513,6 +517,7 @@ public class Miner extends Unit {
                     return;
                 }
             }
+            System.out.println(hugDirection);
             if (hugDirection == 0) {
                 dirs.add(targetDirection.rotateLeft());
                 dirs.add(targetDirection.rotateLeft().rotateLeft());
@@ -542,14 +547,12 @@ public class Miner extends Unit {
             if (hugDirection == 0) {
                 //now try move right
                 hugDirection = 1;
-                prevDirection = null;
             } else {
 //                //we'll claim to be stuck, and then give up miner rush
 //                System.out.println("-----------------STUCK------------------------------");
 //                giveUpMinerRush = true;
                 //now try move right
                 hugDirection = 0;
-                prevDirection = null;
             }
         }
     }
