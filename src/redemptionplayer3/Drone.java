@@ -1,4 +1,4 @@
-package redemptionplayer;
+package redemptionplayer3;
 
 import battlecode.common.*;
 
@@ -14,7 +14,7 @@ public class Drone extends Unit {
     static MapLocation pickUpLocation;
     static boolean sameTeam = true;
     static MapLocation nearestWater;
-    static int moveToEnemyBaseTurn = 1000;
+    static int moveToEnemyBaseTurn = 2000;
     static int attackTurn = 1200;
     static Set<MapLocation> netGuns;
     static boolean enemyUnit = false;

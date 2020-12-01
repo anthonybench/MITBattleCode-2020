@@ -1,4 +1,4 @@
-package redemptionplayer;
+package redemptionplayer3;
 
 import battlecode.common.*;
 
