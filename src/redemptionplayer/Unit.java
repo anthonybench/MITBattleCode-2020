@@ -240,14 +240,7 @@ public class Unit extends Robot {
             default:
                 break;
         }
-        NavHelper s = new NavHelper();
-        MapLocation temp = s.abc(hqLoc, rc.getMapWidth(), rc.getMapHeight());
-        if (temp == null) {
-            giveUpTurn = 50;
-        } else {
-            targetEnemyX = temp.x;
-            targetEnemyY = temp.y;
-        }
+
     }
 
     public boolean locationOccupiedWithSameTeamRobot(MapLocation mapLoc) throws GameActionException {

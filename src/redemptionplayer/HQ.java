@@ -9,9 +9,6 @@ public class HQ extends Building {
     static Direction dir;
     public HQ (RobotController rc) throws GameActionException{
         super(rc);
-        NavHelper s = new NavHelper();
-        temp = s.abc(rc.getLocation(), rc.getMapWidth(), rc.getMapHeight());
-        dir = s.bca(rc.getLocation());
     }
 
     public void run() throws GameActionException {
@@ -21,27 +18,8 @@ public class HQ extends Building {
             sendHqLoc(rc.getLocation());
         }
 
-        if (temp != null && numMiners == 0) {
-            if (tryBuild(RobotType.MINER, rc.getLocation().directionTo(temp))){
-                numMiners++;
-                return;
-            }
-            for (Direction dir : Util.directions) {
-                if (tryBuild(RobotType.MINER, dir)) {
-                    numMiners++;
-                    break;
-                }
-            }
-        }
 
-        if (temp != null && numMiners < 5) {
-            for (Direction dir : Util.directions) {
-                if (tryBuild(RobotType.MINER, dir)) {
-                    numMiners++;
-                    break;
-                }
-            }
-        } else if (temp == null && numMiners < 5) {
+        if (numMiners < 5) {
             for (Direction dir : Util.directions) {
                 if (tryBuild(RobotType.MINER, dir)) {
                     numMiners++;

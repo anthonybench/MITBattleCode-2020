@@ -36,12 +36,6 @@ public class Miner extends Unit {
         refineLocations = new TreeSet<>();
         soupLocations = new LinkedList<>();
         seenSoupLocs = new HashSet<>();
-        NavHelper s = new NavHelper();
-        MapLocation temp = s.abc(hqLoc, rc.getMapWidth(), rc.getMapHeight());
-        if (temp == null) {
-            giveUpTurn = 50;
-        }
-        hugDirection = s.cba(hqLoc);
     }
 
     public void run() throws GameActionException {
